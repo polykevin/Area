@@ -25,6 +25,4 @@ jobs:
           ssh-private-key: ${{ secrets.SSH_PRIVATE_KEY }}
 
       - name: Push repository mirror
-        run: |
-          git remote add mirror ${{ secrets.MIRROR_URL }}
-          git push --mirror mirror
+        run: git push --mirror mirror
