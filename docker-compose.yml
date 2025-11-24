@@ -1,0 +1,40 @@
+services:
+  server:
+    build:
+      context: ./backend
+    container_name: area-server
+    ports:
+      - "8080:8080"
+    depends_on:
+      - db
+    environment:
+      DATABASE_URL: "postgresql://area:area@db:5432/area"
+    volumes:
+      - shared-volume:/shared
+
+  web:
+    build:
+      context: ./web
+    container_name: area-web
+    ports:
+      - "8081:8081"
+    depends_on:
+      - server
+    volumes:
+      - shared-volume:/shared
+
+  db:
+    image: postgres:15
+    container_name: area-db
+    environment:
+      POSTGRES_USER: area
+      POSTGRES_PASSWORD: area
+      POSTGRES_DB: area
+    ports:
+      - "5432:5432"
+    volumes:
+      - pgdata:/var/lib/postgresql/data
+
+volumes:
+  pgdata:
+  shared-volume:
