@@ -1,5 +1,6 @@
 import "./globals.css";
 import type { ReactNode } from "react";
+import { Navbar } from "@/components/Navbar";
 
 export const metadata = {
   title: "AREA – Web Client",
@@ -9,8 +10,19 @@ export const metadata = {
 export default function RootLayout({ children }: { children: ReactNode }) {
   return (
     <html lang="en">
-      <body>
-        <div className="app-root">{children}</div>
+      <body style={{ minHeight: "100vh", display: "flex", flexDirection: "column" }}>
+        <Navbar />
+        <main
+          style={{
+            width: "100%",
+            display: "flex",
+            justifyContent: "center",
+            alignItems: "center",
+            flex: 1,
+          }}
+        >
+          <div className="app-root">{children}</div>
+        </main>
       </body>
     </html>
   );
