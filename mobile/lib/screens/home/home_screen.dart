@@ -32,7 +32,7 @@ class _HomeScreenState extends State<HomeScreen> {
         title: Text('AREA – ${auth.user?.email ?? ''}'),
         actions: [
           IconButton(
-            icon: const Icon(Icons.logout),
+            icon: Image.asset('assets/icons/login.png',height: 24,),
             onPressed: () async {
               await auth.logout();
               if (!mounted) return;
