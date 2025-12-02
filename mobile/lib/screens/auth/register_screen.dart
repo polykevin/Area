@@ -7,6 +7,7 @@ import '../../widgets/app_button.dart';
 import '../../widgets/app_text_field.dart';
 
 class RegisterScreen extends StatefulWidget {
+  static const routeName = 'register';
   const RegisterScreen({super.key});
 
   @override
