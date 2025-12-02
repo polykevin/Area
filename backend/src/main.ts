@@ -1,18 +1,16 @@
 import { ValidationPipe } from '@nestjs/common';
 import { NestFactory } from '@nestjs/core';
 import { AppModule } from './app.module';
+import waitPort from 'wait-port';
 
 async function bootstrap() {
+  await waitPort({
+    host: 'db',
+    port: 5432,
+    timeout: 30000,
+  });
+
   const app = await NestFactory.create(AppModule);
-
-  app.useGlobalPipes(
-    new ValidationPipe({
-      whitelist: true,
-      forbidNonWhitelisted: false,
-      transform: true,
-    }),
-  );
-
   await app.listen(8080);
 }
 bootstrap();
