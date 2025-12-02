@@ -10,7 +10,7 @@ generator client {
 model User {
   id            Int               @id @default(autoincrement())
   email         String            @unique
-  passwordHash  String?
+  passwordHash  String
   role          String            @default("USER")
   provider      String            @default("local")
   providerId    String?
