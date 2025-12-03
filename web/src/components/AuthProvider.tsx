@@ -21,21 +21,24 @@ type AuthContextValue = {
 const AuthContext = createContext<AuthContextValue | undefined>(undefined);
 
 export function AuthProvider({ children }: { children: ReactNode }) {
-  const [user, setUser] = useState<User | null>(null);
+  const [user, setUser] = useState<User | null>(() => {
+    // Initialisation côté client uniquement
+    if (typeof window === "undefined") return null;
 
-  useEffect(() => {
-    if (typeof window === "undefined") return;
     const raw = window.localStorage.getItem("area-user");
-    if (raw) {
-      try {
-        setUser(JSON.parse(raw));
-      } catch {
-      }
-    }
-  }, []);
+    if (!raw) return null;
 
+    try {
+      return JSON.parse(raw) as User;
+    } catch {
+      return null;
+    }
+  });
+
+  // Synchroniser le user vers localStorage quand il change
   useEffect(() => {
     if (typeof window === "undefined") return;
+
     if (user) {
       window.localStorage.setItem("area-user", JSON.stringify(user));
     } else {
