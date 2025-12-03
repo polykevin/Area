@@ -2,8 +2,13 @@
 
 import { FormEvent, useState } from "react";
 import Link from "next/link";
+import { useRouter } from "next/navigation";
+import { useAuth } from "@/components/AuthProvider";
 
 export default function LoginPage() {
+  const { login } = useAuth();
+  const router = useRouter();
+
   const [email, setEmail] = useState("");
   const [password, setPassword] = useState("");
   const [message, setMessage] = useState<string | null>(null);
@@ -19,9 +24,10 @@ export default function LoginPage() {
       return;
     }
 
+    login(email);
     setIsError(false);
-    setMessage("Simulated login. Backend authentication coming soon!");
-    console.log("Simulated login with:", { email, password });
+    setMessage("You are now logged in (simulated).");
+    router.push("/areas");
   }
 
   function handleForgotPassword() {
@@ -34,7 +40,6 @@ export default function LoginPage() {
       <h1 className="card-title">Sign in</h1>
 
       <form onSubmit={handleSubmit}>
-        {/* EMAIL */}
         <div className="form-field" style={{ textAlign: "left" }}>
           <label className="form-label" htmlFor="email">
             Email
