@@ -5,7 +5,7 @@ import * as bcrypt from 'bcrypt';
 
 @Injectable()
 export class AuthService {
-  constructor(private prisma: PrismaService, private jwtService: JwtService,) {}
+  constructor(private prisma: PrismaService, private jwtService: JwtService,) { }
 
   async register(email: string, password: string) {
     const exists = await this.prisma.user.findUnique({
@@ -31,20 +31,46 @@ export class AuthService {
   }
 
   async login(email: string, password: string) {
-  const user = await this.prisma.user.findUnique({
-    where: { email }
-  });
+    const user = await this.prisma.user.findUnique({
+      where: { email }
+    });
+    if (!user || !user.passwordHash)
+      throw new UnauthorizedException("Invalid credentials");
+    if (!user) throw new UnauthorizedException("Invalid credentials");
+    const valid = await bcrypt.compare(password, user.passwordHash);
+    if (!valid) throw new UnauthorizedException("Invalid credentials");
+    const payload = { sub: user.id, email: user.email };
+    return {
+      access_token: await this.jwtService.signAsync(payload),
+    };
+  }
 
-  if (!user) throw new UnauthorizedException("Invalid credentials");
-
-  const valid = await bcrypt.compare(password, user.passwordHash);
-  if (!valid) throw new UnauthorizedException("Invalid credentials");
-
-  const payload = { sub: user.id, email: user.email };
-
-  return {
-    access_token: await this.jwtService.signAsync(payload),
-  };
+  async oauthLogin(profile: any) {
+    const { email, provider, providerId, accessToken, refreshToken } = profile;
+    let user = await this.prisma.user.findUnique({
+      where: { email },
+    });
+    if (!user) {
+      user = await this.prisma.user.create({
+        data: {
+          email,
+          provider,
+          providerId,
+          oauthCredentials: {
+            create: {
+              provider,
+              accessToken,
+              refreshToken,
+            },
+          },
+        },
+      });
+    }
+    const payload = { sub: user.id, email: user.email };
+    return {
+      message: "OAuth login successful",
+      access_token: await this.jwtService.signAsync(payload),
+    };
   }
   health() {
     return { status: 'ok', scope: 'auth' };
