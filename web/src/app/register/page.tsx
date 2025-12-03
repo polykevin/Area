@@ -2,8 +2,13 @@
 
 import { FormEvent, useState } from "react";
 import Link from "next/link";
+import { useRouter } from "next/navigation";
+import { useAuth } from "@/components/AuthProvider";
 
 export default function RegisterPage() {
+  const { login } = useAuth();
+  const router = useRouter();
+
   const [email, setEmail] = useState("");
   const [password, setPassword] = useState("");
   const [confirm, setConfirm] = useState("");
@@ -31,9 +36,10 @@ export default function RegisterPage() {
       return;
     }
 
+    login(email);
     setIsError(false);
-    setMessage("Simulated registration. Backend logic will be added later.");
-    console.log("Simulated register with:", { email, password });
+    setMessage("Account created (simulated). You are now logged in.");
+    router.push("/areas");
   }
 
   return (

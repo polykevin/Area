@@ -1,12 +1,27 @@
+"use client";
+
+import { useEffect } from "react";
+import { useRouter } from "next/navigation";
+import { useAuth } from "@/components/AuthProvider";
+
 export default function ServicesPage() {
+  const { user } = useAuth();
+  const router = useRouter();
+
+  useEffect(() => {
+    if (!user) {
+      router.replace("/login");
+    }
+  }, [user, router]);
+
+  if (!user) return null;
+
   return (
     <div>
       <h1>Services</h1>
-      <p style={{ fontSize: "0.9rem", color: "#6b7280" }}>
-        This page will list all services exposed by the AREA backend and indicate
-        whether the current user has connected each service (e.g. Google, GitHub,
-        Outlook...). The web client does not implement integrations itself, it
-        only triggers backend calls.
+      <p>
+        This page will list all services connected to your account. For now, it
+        is protected by a simple simulated authentication layer.
       </p>
     </div>
   );
