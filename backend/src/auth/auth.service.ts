@@ -3,6 +3,14 @@ import { PrismaService } from '../prisma/prisma.service';
 import { JwtService } from '@nestjs/jwt';
 import * as bcrypt from 'bcrypt';
 
+interface OAuthProfile {
+  email: string;
+  provider: string;
+  providerId: string;
+  accessToken: string;
+  refreshToken: string | null;
+}
+
 @Injectable()
 export class AuthService {
   constructor(private prisma: PrismaService, private jwtService: JwtService,) { }
@@ -45,7 +53,7 @@ export class AuthService {
     };
   }
 
-  async oauthLogin(profile: any) {
+  async oauthLogin(profile: OAuthProfile) {
     const { email, provider, providerId, accessToken, refreshToken } = profile;
     let user = await this.prisma.user.findUnique({
       where: { email },
