@@ -147,7 +147,6 @@ export default function RegisterPage() {
           </p>
         )}
 
-        {/* Separator */}
         <div
           style={{
             margin: "1rem 0",
@@ -158,7 +157,6 @@ export default function RegisterPage() {
           — or —
         </div>
 
-        {/* Google Button (Dark, With Border) */}
         <button
           type="button"
           onClick={handleGoogleSignIn}

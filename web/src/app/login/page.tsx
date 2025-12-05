@@ -134,7 +134,6 @@ export default function LoginPage() {
           </p>
         )}
 
-        {/* Separator */}
         <div
           style={{
             margin: "1rem 0",
@@ -145,7 +144,6 @@ export default function LoginPage() {
           — or —
         </div>
 
-        {/* Google Button (Dark, With Border) */}
         <button
           type="button"
           onClick={handleGoogleSignIn}

@@ -11,10 +11,13 @@ type AuthResponse = {
 
 async function safeErrorMessage(res: Response): Promise<string | null> {
   try {
-    const data = await res.json();
-    if (typeof (data as any).message === "string") return (data as any).message;
-    if (Array.isArray((data as any).message))
-      return (data as any).message.join(", ");
+    const data: unknown = await res.json();
+    if (data && typeof data === "object" && "message" in data) {
+      const { message } = data as { message?: unknown };
+      if (typeof message === "string") return message;
+      if (Array.isArray(message) && message.every((m) => typeof m === "string"))
+        return message.join(", ");
+    }
     return null;
   } catch {
     return null;

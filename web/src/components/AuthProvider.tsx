@@ -26,23 +26,31 @@ const AuthContext = createContext<AuthContextValue | undefined>(undefined);
 
 const STORAGE_KEY = "area-auth";
 
+function readStoredAuth(): { user: User | null; token: string | null } {
+  if (typeof window === "undefined") return { user: null, token: null };
+  const raw = window.localStorage.getItem(STORAGE_KEY);
+  if (!raw) return { user: null, token: null };
+  try {
+    const parsed = JSON.parse(raw) as { user?: User; token?: string };
+    if (parsed.user && typeof parsed.token === "string") {
+      return { user: parsed.user, token: parsed.token };
+    }
+  } catch {
+  }
+  return { user: null, token: null };
+}
+
 export function AuthProvider({ children }: { children: ReactNode }) {
-  const [user, setUser] = useState<User | null>(null);
-  const [token, setToken] = useState<string | null>(null);
+  const [authState, setAuthState] = useState<{ user: User | null; token: string | null }>({
+    user: null,
+    token: null,
+  });
+  const { user, token } = authState;
   const [isReady, setIsReady] = useState(false);
 
   useEffect(() => {
-    if (typeof window === "undefined") return;
-
-    const raw = window.localStorage.getItem(STORAGE_KEY);
-    if (raw) {
-      try {
-        const parsed = JSON.parse(raw) as { user: User; token: string };
-        setUser(parsed.user);
-        setToken(parsed.token);
-      } catch {
-      }
-    }
+    const stored = readStoredAuth();
+    setAuthState(stored);
     setIsReady(true);
   }, []);
 
@@ -56,13 +64,11 @@ export function AuthProvider({ children }: { children: ReactNode }) {
   }, [user, token, isReady]);
 
   function loginFromApi(newUser: User, newToken: string) {
-    setUser(newUser);
-    setToken(newToken);
+    setAuthState({ user: newUser, token: newToken });
   }
 
   function logout() {
-    setUser(null);
-    setToken(null);
+    setAuthState({ user: null, token: null });
   }
 
   return (

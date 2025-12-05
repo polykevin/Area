@@ -28,7 +28,7 @@ const avatarStyle: CSSProperties = {
   height: 42,
   borderRadius: "999px",
   background:
-    "conic-gradient(from 160deg, #3b82f6, #a855f7, #22c55e, #3b82f6)",
+    "conic-gradient(from 160deg, #22c55e)",
   opacity: 0.75,
 };
 
@@ -36,7 +36,6 @@ export default function HomePage() {
   return (
     <main style={pageStyle}>
       <section style={heroCardStyle}>
-        {/* Tagline */}
         <p
           style={{
             fontSize: "0.8rem",
@@ -54,7 +53,6 @@ export default function HomePage() {
           <span>Action–REACTION Automation Platform</span>
         </p>
 
-        {/* Title */}
         <h1
           style={{
             fontSize: "3rem",

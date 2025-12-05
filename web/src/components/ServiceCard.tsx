@@ -5,7 +5,7 @@ type ServiceCardProps = {
   description: string;
   category: string;
   isConnected: boolean;
-  logoSrc: string; // path to the logo in /public
+  logoSrc: string;
   actionsCount?: number;
   reactionsCount?: number;
 };
