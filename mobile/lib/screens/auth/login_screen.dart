@@ -66,7 +66,6 @@ class _LoginScreenState extends State<LoginScreen> {
           child: Column(
             mainAxisAlignment: MainAxisAlignment.center,
             children: [
-              // Title
               const Text(
                 "Welcome Back",
                 style: TextStyle(
@@ -77,7 +76,6 @@ class _LoginScreenState extends State<LoginScreen> {
               ),
               const SizedBox(height: 40),
 
-              // Email Field
               AppTextField(
                 controller: _emailCtrl,
                 label: 'Email',
@@ -85,7 +83,6 @@ class _LoginScreenState extends State<LoginScreen> {
               ),
               const SizedBox(height: 16),
 
-              // Password Field
               AppTextField(
                 controller: _passwordCtrl,
                 label: 'Password',
@@ -93,7 +90,6 @@ class _LoginScreenState extends State<LoginScreen> {
               ),
               const SizedBox(height: 16),
 
-              // Error Message
               if (_error != null)
                 Text(
                   _error!,
@@ -101,21 +97,18 @@ class _LoginScreenState extends State<LoginScreen> {
                 ),
               const SizedBox(height: 16),
 
-              // Login Button
               SizedBox(
                 width: double.infinity,
                 child: AppButton(
                   label: 'Login',
                   loading: _loading,
                   onPressed: _submit,
-                  // Add these if your AppButton supports custom colors:
                   backgroundColor: Colors.black,
                   textColor: Colors.white,
                 ),
               ),
               const SizedBox(height: 20),
 
-              // Divider with text
               Row(
                 children: const [
                   Expanded(child: Divider()),
@@ -128,12 +121,21 @@ class _LoginScreenState extends State<LoginScreen> {
               ),
               const SizedBox(height: 20),
 
-              // Google Button
               SizedBox(
                 width: double.infinity,
                 child: ElevatedButton.icon(
-                  onPressed: () {
-                    //google login
+                  onPressed: () async {
+                    final auth = context.read<AuthProvider>();
+                    final err = await auth.loginWithGoogle();
+                    if (!context.mounted) return;
+                    if (err == null) {
+                      // success
+                      Navigator.pushReplacementNamed(context, HomeScreen.routeName);
+                    } else {
+                      ScaffoldMessenger.of(context).showSnackBar(
+                        SnackBar(content: Text(err)),
+                      );
+                    }
                   },
                   style: ElevatedButton.styleFrom(
                     backgroundColor: Colors.white,
@@ -144,32 +146,12 @@ class _LoginScreenState extends State<LoginScreen> {
                       side: const BorderSide(color: Colors.grey),
                     ),
                   ),
-                  icon: Image.asset('assets/icons/google.png',height: 24,),
+                  icon: Image.asset('assets/icons/google.png', height: 24),
                   label: const Text("Continue with Google"),
                 ),
               ),
-              const SizedBox(height: 12),
+              const SizedBox(height: 16),
 
-              // Apple Button
-              SizedBox(
-                width: double.infinity,
-                child: ElevatedButton.icon(
-                  onPressed: () {
-                    // Apple login
-                  },
-                  style: ElevatedButton.styleFrom(
-                    backgroundColor: Colors.black,
-                    foregroundColor: Colors.white,
-                    shape: RoundedRectangleBorder(
-                      borderRadius: BorderRadius.circular(6),
-                    ),
-                    padding: const EdgeInsets.symmetric(vertical: 14),
-                  ),
-                  icon: const Icon(Icons.apple, size: 24),
-                  label: const Text("Continue with Apple"),
-                ),
-              ),
-              // Register Link
               Row(
                 mainAxisAlignment: MainAxisAlignment.center,
                 children: [

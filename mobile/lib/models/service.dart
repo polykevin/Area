@@ -21,12 +21,5 @@ class Service {
       description: json['description'] as String? ?? '',
       connected: json['connected'] as bool? ?? false,
     );
-    // { assumed structure
-    //   "id": "uuid",
-    //   "name": "github",
-    //   "display_name": "GitHub",
-    //   "description": "GitHub integration",
-    //   "connected": true
-    // }
   }
 }

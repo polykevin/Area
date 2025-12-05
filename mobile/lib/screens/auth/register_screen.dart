@@ -6,6 +6,7 @@ import '../home/home_screen.dart';
 import '../../widgets/app_button.dart';
 import '../../widgets/app_text_field.dart';
 
+
 class RegisterScreen extends StatefulWidget {
   static const routeName = 'register';
   const RegisterScreen({super.key});
@@ -70,10 +71,6 @@ class _RegisterScreenState extends State<RegisterScreen> {
               ),
               const SizedBox(height: 40),
 
-              // First Name Field ?
-              // Last Name Field ?
-
-              // Email Field
               AppTextField(
                 controller: _emailCtrl,
                 label: 'Email',
@@ -81,7 +78,6 @@ class _RegisterScreenState extends State<RegisterScreen> {
               ),
               const SizedBox(height: 16),
 
-              // Password Field
               AppTextField(
                 controller: _passwordCtrl,
                 label: 'Password',
@@ -89,7 +85,6 @@ class _RegisterScreenState extends State<RegisterScreen> {
               ),
               const SizedBox(height: 16),
 
-              // Error Message
               if (_error != null)
                 Text(
                   _error!,
@@ -97,7 +92,6 @@ class _RegisterScreenState extends State<RegisterScreen> {
                 ),
               const SizedBox(height: 16),
 
-              // Register Button
               SizedBox(
                 width: double.infinity,
                 child: AppButton(
@@ -111,7 +105,6 @@ class _RegisterScreenState extends State<RegisterScreen> {
               ),
               const SizedBox(height: 20),
 
-              // Divider with text
               Row(
                 children: const [
                   Expanded(child: Divider()),
@@ -124,12 +117,21 @@ class _RegisterScreenState extends State<RegisterScreen> {
               ),
               const SizedBox(height: 20),
 
-              // Social Buttons
               SizedBox(
                 width: double.infinity,
                 child: ElevatedButton.icon(
-                  onPressed: () {
-                    // Google sign-up
+                  onPressed: () async {
+                    final auth = context.read<AuthProvider>();
+                    final err = await auth.loginWithGoogle();
+                    if (!context.mounted) return;
+                    if (err == null) {
+                      // success
+                      Navigator.pushReplacementNamed(context, HomeScreen.routeName);
+                    } else {
+                      ScaffoldMessenger.of(context).showSnackBar(
+                        SnackBar(content: Text(err)),
+                      );
+                    }
                   },
                   style: ElevatedButton.styleFrom(
                     backgroundColor: Colors.white,
@@ -140,27 +142,11 @@ class _RegisterScreenState extends State<RegisterScreen> {
                     ),
                     padding: const EdgeInsets.symmetric(vertical: 14),
                   ),
-                  icon: Image.asset('assets/icons/google.png', height: 24,),
-                  label: const Text("Continue with Google"),
-                ),
-              ),
-              const SizedBox(height: 12),
-              SizedBox(
-                width: double.infinity,
-                child: ElevatedButton.icon(
-                  onPressed: () {
-                    // Apple sign-up
-                  },
-                  style: ElevatedButton.styleFrom(
-                    backgroundColor: Colors.black,
-                    foregroundColor: Colors.white,
-                    shape: RoundedRectangleBorder(
-                      borderRadius: BorderRadius.circular(6),
-                    ),
-                    padding: const EdgeInsets.symmetric(vertical: 14),
+                  icon: Image.asset(
+                    'assets/icons/google.png',
+                    height: 24,
                   ),
-                  icon: const Icon(Icons.apple, size: 24),
-                  label: const Text("Continue with Apple"),
+                  label: const Text("Continue with Google"),
                 ),
               ),
             ],

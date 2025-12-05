@@ -3,7 +3,7 @@ import 'package:provider/provider.dart';
 
 import '../../providers/areas_provider.dart';
 import '../../models/area.dart';
-import './create_area_screen.dart'; // adjust path
+import './create_area_screen.dart';
 
 class AreasScreen extends StatefulWidget {
   const AreasScreen({super.key});
@@ -16,7 +16,6 @@ class _AreasScreenState extends State<AreasScreen> {
   @override
   void initState() {
     super.initState();
-    // load areas once when page opens
     WidgetsBinding.instance.addPostFrameCallback((_) {
       context.read<AreasProvider>().loadAreas();
     });
@@ -128,7 +127,6 @@ class _AreaRow extends StatelessWidget {
       child: Row(
         crossAxisAlignment: CrossAxisAlignment.center,
         children: [
-          // LEFT: black tag -> arrow -> green tag
           Row(
             mainAxisSize: MainAxisSize.min,
             children: [
@@ -148,7 +146,6 @@ class _AreaRow extends StatelessWidget {
 
           const SizedBox(width: 16),
 
-          // MIDDLE: AREA name + labels
           Expanded(
             child: Column(
               crossAxisAlignment: CrossAxisAlignment.start,
@@ -177,7 +174,6 @@ class _AreaRow extends StatelessWidget {
 
           const SizedBox(width: 8),
 
-          // RIGHT: switch + delete + createdAgo
           Column(
             crossAxisAlignment: CrossAxisAlignment.end,
             children: [

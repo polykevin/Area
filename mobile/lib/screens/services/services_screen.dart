@@ -1,10 +1,14 @@
 import 'package:flutter/material.dart';
+import 'package:provider/provider.dart';
+import '../../providers/auth_provider.dart';
+import '../profile/profile_screen.dart';
 
 class ServicesScreen extends StatelessWidget {
   const ServicesScreen({super.key});
 
   @override
   Widget build(BuildContext context) {
+    final auth = context.watch<AuthProvider>();
     final services = [
       {"name": "Spotify", "color": Colors.green},
       {"name": "Youtube", "color": Colors.red},
@@ -17,26 +21,11 @@ class ServicesScreen extends StatelessWidget {
     ];
 
     return Scaffold(
-      appBar: AppBar(
-        elevation: 0,
-        backgroundColor: Colors.white,
-        actions: [
-          Padding(
-            padding: const EdgeInsets.only(right: 16),
-            child: CircleAvatar(
-              radius: 16,
-              backgroundColor: Colors.purple.shade100,
-              child: Icon(Icons.person, color: Colors.purple.shade700),
-            ),
-          )
-        ],
-      ),
       body: Padding(
         padding: const EdgeInsets.symmetric(horizontal: 16),
         child: Column(
           crossAxisAlignment: CrossAxisAlignment.start,
           children: [
-            // Grey header card
             Container(
               height: 160,
               decoration: BoxDecoration(
@@ -56,7 +45,6 @@ class ServicesScreen extends StatelessWidget {
 
             const SizedBox(height: 16),
 
-            // Search bar
             TextField(
               decoration: const InputDecoration(
                 hintText: "Search",
@@ -66,7 +54,6 @@ class ServicesScreen extends StatelessWidget {
 
             const SizedBox(height: 16),
 
-            // Grid
             Expanded(
               child: GridView.count(
                 crossAxisCount: 2,

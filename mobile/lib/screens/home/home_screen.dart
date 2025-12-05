@@ -1,3 +1,5 @@
+import 'dart:io';
+
 import 'package:flutter/material.dart';
 import 'package:provider/provider.dart';
 
@@ -6,6 +8,7 @@ import '../areas/areas_screen.dart';
 import '../services/services_screen.dart';
 import '../auth/login_screen.dart';
 import '../auth/register_screen.dart';
+import '../profile/profile_screen.dart';
 
 class HomeScreen extends StatefulWidget {
   static const routeName = '/home';
@@ -40,14 +43,39 @@ class _HomeScreenState extends State<HomeScreen> {
   Widget build(BuildContext context) {
     final auth = context.watch<AuthProvider>();
 
+    final avatarUrl = auth.avatarUrl;
+    ImageProvider? avatarImage;
+    if (avatarUrl != null) {
+      if (avatarUrl.startsWith('http')) {
+        avatarImage = NetworkImage(avatarUrl);
+      } else {
+        avatarImage = FileImage(File(avatarUrl));
+      }
+    }
+
     return Scaffold(
       appBar: AppBar(
         title: Text('AREA – ${auth.user?.email ?? ''}'),
         actions: [
-          // Login button on top right
-          IconButton(
-            icon: const Icon(Icons.login),
-            onPressed: _goToLogin,
+          Padding(
+            padding: const EdgeInsets.only(right: 12),
+            child: GestureDetector(
+              onTap: () {
+                Navigator.of(context).push(
+                  MaterialPageRoute(
+                    builder: (_) => const ProfileScreen(),
+                  ),
+                );
+              },
+              child: CircleAvatar(
+                radius: 18,
+                backgroundColor: Colors.purple,
+                backgroundImage: avatarImage,
+                child: avatarImage == null
+                    ? const Icon(Icons.person, color: Colors.white)
+                    : null,
+              ),
+            ),
           ),
         ],
       ),
@@ -55,9 +83,8 @@ class _HomeScreenState extends State<HomeScreen> {
         child: ListView(
           padding: EdgeInsets.zero,
           children: [
-            // Drawer header with fixed height
             SizedBox(
-              height: 100, // smaller than default 200
+              height: 100,
               child: DrawerHeader(
                 decoration: const BoxDecoration(color: Colors.blue),
                 child: Align(

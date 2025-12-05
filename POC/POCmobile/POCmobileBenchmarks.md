@@ -1,4 +1,4 @@
-# APK size:
+# APK size: ls -lh build/app/outputs/flutter-apk/app-release.apk
 
 Kotlin APK size = 6.2 MB (debug is 9 MB)
 
@@ -6,7 +6,7 @@ React APK size = 48 MB (debug is 99 MB)
 
 Flutter APK size = 43 MB (debug is 136 MB)
 
-# Cold start time:
+# Cold start time: adb logcat | grep -i "Displayed"
 
 Kotlin: 703ms
 
@@ -14,7 +14,7 @@ React: 502ms
 
 Flutter: 1065ms
 
-# Memory usage when idle:
+# Memory usage when idle: adb shell dumpsys meminfo <package.name> | head -40
 
 Kotlin: 70MB
 

@@ -9,6 +9,13 @@ services:
       - db
     environment:
       DATABASE_URL: "postgresql://area:area@db:5432/area"
+      DB_HOST: "db"
+      DB_PORT: "5432"
+      JWT_SECRET: "supersecretjwtkey"
+      JWT_EXPIRES_IN: "1d"
+      GOOGLE_CLIENT_ID: 1008857371236-3d09ddvj4l7p3deubnufbih0susfpt5a.apps.googleusercontent.com
+      GOOGLE_CLIENT_SECRET: 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
+      GOOGLE_CALLBACK_URL: "http://area-dev.com:8080/auth/google/callback"
     volumes:
       - shared-volume:/shared
   client_mobile:
