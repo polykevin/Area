@@ -3,8 +3,7 @@
 import {
   createContext,
   useContext,
-  useEffect,
-  useState,
+  useSyncExternalStore,
   ReactNode,
 } from "react";
 
@@ -26,7 +25,12 @@ const AuthContext = createContext<AuthContextValue | undefined>(undefined);
 
 const STORAGE_KEY = "area-auth";
 
-function readStoredAuth(): { user: User | null; token: string | null } {
+type AuthSnapshot = { user: User | null; token: string | null; isReady: boolean };
+
+const listeners = new Set<() => void>();
+let authState: AuthSnapshot = { user: null, token: null, isReady: false };
+
+function parseStoredAuth(): { user: User | null; token: string | null } {
   if (typeof window === "undefined") return { user: null, token: null };
   const raw = window.localStorage.getItem(STORAGE_KEY);
   if (!raw) return { user: null, token: null };
@@ -40,35 +44,66 @@ function readStoredAuth(): { user: User | null; token: string | null } {
   return { user: null, token: null };
 }
 
-export function AuthProvider({ children }: { children: ReactNode }) {
-  const [authState, setAuthState] = useState<{ user: User | null; token: string | null }>({
-    user: null,
-    token: null,
-  });
-  const { user, token } = authState;
-  const [isReady, setIsReady] = useState(false);
+function loadClientAuth() {
+  const { user, token } = parseStoredAuth();
+  authState = { user, token, isReady: true };
+}
 
-  useEffect(() => {
-    const stored = readStoredAuth();
-    setAuthState(stored);
-    setIsReady(true);
-  }, []);
+function getServerSnapshot(): AuthSnapshot {
+  return { user: null, token: null, isReady: false };
+}
 
-  useEffect(() => {
-    if (!isReady || typeof window === "undefined") return;
-    if (user && token) {
-      window.localStorage.setItem(STORAGE_KEY, JSON.stringify({ user, token }));
-    } else {
-      window.localStorage.removeItem(STORAGE_KEY);
+function getClientSnapshot(): AuthSnapshot {
+  return authState;
+}
+
+function subscribe(callback: () => void) {
+  listeners.add(callback);
+
+  if (typeof window !== "undefined") {
+    if (!authState.isReady) {
+      loadClientAuth();
+      queueMicrotask(() => notifyListeners());
     }
-  }, [user, token, isReady]);
+    const handleStorage = () => {
+      loadClientAuth();
+      notifyListeners();
+    };
+    window.addEventListener("storage", handleStorage);
+    return () => {
+      listeners.delete(callback);
+      window.removeEventListener("storage", handleStorage);
+    };
+  }
+
+  return () => listeners.delete(callback);
+}
+
+function notifyListeners() {
+  listeners.forEach((cb) => cb());
+}
+
+export function AuthProvider({ children }: { children: ReactNode }) {
+  const { user, token, isReady } = useSyncExternalStore(
+    subscribe,
+    getClientSnapshot,
+    getServerSnapshot,
+  );
 
   function loginFromApi(newUser: User, newToken: string) {
-    setAuthState({ user: newUser, token: newToken });
+    if (typeof window !== "undefined") {
+      window.localStorage.setItem(STORAGE_KEY, JSON.stringify({ user: newUser, token: newToken }));
+    }
+    authState = { user: newUser, token: newToken, isReady: true };
+    notifyListeners();
   }
 
   function logout() {
-    setAuthState({ user: null, token: null });
+    if (typeof window !== "undefined") {
+      window.localStorage.removeItem(STORAGE_KEY);
+    }
+    authState = { user: null, token: null, isReady: true };
+    notifyListeners();
   }
 
   return (
