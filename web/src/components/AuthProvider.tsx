@@ -9,53 +9,66 @@ import {
 } from "react";
 
 type User = {
+  id?: string | number;
   email: string;
+  name?: string;
 };
 
 type AuthContextValue = {
   user: User | null;
-  login: (email: string) => void;
+  token: string | null;
+  loginFromApi: (user: User, token: string) => void;
   logout: () => void;
+  isReady: boolean;
 };
 
 const AuthContext = createContext<AuthContextValue | undefined>(undefined);
 
+const STORAGE_KEY = "area-auth";
+
 export function AuthProvider({ children }: { children: ReactNode }) {
-  const [user, setUser] = useState<User | null>(() => {
-    // Initialisation côté client uniquement
-    if (typeof window === "undefined") return null;
+  const [user, setUser] = useState<User | null>(null);
+  const [token, setToken] = useState<string | null>(null);
+  const [isReady, setIsReady] = useState(false);
 
-    const raw = window.localStorage.getItem("area-user");
-    if (!raw) return null;
-
-    try {
-      return JSON.parse(raw) as User;
-    } catch {
-      return null;
-    }
-  });
-
-  // Synchroniser le user vers localStorage quand il change
   useEffect(() => {
     if (typeof window === "undefined") return;
 
-    if (user) {
-      window.localStorage.setItem("area-user", JSON.stringify(user));
-    } else {
-      window.localStorage.removeItem("area-user");
+    const raw = window.localStorage.getItem(STORAGE_KEY);
+    if (raw) {
+      try {
+        const parsed = JSON.parse(raw) as { user: User; token: string };
+        setUser(parsed.user);
+        setToken(parsed.token);
+      } catch {
+      }
     }
-  }, [user]);
+    setIsReady(true);
+  }, []);
 
-  function login(email: string) {
-    setUser({ email });
+  useEffect(() => {
+    if (!isReady || typeof window === "undefined") return;
+    if (user && token) {
+      window.localStorage.setItem(STORAGE_KEY, JSON.stringify({ user, token }));
+    } else {
+      window.localStorage.removeItem(STORAGE_KEY);
+    }
+  }, [user, token, isReady]);
+
+  function loginFromApi(newUser: User, newToken: string) {
+    setUser(newUser);
+    setToken(newToken);
   }
 
   function logout() {
     setUser(null);
+    setToken(null);
   }
 
   return (
-    <AuthContext.Provider value={{ user, login, logout }}>
+    <AuthContext.Provider
+      value={{ user, token, loginFromApi, logout, isReady }}
+    >
       {children}
     </AuthContext.Provider>
   );
