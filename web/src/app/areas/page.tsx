@@ -1,35 +1,36 @@
 "use client";
 
+import Link from "next/link";
 import { useEffect } from "react";
 import { useRouter } from "next/navigation";
-import Link from "next/link";
 import { useAuth } from "@/components/AuthProvider";
+import type { Area } from "@/types/area";
 import { AreaCard } from "@/components/AreaCard";
 
-const MOCK_AREAS = [
+const MOCK_AREAS: Area[] = [
   {
-    name: "GitHub → Discord alerts",
-    description:
-      "Notify a Discord channel whenever a new commit is pushed on the main branch.",
-    trigger: "a new commit is pushed on GitHub (main branch)",
-    reaction: "send a message to a specific Discord channel",
-    enabled: true,
+    id: "1",
+    name: "Sync GitHub issues to Discord",
+    description: "When a new issue is created on GitHub, send a message to Discord.",
+    status: "active",
+    triggerService: "GitHub",
+    triggerAction: "New issue in repository",
+    reactionService: "Discord",
+    reactionAction: "Send message to channel",
+    createdAt: new Date().toISOString(),
+    triggerType: "webhook",
   },
   {
-    name: "New Gmail label → Drive backup",
-    description:
-      "When an email is labeled 'Invoices', automatically save its attachments to Google Drive.",
-    trigger: "an email receives the label 'Invoices' in Gmail",
-    reaction: "upload all attachments to a Drive folder",
-    enabled: false,
-  },
-  {
-    name: "GitHub issue → Gmail notification",
-    description:
-      "Alert via Gmail when a new issue is created on a monitored repository.",
-    trigger: "a new issue is opened on a GitHub repository",
-    reaction: "send a summary email to your inbox",
-    enabled: true,
+    id: "2",
+    name: "Morning summary by email",
+    description: "Every day at 8 AM, send me a summary email.",
+    status: "paused",
+    triggerService: "Scheduler",
+    triggerAction: "Every day at 08:00",
+    reactionService: "Gmail",
+    reactionAction: "Send email",
+    createdAt: new Date().toISOString(),
+    triggerType: "polling",
   },
 ];
 
@@ -42,65 +43,79 @@ export default function AreasPage() {
     if (!user) {
       router.replace("/login");
     }
-  }, [user, isReady, router]);
+  }, [isReady, user, router]);
 
   if (!isReady || !user) {
     return null;
   }
 
-  const enabledCount = MOCK_AREAS.filter((a) => a.enabled).length;
+  const areas: Area[] = MOCK_AREAS;
 
   return (
-    <main
+    <div
       style={{
-        minHeight: "100vh",
-        padding: "6rem 3rem 3rem",
-        backgroundColor: "#020617",
+        paddingTop: "6rem",
+        paddingBottom: "3rem",
+        maxWidth: 960,
+        margin: "0 auto",
         color: "#e5e7eb",
       }}
     >
-      {/* Header */}
       <header
         style={{
-          textAlign: "center",
-          maxWidth: 720,
-          marginInline: "auto",
-          marginBottom: "2rem",
+          display: "flex",
+          justifyContent: "space-between",
+          alignItems: "center",
+          marginBottom: "1.5rem",
         }}
       >
-        <h1
+        <div>
+          <h1
+            style={{
+              fontSize: "1.8rem",
+              fontWeight: 600,
+              marginBottom: "0.3rem",
+            }}
+          >
+            My AREAs
+          </h1>
+          <p style={{ fontSize: "0.9rem", color: "#9ca3af" }}>
+            Automations that connect your services together.
+          </p>
+        </div>
+
+        <Link href="/areas/new">
+          <button
+            type="button"
+            style={{
+              padding: "0.55rem 1.1rem",
+              borderRadius: 999,
+              border: "none",
+              background: "#2563eb",
+              color: "#f9fafb",
+              fontSize: "0.9rem",
+              fontWeight: 500,
+              cursor: "pointer",
+            }}
+          >
+            + New AREA
+          </button>
+        </Link>
+      </header>
+
+      {areas.length === 0 ? (
+        <div
           style={{
-            fontSize: "1.8rem",
-            fontWeight: 600,
-            marginBottom: "0.5rem",
+            borderRadius: 18,
+            border: "1px dashed rgba(148,163,184,0.5)",
+            padding: "1.5rem",
+            textAlign: "center",
+            background: "rgba(15,23,42,0.8)",
           }}
         >
-          My AREA
-        </h1>
-
-        <p
-          style={{
-            fontSize: "0.9rem",
-            color: "#cbd5e1",
-            marginBottom: "0.75rem",
-          }}
-        >
-          An AREA links one <strong>Action</strong> to one{" "}
-          <strong>REAction</strong>.
-        </p>
-
-        <p
-          style={{
-            fontSize: "0.8rem",
-            color: "#94a3b8",
-            marginBottom: "1.2rem",
-          }}
-        >
-          <strong>{enabledCount}</strong> enabled ·{" "}
-          <strong>{MOCK_AREAS.length}</strong> total
-        </p>
-
-        <div style={{ marginTop: "0.3rem" }}>
+          <p style={{ marginBottom: "0.7rem" }}>
+            You do not have any AREA yet.
+          </p>
           <Link href="/areas/new">
             <button
               type="button"
@@ -109,31 +124,28 @@ export default function AreasPage() {
                 borderRadius: 999,
                 border: "none",
                 background: "#2563eb",
-                color: "#f9fafb",
+                color: "#fff",
                 fontSize: "0.85rem",
-                fontWeight: 500,
                 cursor: "pointer",
               }}
             >
-              + Create a new AREA
+              Create your first AREA
             </button>
           </Link>
         </div>
-      </header>
-
-      <section
-        style={{
-          display: "grid",
-          gridTemplateColumns: "repeat(auto-fit, minmax(280px, 1fr))",
-          gap: "1rem",
-          maxWidth: 960,
-          marginInline: "auto",
-        }}
-      >
-        {MOCK_AREAS.map((area) => (
-          <AreaCard key={area.name} {...area} />
-        ))}
-      </section>
-    </main>
+      ) : (
+        <div
+          style={{
+            display: "grid",
+            gridTemplateColumns: "repeat(auto-fit, minmax(260px, 1fr))",
+            gap: "1rem",
+          }}
+        >
+          {areas.map((area) => (
+            <AreaCard key={area.id} area={area} />
+          ))}
+        </div>
+      )}
+    </div>
   );
 }
