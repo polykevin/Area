@@ -1,4 +1,8 @@
-import { Injectable, ConflictException, UnauthorizedException } from '@nestjs/common';
+import {
+  Injectable,
+  ConflictException,
+  UnauthorizedException,
+} from '@nestjs/common';
 import { PrismaService } from '../prisma/prisma.service';
 import { JwtService } from '@nestjs/jwt';
 import * as bcrypt from 'bcrypt';
@@ -13,7 +17,10 @@ interface OAuthProfile {
 
 @Injectable()
 export class AuthService {
-  constructor(private prisma: PrismaService, private jwtService: JwtService,) { }
+  constructor(
+    private prisma: PrismaService,
+    private jwtService: JwtService,
+  ) {}
 
   async register(email: string, password: string) {
     const exists = await this.prisma.user.findUnique({
@@ -23,7 +30,9 @@ export class AuthService {
     if (exists) {
       throw new ConflictException('Email already taken');
     }
+
     const passwordHash = await bcrypt.hash(password, 10);
+
     const user = await this.prisma.user.create({
       data: {
         email,
@@ -31,33 +40,54 @@ export class AuthService {
         provider: 'local',
       },
     });
+
+    const payload = { sub: user.id, email: user.email };
+    const access_token = await this.jwtService.signAsync(payload);
+
     return {
-      id: user.id,
-      email: user.email,
-      createdAt: user.createdAt,
+      access_token,
+      user: {
+        id: user.id,
+        email: user.email,
+        createdAt: user.createdAt,
+      },
     };
   }
 
   async login(email: string, password: string) {
     const user = await this.prisma.user.findUnique({
-      where: { email }
+      where: { email },
     });
-    if (!user || !user.passwordHash)
-      throw new UnauthorizedException("Invalid credentials");
-    if (!user) throw new UnauthorizedException("Invalid credentials");
+
+    if (!user || !user.passwordHash) {
+      throw new UnauthorizedException('Invalid credentials');
+    }
+
     const valid = await bcrypt.compare(password, user.passwordHash);
-    if (!valid) throw new UnauthorizedException("Invalid credentials");
+    if (!valid) {
+      throw new UnauthorizedException('Invalid credentials');
+    }
+
     const payload = { sub: user.id, email: user.email };
+    const access_token = await this.jwtService.signAsync(payload);
+
     return {
-      access_token: await this.jwtService.signAsync(payload),
+      access_token,
+      user: {
+        id: user.id,
+        email: user.email,
+        createdAt: user.createdAt,
+      },
     };
   }
 
   async oauthLogin(profile: OAuthProfile) {
     const { email, provider, providerId, accessToken, refreshToken } = profile;
+
     let user = await this.prisma.user.findUnique({
       where: { email },
     });
+
     if (!user) {
       user = await this.prisma.user.create({
         data: {
@@ -74,12 +104,21 @@ export class AuthService {
         },
       });
     }
+
     const payload = { sub: user.id, email: user.email };
+    const access_token = await this.jwtService.signAsync(payload);
+
     return {
-      message: "OAuth login successful",
-      access_token: await this.jwtService.signAsync(payload),
+      message: 'OAuth login successful',
+      access_token,
+      user: {
+        id: user.id,
+        email: user.email,
+        createdAt: user.createdAt,
+      },
     };
   }
+
   health() {
     return { status: 'ok', scope: 'auth' };
   }
