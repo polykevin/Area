@@ -47,12 +47,18 @@ export default function RegisterPage() {
 
       loginFromApi(res.user, res.access_token);
       router.push("/areas");
-    } catch (err: any) {
+    } catch (err) {
+      const message =
+        err instanceof Error ? err.message : "Registration failed.";
       setIsError(true);
-      setMessage(err?.message || "Registration failed.");
+      setMessage(message);
     } finally {
       setIsSubmitting(false);
     }
+  }
+
+  function handleGoogleSignIn() {
+    window.location.href = `${process.env.NEXT_PUBLIC_API_URL}/auth/google`;
   }
 
   return (
@@ -140,6 +146,36 @@ export default function RegisterPage() {
             {message}
           </p>
         )}
+
+        {/* Separator */}
+        <div
+          style={{
+            margin: "1rem 0",
+            color: "#94a3b8",
+            fontSize: "0.8rem",
+          }}
+        >
+          — or —
+        </div>
+
+        {/* Google Button (Dark, With Border) */}
+        <button
+          type="button"
+          onClick={handleGoogleSignIn}
+          style={{
+            width: "100%",
+            background: "rgba(15,23,42,0.9)",
+            color: "#f9fafb",
+            borderRadius: 999,
+            padding: "0.55rem",
+            border: "1px solid rgba(148,163,184,0.6)",
+            fontSize: "0.85rem",
+            fontWeight: 500,
+            cursor: "pointer",
+          }}
+        >
+          Continue with Google
+        </button>
 
         <p className="card-footer">
           Already have an account?{" "}
