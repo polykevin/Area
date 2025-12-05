@@ -58,43 +58,112 @@ class _LoginScreenState extends State<LoginScreen> {
   @override
   Widget build(BuildContext context) {
     return Scaffold(
-      appBar: AppBar(title: const Text('AREA – Login')),
-      body: Padding(
-        padding: const EdgeInsets.all(16.0),
-        child: Column(
-          children: [
-            AppTextField(
-              controller: _emailCtrl,
-              label: 'Email',
-              keyboardType: TextInputType.emailAddress,
-            ),
-            const SizedBox(height: 16),
-            AppTextField(
-              controller: _passwordCtrl,
-              label: 'Password',
-              obscureText: true,
-            ),
-            const SizedBox(height: 16),
-            if (_error != null)
-              Text(
-                _error!,
-                style: const TextStyle(color: Colors.red),
+      backgroundColor: Colors.grey[100],
+      appBar: AppBar(title: const Text('Login')),
+      body: Center(
+        child: SingleChildScrollView(
+          padding: const EdgeInsets.all(24.0),
+          child: Column(
+            mainAxisAlignment: MainAxisAlignment.center,
+            children: [
+              const Text(
+                "Welcome Back",
+                style: TextStyle(
+                  fontSize: 28,
+                  fontWeight: FontWeight.bold,
+                  color: Colors.black87,
+                ),
               ),
-            const SizedBox(height: 16),
-            SizedBox(
-              width: double.infinity,
-              child: AppButton(
-                label: 'Login',
-                loading: _loading,
-                onPressed: _submit,
+              const SizedBox(height: 40),
+
+              AppTextField(
+                controller: _emailCtrl,
+                label: 'Email',
+                keyboardType: TextInputType.emailAddress,
               ),
-            ),
-            const SizedBox(height: 16),
-            TextButton(
-              onPressed: _goToRegister,
-              child: const Text("Don't have an account? Register"),
-            ),
-          ],
+              const SizedBox(height: 16),
+
+              AppTextField(
+                controller: _passwordCtrl,
+                label: 'Password',
+                obscureText: true,
+              ),
+              const SizedBox(height: 16),
+
+              if (_error != null)
+                Text(
+                  _error!,
+                  style: const TextStyle(color: Colors.red),
+                ),
+              const SizedBox(height: 16),
+
+              SizedBox(
+                width: double.infinity,
+                child: AppButton(
+                  label: 'Login',
+                  loading: _loading,
+                  onPressed: _submit,
+                  backgroundColor: Colors.black,
+                  textColor: Colors.white,
+                ),
+              ),
+              const SizedBox(height: 20),
+
+              Row(
+                children: const [
+                  Expanded(child: Divider()),
+                  Padding(
+                    padding: EdgeInsets.symmetric(horizontal: 8.0),
+                    child: Text("or"),
+                  ),
+                  Expanded(child: Divider()),
+                ],
+              ),
+              const SizedBox(height: 20),
+
+              SizedBox(
+                width: double.infinity,
+                child: ElevatedButton.icon(
+                  onPressed: () async {
+                    final auth = context.read<AuthProvider>();
+                    final err = await auth.loginWithGoogle();
+                    if (!context.mounted) return;
+                    if (err == null) {
+                      // success
+                      Navigator.pushReplacementNamed(context, HomeScreen.routeName);
+                    } else {
+                      ScaffoldMessenger.of(context).showSnackBar(
+                        SnackBar(content: Text(err)),
+                      );
+                    }
+                  },
+                  style: ElevatedButton.styleFrom(
+                    backgroundColor: Colors.white,
+                    foregroundColor: Colors.black87,
+                    padding: const EdgeInsets.symmetric(vertical: 14),
+                    shape: RoundedRectangleBorder(
+                      borderRadius: BorderRadius.circular(6),
+                      side: const BorderSide(color: Colors.grey),
+                    ),
+                  ),
+                  icon: Image.asset('assets/icons/google.png', height: 24),
+                  label: const Text("Continue with Google"),
+                ),
+              ),
+              const SizedBox(height: 16),
+
+              Row(
+                mainAxisAlignment: MainAxisAlignment.center,
+                children: [
+                  const Text("Don't have an account?"),
+                  TextButton(
+                    onPressed: _goToRegister,
+                    child: const Text("Register"),
+                  ),
+                ],
+              ),
+            ],
+          ),
         ),
       ),
     );

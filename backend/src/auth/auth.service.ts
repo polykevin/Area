@@ -6,6 +6,7 @@ import {
 import { PrismaService } from '../prisma/prisma.service';
 import { JwtService } from '@nestjs/jwt';
 import * as bcrypt from 'bcrypt';
+import { OAuth2Client } from 'google-auth-library';
 
 interface OAuthProfile {
   email: string;
@@ -80,7 +81,6 @@ export class AuthService {
       },
     };
   }
-
   async oauthLogin(profile: OAuthProfile) {
     const { email, provider, providerId, accessToken, refreshToken } = profile;
 
@@ -119,6 +119,54 @@ export class AuthService {
     };
   }
 
+  private googleClient = new OAuth2Client(
+    '1008857371236-3d09ddvj4l7p3deubnufbih0susfpt5a.apps.googleusercontent.com'
+  );
+
+  async oauthLoginWithIdToken(idToken: string) {
+    const ticket = await this.googleClient.verifyIdToken({
+      idToken,
+      audience: '1008857371236-3d09ddvj4l7p3deubnufbih0susfpt5a.apps.googleusercontent.com',
+    });
+
+    const payload = ticket.getPayload();
+
+    if (!payload || !payload.email || !payload.sub) {
+      throw new UnauthorizedException('Invalid Google token');
+    }
+
+    const email = payload.email;
+    const provider = 'google';
+    const providerId = payload.sub;
+
+    let user = await this.prisma.user.findUnique({
+      where: { email },
+    });
+
+    if (!user) {
+      user = await this.prisma.user.create({
+        data: {
+          email,
+          provider,
+          providerId,
+          oauthCredentials: {
+            create: {
+              provider,
+              accessToken: '',
+              refreshToken: '',
+            },
+          },
+        },
+      });
+    }
+
+    const tokenPayload = { sub: user.id, email: user.email };
+
+    return {
+      message: "Google mobile login successful",
+      access_token: await this.jwtService.signAsync(tokenPayload),
+    };
+  }
   health() {
     return { status: 'ok', scope: 'auth' };
   }

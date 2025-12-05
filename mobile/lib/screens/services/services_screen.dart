@@ -1,99 +1,88 @@
 import 'package:flutter/material.dart';
 import 'package:provider/provider.dart';
+import '../../providers/auth_provider.dart';
+import '../profile/profile_screen.dart';
 
-import '../../providers/services_provider.dart';
-import '../../models/service.dart';
-
-class ServicesScreen extends StatefulWidget {
+class ServicesScreen extends StatelessWidget {
   const ServicesScreen({super.key});
 
   @override
-  State<ServicesScreen> createState() => _ServicesScreenState();
-}
-
-class _ServicesScreenState extends State<ServicesScreen> {
-  @override
-  void initState() {
-    super.initState();
-    Future.microtask(() {
-      final provider = context.read<ServicesProvider>();
-      provider.loadServices(); // mockIfFail = true
-    });
-  }
-
-  @override
   Widget build(BuildContext context) {
-    final provider = context.watch<ServicesProvider>();
+    final auth = context.watch<AuthProvider>();
+    final services = [
+      {"name": "Spotify", "color": Colors.green},
+      {"name": "Youtube", "color": Colors.red},
+      {"name": "Github", "color": Colors.black},
+      {"name": "Outlook", "color": Colors.blue},
+      {"name": "Soundcloud", "color": Colors.orange},
+      {"name": "Twitch", "color": Colors.purple},
+      {"name": "Instagram", "color": Colors.pink},
+      {"name": "X", "color": Colors.black},
+    ];
 
-    if (provider.loading && provider.services.isEmpty) {
-      return const Center(child: CircularProgressIndicator());
-    }
-
-    return RefreshIndicator(
-      onRefresh: () => provider.loadServices(mockIfFail: false),
-      child: ListView.builder(
-        padding: const EdgeInsets.all(12),
-        itemCount: provider.services.length + (provider.error != null ? 1 : 0),
-        itemBuilder: (context, index) {
-          if (provider.error != null && index == 0) {
-            //show error
-            return Padding(
-              padding: const EdgeInsets.only(bottom: 8.0),
-              child: Card(
-                color: Colors.amber.shade100,
-                child: Padding(
-                  padding: const EdgeInsets.all(8.0),
-                  child: Text(
-                    provider.error!,
-                    style: const TextStyle(color: Colors.black87),
+    return Scaffold(
+      body: Padding(
+        padding: const EdgeInsets.symmetric(horizontal: 16),
+        child: Column(
+          crossAxisAlignment: CrossAxisAlignment.start,
+          children: [
+            Container(
+              height: 160,
+              decoration: BoxDecoration(
+                color: Colors.grey.shade300,
+                borderRadius: BorderRadius.circular(16),
+              ),
+              child: const Center(
+                child: Text(
+                  "SERVICES",
+                  style: TextStyle(
+                    fontSize: 28,
+                    fontWeight: FontWeight.bold,
                   ),
                 ),
               ),
-            );
-          }
-
-          final offset = provider.error != null ? 1 : 0;
-          final Service service = provider.services[index - offset];
-
-          return Card(
-            child: ListTile(
-              leading: CircleAvatar(
-                child: Text(
-                  service.displayName.isNotEmpty
-                      ? service.displayName[0]
-                      : service.name[0],
-                ),
-              ),
-              title: Text(service.displayName),
-              subtitle: Text(service.description),
-              trailing: _buildTrailingButton(context, provider, service),
             ),
-          );
-        },
-      ),
-    );
-  }
 
-  Widget _buildTrailingButton(
-      BuildContext context,
-      ServicesProvider provider,
-      Service service,
-      ) {
-    final isConnected = service.connected;
+            const SizedBox(height: 16),
 
-    return TextButton.icon(
-      onPressed: () {
-        if (isConnected) {
-          provider.disconnect(service.name);
-        } else {
-          provider.connect(service.name);
-        }
-      },
-      icon: Icon(
-        isConnected ? Icons.check_circle : Icons.link,
-        color: isConnected ? Colors.green : Colors.blue,
+            TextField(
+              decoration: const InputDecoration(
+                hintText: "Search",
+                prefixIcon: Icon(Icons.search),
+              ),
+            ),
+
+            const SizedBox(height: 16),
+
+            Expanded(
+              child: GridView.count(
+                crossAxisCount: 2,
+                crossAxisSpacing: 16,
+                mainAxisSpacing: 16,
+                childAspectRatio: 1.6,
+                children: services.map((s) {
+                  return Container(
+                    decoration: BoxDecoration(
+                      color: s["color"] as Color,
+                      borderRadius: BorderRadius.circular(12),
+                    ),
+                    child: Center(
+                      child: Text(
+                        s["name"] as String,
+                        style: const TextStyle(
+                          fontSize: 18,
+                          fontWeight: FontWeight.w600,
+                          color: Colors.white,
+                        ),
+                      ),
+                    ),
+                  );
+                }).toList(),
+              ),
+            ),
+          ],
+        ),
       ),
-      label: Text(isConnected ? 'Connected' : 'Connect'),
     );
   }
 }
