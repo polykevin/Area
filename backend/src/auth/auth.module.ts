@@ -1,22 +1,28 @@
 import { Module } from '@nestjs/common';
 import { JwtModule } from '@nestjs/jwt';
-import type { StringValue } from "ms";
-import { AuthService } from './auth.service';
-import { JwtStrategy } from './jwt.strategy';
-import { PrismaService } from '../prisma/prisma.service';
-import { GoogleStrategy } from "./google.strategy";
-import { AuthController } from './auth.controller';
+import { PassportModule } from '@nestjs/passport';
 
-const expiresIn: StringValue = (process.env.JWT_EXPIRES_IN as StringValue) ?? "1d";
+import { AuthService } from './auth.service';
+import { AuthController } from './auth.controller';
+import { PrismaModule } from '../prisma/prisma.module';
+import { JwtStrategy } from './jwt.strategy';
+// import { GoogleStrategy } from './google.strategy';
 
 @Module({
   imports: [
+    PrismaModule,
+    PassportModule,
     JwtModule.register({
-      secret: process.env.JWT_SECRET ?? "",
-      signOptions: { expiresIn },
+      secret: 'dev-secret-key-area',
+      signOptions: { expiresIn: '1h' },
     }),
   ],
   controllers: [AuthController],
-  providers: [AuthService, GoogleStrategy, JwtStrategy, PrismaService],
+  providers: [
+    AuthService,
+    JwtStrategy,
+    // GoogleStrategy,
+  ],
+  exports: [JwtModule],
 })
 export class AuthModule {}
