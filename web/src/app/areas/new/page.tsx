@@ -1,12 +1,28 @@
+"use client";
+
+import { useEffect } from "react";
+import { useRouter } from "next/navigation";
+import { useAuth } from "@/components/AuthProvider";
+import { AreaWizard } from "@/components/AreaWizard";
+
 export default function NewAreaPage() {
+  const { user, isReady } = useAuth();
+  const router = useRouter();
+
+  useEffect(() => {
+    if (!isReady) return;
+    if (!user) {
+      router.replace("/login");
+    }
+  }, [user, isReady, router]);
+
+  if (!isReady || !user) {
+    return null;
+  }
+
   return (
     <div>
-      <h1>New AREA</h1>
-      <p style={{ fontSize: "0.9rem", color: "#6b7280" }}>
-        This page will host a simple wizard: the user selects one Action and one
-        Reaction from the available services. The configuration will then be sent
-        to the backend to create a new AREA.
-      </p>
+      <AreaWizard />
     </div>
   );
 }

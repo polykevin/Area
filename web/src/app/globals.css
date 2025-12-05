@@ -23,8 +23,9 @@ body {
 
 .app-root {
   width: 100%;
-  max-width: 420px;
-  padding: 1.5rem;
+  max-width: 1120px;
+  margin: 0 auto;
+  padding: 5rem 2rem 2.5rem;
 }
 
 .card {
@@ -94,7 +95,6 @@ body {
   transform: translateY(1px);
 }
 
-/* Messages */
 .message {
   margin-top: 0.8rem;
   font-size: 0.85rem;

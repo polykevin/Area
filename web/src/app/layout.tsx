@@ -11,17 +11,10 @@ export const metadata = {
 export default function RootLayout({ children }: { children: ReactNode }) {
   return (
     <html lang="en">
-      <body>
+      <body style={{ minHeight: "100vh", backgroundColor: "#020617" }}>
         <AuthProvider>
           <Navbar />
-          <main
-            style={{
-              minHeight: "100vh",
-              display: "flex",
-              justifyContent: "center",
-              alignItems: "center",
-            }}
-          >
+          <main>
             <div className="app-root">{children}</div>
           </main>
         </AuthProvider>
