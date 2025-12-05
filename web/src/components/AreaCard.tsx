@@ -1,128 +1,100 @@
-type AreaCardProps = {
-  name: string;
-  description: string;
-  trigger: string;
-  reaction: string;
-  enabled: boolean;
+"use client";
+
+import type { Area } from "@/types/area";
+
+type Props = {
+  area: Area;
 };
 
-export function AreaCard({
-  name,
-  description,
-  trigger,
-  reaction,
-  enabled,
-}: AreaCardProps) {
+export function AreaCard({ area }: Props) {
+  const isActive = area.status === "active";
+
   return (
-    <article
+    <div
       style={{
-        borderRadius: 18,
+        borderRadius: 16,
         border: "1px solid rgba(148,163,184,0.35)",
-        padding: "1rem 1.25rem",
+        padding: "1rem 1.2rem",
         background: "rgba(15,23,42,0.95)",
         display: "flex",
         flexDirection: "column",
-        gap: "0.6rem",
+        gap: "0.3rem",
       }}
     >
-      <header
+      <div
         style={{
           display: "flex",
           justifyContent: "space-between",
           alignItems: "center",
-          gap: "0.5rem",
+          gap: "0.75rem",
         }}
       >
         <h3
           style={{
-            margin: 0,
             fontSize: "1rem",
-            fontWeight: 600,
-            color: "#f9fafb",
+            fontWeight: 500,
+            color: "#e5e7eb",
           }}
         >
-          {name}
+          {area.name}
         </h3>
 
         <span
           style={{
             fontSize: "0.75rem",
-            padding: "0.2rem 0.7rem",
+            padding: "0.2rem 0.6rem",
             borderRadius: 999,
-            border: "1px solid rgba(148,163,184,0.5)",
-            color: enabled ? "#4ade80" : "#e5e7eb",
-            background: enabled ? "rgba(22,163,74,0.15)" : "rgba(15,23,42,1)",
-            whiteSpace: "nowrap",
+            border: isActive
+              ? "1px solid rgba(52,211,153,0.5)"
+              : "1px solid rgba(148,163,184,0.4)",
+            color: isActive ? "#6ee7b7" : "#9ca3af",
+            background: isActive
+              ? "rgba(22,163,74,0.15)"
+              : "rgba(30,64,175,0.15)",
           }}
         >
-          {enabled ? "Enabled" : "Disabled"}
+          {isActive ? "Active" : "Paused"}
         </span>
-      </header>
+      </div>
+
+      {area.description && (
+        <p
+          style={{
+            fontSize: "0.85rem",
+            color: "#9ca3af",
+            marginTop: "0.15rem",
+          }}
+        >
+          {area.description}
+        </p>
+      )}
 
       <p
         style={{
-          margin: 0,
-          fontSize: "0.85rem",
-          color: "#cbd5e1",
+          fontSize: "0.8rem",
+          color: "#cbd5f5",
+          marginTop: "0.25rem",
         }}
       >
-        {description}
+        <strong>When</strong> {area.triggerService} / {area.triggerAction}
+        <br />
+        <strong>Then</strong> {area.reactionService} / {area.reactionAction}
       </p>
 
-      <div
+      <p
         style={{
-          marginTop: "0.4rem",
-          fontSize: "0.85rem",
-          color: "#e5e7eb",
+          fontSize: "0.75rem",
+          color: "#64748b",
+          marginTop: "0.35rem",
         }}
       >
-        <p style={{ margin: 0 }}>
-          <span style={{ color: "#60a5fa", fontWeight: 500 }}>When</span>{" "}
-          {trigger}
-        </p>
-        <p style={{ margin: 0 }}>
-          <span style={{ color: "#22c55e", fontWeight: 500 }}>Then</span>{" "}
-          {reaction}
-        </p>
-      </div>
-
-      <div
-        style={{
-          marginTop: "0.7rem",
-          display: "flex",
-          justifyContent: "space-between",
-          gap: "0.75rem",
-          fontSize: "0.8rem",
-        }}
-      >
-        <button
-          type="button"
-          style={{
-            padding: "0.4rem 0.9rem",
-            borderRadius: 999,
-            border: "1px solid rgba(148,163,184,0.6)",
-            background: "transparent",
-            color: "#f9fafb",
-            cursor: "pointer",
-          }}
-        >
-          Edit
-        </button>
-
-        <button
-          type="button"
-          style={{
-            padding: "0.4rem 0.9rem",
-            borderRadius: 999,
-            border: "none",
-            background: enabled ? "#ef4444" : "#22c55e",
-            color: "#f9fafb",
-            cursor: "pointer",
-          }}
-        >
-          {enabled ? "Disable" : "Enable"}
-        </button>
-      </div>
-    </article>
+        Created on{" "}
+        {new Date(area.createdAt).toLocaleDateString(undefined, {
+          year: "numeric",
+          month: "short",
+          day: "numeric",
+        })}
+      </p>
+    </div>
   );
 }
