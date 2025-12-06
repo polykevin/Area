@@ -6,6 +6,12 @@
 - flutter pub get (for installing dependencies)
 - flutter run -d localhost:5555 (to install the apk and run it)
 
+# Run on Android 
+
+- flutter build apk (builds the apk named "app-release.apk" in build/app/outputs/flutter-apk/)
+- send the apk to a android device
+- install the app
+
 # TO DO:
 
 - integrate with the backend (not ready yet)

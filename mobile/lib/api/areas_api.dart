@@ -14,6 +14,27 @@ class AreasApi {
         .toList();
   }
 
+  Future<Area> createArea({
+    required String name,
+    required String actionService,
+    required String actionLabel,
+    required String reactionService,
+    required String reactionLabel,
+  }) async {
+    final response = await _dio.post(
+      '/areas',
+      data: {
+        'name': name,
+        'action_service': actionService,
+        'action_label': actionLabel,
+        'reaction_service': reactionService,
+        'reaction_label': reactionLabel,
+      },
+    );
+
+    return Area.fromJson(response.data as Map<String, dynamic>);
+  }
+
   Future<Area> toggleArea(String id) async {
     final response = await _dio.patch('/areas/$id/toggle');
     return Area.fromJson(response.data as Map<String, dynamic>);

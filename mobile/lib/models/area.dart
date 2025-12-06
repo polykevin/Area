@@ -1,10 +1,10 @@
 class Area {
   final String id;
-  final String name; // optional friendly name like "GitHub → Gmail"
+  final String name;
   final String actionService;
-  final String actionLabel;   // e.g. "New GitHub issue"
+  final String actionLabel;
   final String reactionService;
-  final String reactionLabel; // e.g. "Send Gmail email"
+  final String reactionLabel;
   final bool isActive;
   final DateTime? createdAt;
 

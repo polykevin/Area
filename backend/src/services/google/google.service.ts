@@ -9,7 +9,7 @@ export class GoogleService {
 
   constructor(private authRepo: ServiceAuthRepository) {}
 
-  async getOAuthClient(userId: number) {
+  private async getOAuthClient(userId: number) {
     const auth = await this.authRepo.findByUserAndService(userId, 'google');
     if (!auth) throw new Error('User not connected to Google');
 
@@ -22,25 +22,24 @@ export class GoogleService {
     client.setCredentials({
       access_token: auth.accessToken,
       refresh_token: auth.refreshToken,
-      expiry_date: auth.expiresAt,
+      expiry_date: auth.expiresAt ? new Date(auth.expiresAt).getTime() : null,
     });
 
-    if (auth.expiresAt && Number(auth.expiresAt) < Date.now()) {
-      const newTokens = await client.getAccessToken();
+    if (auth.expiresAt && auth.expiresAt.getTime() < Date.now()) {
+      const newTokens = await client.refreshAccessToken();
+      const tokens = newTokens.credentials;
       this.logger.log(`Refreshed Google token for user ${userId}`);
 
       await this.authRepo.updateTokens(userId, 'google', {
-        accessToken: newTokens.token,
-        expiresAt: Date.now() + 3300 * 1000,
+        accessToken: tokens.access_token,
+        refreshToken: tokens.refresh_token ?? auth.refreshToken,
+        expiresAt: tokens.expiry_date
+          ? new Date(tokens.expiry_date)
+          : null,
       });
 
-      client.setCredentials({
-        access_token: newTokens.token,
-        refresh_token: auth.refreshToken,
-        expiry_date: Date.now() + 3300 * 1000,
-      });
+      client.setCredentials(tokens);
     }
-
     return client;
   }
 
@@ -55,6 +54,7 @@ export class GoogleService {
     const res = await gmail.users.messages.list({
       userId: 'me',
       q: 'is:unread',
+      maxResults: 5,
     });
 
     if (!res.data.messages) return [];
@@ -79,8 +79,8 @@ export class GoogleService {
   }
 
   private getHeader(headers: any[], name: string) {
-    const h = headers.find(h => h.name === name);
-    return h ? h.value : null;
+    const found = headers.find(h => h.name === name);
+    return found ? found.value : null;
   }
 
   async sendEmail(userId: number, rawMessage: string) {

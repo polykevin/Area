@@ -10,21 +10,22 @@ import { AutomationEngine } from '../../automation/engine.service';
 @Module({
   providers: [
     GoogleService,
-    NewEmailHook,
-    PrismaService,
+    ServiceRegistry,
     ServiceAuthRepository,
     AutomationEngine,
+    NewEmailHook,
   ],
 })
 export class GoogleModule {
   constructor(
-    registry: ServiceRegistry,
-    googleService: GoogleService,
-    authRepo: ServiceAuthRepository,
-    engine: AutomationEngine,
+    private registry: ServiceRegistry,
+    private googleService: GoogleService,
+    private authRepo: ServiceAuthRepository,
+    private engine: AutomationEngine,
+    private newEmailHook: NewEmailHook,
   ) {
     registry.register(
-      googleIntegration(googleService, authRepo, engine)
+      googleIntegration(googleService, authRepo, engine, newEmailHook)
     );
   }
 }

@@ -2,7 +2,7 @@ import { newEmailAction } from './actions/new-email.action';
 import { NewEmailHook } from './hooks/new-email.hook';
 import { sendEmailReaction } from './reactions/send-email.reaction';
 
-export function googleIntegration(googleService, authRepo, engine) {
+export function googleIntegration(googleService, authRepo, engine, newEmailHook) {
   return {
     id: 'google',
     displayName: 'Google',
@@ -20,5 +20,9 @@ export function googleIntegration(googleService, authRepo, engine) {
     reactions: [
         sendEmailReaction
     ],
+
+    hooks: [
+      newEmailHook
+    ]
   };
 }

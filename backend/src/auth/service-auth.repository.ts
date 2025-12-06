@@ -11,7 +11,7 @@ export class ServiceAuthRepository {
     provider_user_id: string;
     access_token: string;
     refresh_token?: string;
-    expires_at?: number;
+    expires_at?: Date | null;
     metadata?: any;
   }) {
     return this.prisma.serviceAuth.upsert({
@@ -27,14 +27,14 @@ export class ServiceAuthRepository {
         providerUserId: data.provider_user_id,
         accessToken: data.access_token,
         refreshToken: data.refresh_token,
-        expiresAt: data.expires_at ? BigInt(data.expires_at) : null,
+        expiresAt: data.expires_at ? new Date(data.expires_at) : null,
         metadata: data.metadata || {},
       },
       update: {
         providerUserId: data.provider_user_id,
         accessToken: data.access_token,
         refreshToken: data.refresh_token,
-        expiresAt: data.expires_at ? BigInt(data.expires_at) : null,
+        expiresAt: data.expires_at ? new Date(data.expires_at) : null,
         metadata: data.metadata || {},
       },
     });
@@ -60,7 +60,7 @@ export class ServiceAuthRepository {
     data: {
       accessToken?: string;
       refreshToken?: string;
-      expiresAt?: bigint | number | null;
+      expiresAt?: Date | null;
     }
   ) {
     return this.prisma.serviceAuth.update({
@@ -69,7 +69,7 @@ export class ServiceAuthRepository {
         accessToken: data.accessToken,
         refreshToken: data.refreshToken,
         expiresAt: data.expiresAt !== undefined && data.expiresAt !== null
-          ? BigInt(data.expiresAt)
+          ? new Date(data.expiresAt)
           : null,
       },
     });

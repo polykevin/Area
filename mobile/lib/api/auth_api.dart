@@ -12,6 +12,14 @@ class AuthApi {
     return response.data as Map<String, dynamic>;
   }
 
+  Future<Map<String, dynamic>> loginWithGoogleIdToken(String idToken) async {
+    final response = await _dio.post(
+      '/auth/google/mobile',
+      data: {'idToken': idToken},
+    );
+    return response.data as Map<String, dynamic>;
+  }
+
   Future<Map<String, dynamic>> register(String email, String password) async {
     final response = await _dio.post('/auth/register', data: {
       'email': email,
@@ -21,7 +29,7 @@ class AuthApi {
   }
 
   Future<Map<String, dynamic>> getMe() async {
-    final response = await _dio.get('/users/me');
+    final response = await _dio.get('/auth/me');
     return response.data as Map<String, dynamic>;
   }
 }

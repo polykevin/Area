@@ -3,7 +3,11 @@ import { Cron } from '@nestjs/schedule';
 
 @Injectable()
 export class NewEmailHook {
-  constructor(private googleService, private authRepo, private engine) {}
+  constructor(private googleService, private authRepo, private engine) {
+    this.googleService = googleService;
+    this.authRepo = authRepo;
+    this.engine = engine;
+  }
 
   @Cron('*/20 * * * * *')
   async poll() {

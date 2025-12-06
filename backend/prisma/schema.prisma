@@ -8,13 +8,28 @@ generator client {
 }
 
 model User {
-  id        Int      @id @default(autoincrement())
-  email     String   @unique
-  password  String
-  createdAt DateTime @default(now())
+  id            Int               @id @default(autoincrement())
+  email         String            @unique
+  passwordHash  String?
+  role          String            @default("USER")
+  provider      String            @default("local")
+  providerId    String?
+  createdAt     DateTime          @default(now())
+  updatedAt     DateTime          @updatedAt
 
+  oauthCredentials OAuthCredential[]
   serviceAuth ServiceAuth[]
   areas Area[]
+}
+
+model OAuthCredential {
+  id           Int       @id @default(autoincrement())
+  provider     String
+  accessToken  String
+  refreshToken String?
+  expiresAt    DateTime?
+  userId       Int
+  user         User      @relation(fields: [userId], references: [id])
 }
 
 model ServiceAuth {
@@ -24,7 +39,7 @@ model ServiceAuth {
   providerUserId  String
   accessToken     String
   refreshToken    String?
-  expiresAt       BigInt?
+  expiresAt       DateTime?
   metadata        Json?
 
   user User @relation(fields: [userId], references: [id])

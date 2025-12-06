@@ -1,26 +1,141 @@
-@import "tailwindcss";
-
-:root {
-  --background: #ffffff;
-  --foreground: #171717;
+*,
+*::before,
+*::after {
+  box-sizing: border-box;
 }
 
-@theme inline {
-  --color-background: var(--background);
-  --color-foreground: var(--foreground);
-  --font-sans: var(--font-geist-sans);
-  --font-mono: var(--font-geist-mono);
-}
-
-@media (prefers-color-scheme: dark) {
-  :root {
-    --background: #0a0a0a;
-    --foreground: #ededed;
-  }
+html,
+body {
+  margin: 0;
+  padding: 0;
+  min-height: 100vh;
 }
 
 body {
-  background: var(--background);
-  color: var(--foreground);
-  font-family: Arial, Helvetica, sans-serif;
+  font-family: system-ui, -apple-system, BlinkMacSystemFont, "SF Pro Text",
+    "Segoe UI", sans-serif;
+  background: #050b26;
+  color: #e5e7eb;
+  display: flex;
+  justify-content: center;
+  align-items: center;
+}
+
+.app-root {
+  width: 100%;
+  max-width: 1120px;
+  margin: 0 auto;
+  padding: 5rem 2rem 2.5rem;
+}
+
+.card {
+  background: rgba(15, 23, 42, 0.9);
+  border-radius: 18px;
+  padding: 2rem 2.25rem;
+  border: 1px solid rgba(148, 163, 184, 0.4);
+  backdrop-filter: blur(6px);
+}
+
+.card-title {
+  margin: 0 0 1.5rem;
+  font-size: 1.7rem;
+  font-weight: 600;
+  text-align: center;
+  color: #f9fafb;
+}
+
+.form-field {
+  margin-bottom: 1rem;
+}
+
+.form-label {
+  display: block;
+  font-size: 0.85rem;
+  margin-bottom: 0.3rem;
+  color: #e5e7eb;
+}
+
+.form-input {
+  width: 100%;
+  padding: 0.55rem 0.7rem;
+  border-radius: 10px;
+  border: 1px solid rgba(148, 163, 184, 0.5);
+  background: #020617;
+  color: #f9fafb;
+  font-size: 0.9rem;
+  outline: none;
+}
+
+.form-input::placeholder {
+  color: #6b7280;
+}
+
+.form-input:focus {
+  border-color: #3b82f6;
+}
+
+.btn-primary {
+  width: 100%;
+  padding: 0.6rem 0.8rem;
+  border-radius: 10px;
+  border: none;
+  background: #111827;
+  color: #f9fafb;
+  font-weight: 500;
+  font-size: 0.95rem;
+  cursor: pointer;
+  transition: background-color 0.12s ease, transform 0.05s ease;
+}
+
+.btn-primary:hover {
+  background: #1f2937;
+}
+
+.btn-primary:active {
+  transform: translateY(1px);
+}
+
+.message {
+  margin-top: 0.8rem;
+  font-size: 0.85rem;
+  text-align: center;
+}
+
+.message-success {
+  color: #4ade80;
+}
+
+.message-error {
+  color: #f97373;
+}
+
+.card-footer {
+  margin-top: 1.4rem;
+  font-size: 0.85rem;
+  color: #9ca3af;
+  text-align: center;
+}
+
+.card-link {
+  color: #60a5fa;
+  text-decoration: none;
+  font-weight: 500;
+}
+
+.card-link:hover {
+  text-decoration: underline;
+}
+
+.text-button {
+  background: none;
+  border: none;
+  padding: 0;
+  margin: 0;
+  font-size: 0.85rem;
+  color: #60a5fa;
+  cursor: pointer;
+}
+
+.text-button:hover {
+  text-decoration: underline;
 }

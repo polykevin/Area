@@ -3,8 +3,6 @@ import 'package:provider/provider.dart';
 
 import '../../providers/areas_provider.dart';
 
-/// Mocked definitions for actions & reactions per service.
-/// You can sync these with backend later.
 const kActionOptions = {
   'timer': [
     {'key': 'timer_every_x_minutes', 'label': 'Every X minutes'},
@@ -97,20 +95,15 @@ class CreateAreaScreen extends StatefulWidget {
 }
 
 class _CreateAreaScreenState extends State<CreateAreaScreen> {
-  int _currentStep = 0;
 
-  // Step 1
   String? _actionService;
   String? _actionKey;
 
-  // Step 2
   final _actionConfigController = TextEditingController();
 
-  // Step 3
   String? _reactionService;
   String? _reactionKey;
 
-  // Step 4
   final _areaNameController = TextEditingController();
   final _reactionConfigController = TextEditingController();
 
@@ -122,40 +115,16 @@ class _CreateAreaScreenState extends State<CreateAreaScreen> {
     super.dispose();
   }
 
-  void _nextStep() {
-    if (_currentStep == 0) {
-      if (_actionService == null || _actionKey == null) {
-        _showError('Please choose an action service and an action.');
-        return;
-      }
-    } else if (_currentStep == 1) {
-      // Action config is optional for now
-    } else if (_currentStep == 2) {
-      if (_reactionService == null || _reactionKey == null) {
-        _showError('Please choose a reaction service and a reaction.');
-        return;
-      }
-    } else if (_currentStep == 3) {
-      _submit();
-      return;
-    }
-
-    setState(() {
-      _currentStep = (_currentStep + 1).clamp(0, 3);
-    });
-  }
-
-  void _prevStep() {
-    if (_currentStep == 0) {
-      Navigator.of(context).pop();
-      return;
-    }
-    setState(() {
-      _currentStep = (_currentStep - 1).clamp(0, 3);
-    });
-  }
-
   Future<void> _submit() async {
+    if (_actionService == null || _actionKey == null) {
+      _showError('Please choose an action service and an action.');
+      return;
+    }
+    if (_reactionService == null || _reactionKey == null) {
+      _showError('Please choose a reaction service and a reaction.');
+      return;
+    }
+
     final areasProvider = context.read<AreasProvider>();
 
     final actionService = _actionService!;
@@ -178,12 +147,10 @@ class _CreateAreaScreenState extends State<CreateAreaScreen> {
 
     if (!mounted) return;
 
-    Navigator.of(context).pop(); // go back to list
+    Navigator.of(context).pop();
 
     ScaffoldMessenger.of(context).showSnackBar(
-      SnackBar(
-        content: Text('AREA "$name" created'),
-      ),
+      SnackBar(content: Text('AREA "$name" created')),
     );
   }
 
@@ -207,239 +174,362 @@ class _CreateAreaScreenState extends State<CreateAreaScreen> {
     );
   }
 
+  Future<void> _pickActionDialog() async {
+    String? tempService = _actionService;
+    String? tempKey = _actionKey;
+
+    await showDialog(
+      context: context,
+      builder: (ctx) {
+        return StatefulBuilder(
+          builder: (ctx, setStateDialog) {
+            final availableServices = kServicesOrder
+                .where((s) => kActionOptions[s]?.isNotEmpty ?? false)
+                .toList();
+
+            final actionsForService = tempService != null
+                ? (kActionOptions[tempService] ?? [])
+                : <Map<String, String>>[];
+
+            return AlertDialog(
+              title: const Text('Select action'),
+              content: Column(
+                mainAxisSize: MainAxisSize.min,
+                children: [
+                  DropdownButtonFormField<String>(
+                    value: tempService,
+                    decoration: const InputDecoration(labelText: 'Service'),
+                    items: availableServices
+                        .map(
+                          (s) => DropdownMenuItem(
+                        value: s,
+                        child: Text(prettyServiceName(s)),
+                      ),
+                    )
+                        .toList(),
+                    onChanged: (value) {
+                      setStateDialog(() {
+                        tempService = value;
+                        tempKey = null;
+                      });
+                    },
+                  ),
+                  const SizedBox(height: 12),
+                  DropdownButtonFormField<String>(
+                    value: tempKey,
+                    decoration: const InputDecoration(labelText: 'Action'),
+                    items: actionsForService
+                        .map(
+                          (opt) => DropdownMenuItem(
+                        value: opt['key']!,
+                        child: Text(opt['label']!),
+                      ),
+                    )
+                        .toList(),
+                    onChanged: (value) {
+                      setStateDialog(() {
+                        tempKey = value;
+                      });
+                    },
+                  ),
+                ],
+              ),
+              actions: [
+                TextButton(
+                  onPressed: () => Navigator.of(ctx).pop(),
+                  child: const Text('Cancel'),
+                ),
+                ElevatedButton(
+                  onPressed: (tempService != null && tempKey != null)
+                      ? () {
+                    setState(() {
+                      _actionService = tempService;
+                      _actionKey = tempKey;
+                    });
+                    Navigator.of(ctx).pop();
+                  }
+                      : null,
+                  child: const Text('Use'),
+                ),
+              ],
+            );
+          },
+        );
+      },
+    );
+  }
+
+  Future<void> _pickReactionDialog() async {
+    String? tempService = _reactionService;
+    String? tempKey = _reactionKey;
+
+    await showDialog(
+      context: context,
+      builder: (ctx) {
+        return StatefulBuilder(
+          builder: (ctx, setStateDialog) {
+            final availableServices = kServicesOrder
+                .where((s) => kReactionOptions[s]?.isNotEmpty ?? false)
+                .toList();
+
+            final reactionsForService = tempService != null
+                ? (kReactionOptions[tempService] ?? [])
+                : <Map<String, String>>[];
+
+            return AlertDialog(
+              title: const Text('Select reaction'),
+              content: Column(
+                mainAxisSize: MainAxisSize.min,
+                children: [
+                  DropdownButtonFormField<String>(
+                    value: tempService,
+                    decoration: const InputDecoration(labelText: 'Service'),
+                    items: availableServices
+                        .map(
+                          (s) => DropdownMenuItem(
+                        value: s,
+                        child: Text(prettyServiceName(s)),
+                      ),
+                    )
+                        .toList(),
+                    onChanged: (value) {
+                      setStateDialog(() {
+                        tempService = value;
+                        tempKey = null;
+                      });
+                    },
+                  ),
+                  const SizedBox(height: 12),
+                  DropdownButtonFormField<String>(
+                    value: tempKey,
+                    decoration: const InputDecoration(labelText: 'Reaction'),
+                    items: reactionsForService
+                        .map(
+                          (opt) => DropdownMenuItem(
+                        value: opt['key']!,
+                        child: Text(opt['label']!),
+                      ),
+                    )
+                        .toList(),
+                    onChanged: (value) {
+                      setStateDialog(() {
+                        tempKey = value;
+                      });
+                    },
+                  ),
+                ],
+              ),
+              actions: [
+                TextButton(
+                  onPressed: () => Navigator.of(ctx).pop(),
+                  child: const Text('Cancel'),
+                ),
+                ElevatedButton(
+                  onPressed: (tempService != null && tempKey != null)
+                      ? () {
+                    setState(() {
+                      _reactionService = tempService;
+                      _reactionKey = tempKey;
+                    });
+                    Navigator.of(ctx).pop();
+                  }
+                      : null,
+                  child: const Text('Use'),
+                ),
+              ],
+            );
+          },
+        );
+      },
+    );
+  }
+
   @override
   Widget build(BuildContext context) {
+    final actionLabel = _actionService == null
+        ? 'Service 1'
+        : prettyServiceName(_actionService!);
+    final reactionLabel = _reactionService == null
+        ? 'Service 2'
+        : prettyServiceName(_reactionService!);
+
     return Scaffold(
       appBar: AppBar(
-        title: const Text('New AREA'),
+        elevation: 0,
+        backgroundColor: Colors.white,
+        leading: IconButton(
+          icon: const Icon(Icons.arrow_back, color: Colors.black),
+          onPressed: () => Navigator.of(context).pop(),
+        ),
+        centerTitle: true,
+        title: const Text(
+          'Create an AREA',
+          style: TextStyle(color: Colors.black, fontWeight: FontWeight.bold),
+        ),
       ),
-      body: Stepper(
-        type: StepperType.vertical,
-        currentStep: _currentStep,
-        onStepContinue: _nextStep,
-        onStepCancel: _prevStep,
-        controlsBuilder: (context, details) {
-          final isLast = _currentStep == 3;
-          return Padding(
-            padding: const EdgeInsets.only(top: 16.0),
-            child: Row(
+      backgroundColor: Colors.white,
+      body: Padding(
+        padding: const EdgeInsets.symmetric(horizontal: 24),
+        child: ListView(
+          children: [
+            const SizedBox(height: 16),
+
+            const Text('Name', style: TextStyle(fontSize: 16)),
+            const SizedBox(height: 4),
+            TextField(
+              controller: _areaNameController,
+              decoration: const InputDecoration(
+                hintText: 'My cool AREA',
+              ),
+            ),
+
+            const SizedBox(height: 12),
+
+            const Text('Value', style: TextStyle(fontSize: 16)),
+            const SizedBox(height: 4),
+            TextField(
+              controller: _actionConfigController,
+              decoration: const InputDecoration(
+                hintText: 'Optional config / value',
+              ),
+            ),
+
+            const SizedBox(height: 32),
+
+            Row(
+              mainAxisAlignment: MainAxisAlignment.center,
               children: [
-                ElevatedButton(
-                  onPressed: details.onStepContinue,
-                  child: Text(isLast ? 'Create AREA' : 'Next'),
+                _ServiceBox(
+                  label: actionLabel,
+                  onTap: _pickActionDialog,
                 ),
-                const SizedBox(width: 12),
-                TextButton(
-                  onPressed: details.onStepCancel,
-                  child: Text(_currentStep == 0 ? 'Cancel' : 'Back'),
+                const SizedBox(width: 16),
+                const Icon(Icons.arrow_forward, size: 36),
+                const SizedBox(width: 16),
+                _ServiceBox(
+                  label: reactionLabel,
+                  onTap: _pickReactionDialog,
                 ),
               ],
             ),
-          );
-        },
-        steps: [
-          Step(
-            title: const Text('Action'),
-            isActive: _currentStep >= 0,
-            state:
-            _currentStep > 0 ? StepState.complete : StepState.indexed,
-            content: _buildActionStep(),
-          ),
-          Step(
-            title: const Text('Action config'),
-            isActive: _currentStep >= 1,
-            state:
-            _currentStep > 1 ? StepState.complete : StepState.indexed,
-            content: _buildActionConfigStep(),
-          ),
-          Step(
-            title: const Text('Reaction'),
-            isActive: _currentStep >= 2,
-            state:
-            _currentStep > 2 ? StepState.complete : StepState.indexed,
-            content: _buildReactionStep(),
-          ),
-          Step(
-            title: const Text('Name & confirm'),
-            isActive: _currentStep >= 3,
-            state: _currentStep == 3
-                ? StepState.editing
-                : StepState.indexed,
-            content: _buildConfirmStep(),
-          ),
-        ],
+
+            const SizedBox(height: 24),
+
+            SizedBox(
+              height: 50,
+              child: ElevatedButton(
+                style: ElevatedButton.styleFrom(
+                  backgroundColor: Colors.black,
+                  shape: RoundedRectangleBorder(
+                    borderRadius: BorderRadius.circular(12),
+                  ),
+                ),
+                onPressed: _submit,
+                child: const Text(
+                  'Create area',
+                  style: TextStyle(fontSize: 16),
+                ),
+              ),
+            ),
+
+            const SizedBox(height: 32),
+            const Divider(),
+            const SizedBox(height: 12),
+
+            const Text(
+              'Existing areas',
+              style: TextStyle(fontSize: 20, fontWeight: FontWeight.bold),
+            ),
+
+            const SizedBox(height: 16),
+
+            _ExistingAreaRow(
+              from: 'Github',
+              to: 'Spotify',
+              title: 'music push',
+              time: 'created 2d ago',
+            ),
+          ],
+        ),
       ),
     );
   }
+}
 
-  Widget _buildActionStep() {
-    return Column(
-      crossAxisAlignment: CrossAxisAlignment.start,
-      children: [
-        const Text('Choose the service that will TRIGGER the AREA:'),
-        const SizedBox(height: 8),
-        DropdownButtonFormField<String>(
-          value: _actionService,
-          decoration: const InputDecoration(
-            labelText: 'Action service',
-            border: OutlineInputBorder(),
-          ),
-          items: kServicesOrder
-              .where((s) => kActionOptions[s]?.isNotEmpty ?? false)
-              .map(
-                (s) => DropdownMenuItem(
-              value: s,
-              child: Text(prettyServiceName(s)),
-            ),
-          )
-              .toList(),
-          onChanged: (value) {
-            setState(() {
-              _actionService = value;
-              _actionKey = null; // reset action when service changes
-            });
-          },
+class _ServiceBox extends StatelessWidget {
+  final String label;
+  final VoidCallback onTap;
+
+  const _ServiceBox({
+    required this.label,
+    required this.onTap,
+  });
+
+  @override
+  Widget build(BuildContext context) {
+    return InkWell(
+      borderRadius: BorderRadius.circular(12),
+      onTap: onTap,
+      child: Container(
+        padding: const EdgeInsets.symmetric(horizontal: 20, vertical: 14),
+        decoration: BoxDecoration(
+          color: const Color(0xFFEAE4FF),
+          borderRadius: BorderRadius.circular(12),
         ),
-        const SizedBox(height: 16),
-        DropdownButtonFormField<String>(
-          value: _actionKey,
-          decoration: const InputDecoration(
-            labelText: 'Action',
-            border: OutlineInputBorder(),
-          ),
-          items: (_actionService != null
-              ? (kActionOptions[_actionService] ?? [])
-              : <Map<String, String>>[])
-              .map(
-                (opt) => DropdownMenuItem(
-              value: opt['key']!,
-              child: Text(opt['label']!),
-            ),
-          )
-              .toList(),
-          onChanged: (value) {
-            setState(() {
-              _actionKey = value;
-            });
-          },
+        child: Text(
+          label,
+          style: const TextStyle(fontSize: 16),
         ),
-      ],
+      ),
     );
   }
+}
 
-  Widget _buildActionConfigStep() {
-    return Column(
-      crossAxisAlignment: CrossAxisAlignment.start,
+class _ExistingAreaRow extends StatelessWidget {
+  final String from;
+  final String to;
+  final String title;
+  final String time;
+
+  const _ExistingAreaRow({
+    required this.from,
+    required this.to,
+    required this.title,
+    required this.time,
+  });
+
+  @override
+  Widget build(BuildContext context) {
+    return Row(
       children: [
+        Container(
+          padding: const EdgeInsets.symmetric(horizontal: 20, vertical: 12),
+          decoration: BoxDecoration(
+            color: Colors.black,
+            borderRadius: BorderRadius.circular(12),
+          ),
+          child: Text(from, style: const TextStyle(color: Colors.white)),
+        ),
+        const SizedBox(width: 16),
+        Column(
+          children: [
+            Text(title, style: const TextStyle(fontSize: 14)),
+            const Icon(Icons.arrow_forward),
+          ],
+        ),
+        const SizedBox(width: 16),
+        Container(
+          padding: const EdgeInsets.symmetric(horizontal: 20, vertical: 12),
+          decoration: BoxDecoration(
+            color: Colors.green,
+            borderRadius: BorderRadius.circular(12),
+          ),
+          child: Text(to, style: const TextStyle(color: Colors.white)),
+        ),
+        const Spacer(),
         Text(
-          'Configure the action (optional for now).\n'
-              'Example: repo name, time interval, thresholds, etc.',
-          style: Theme.of(context).textTheme.bodyMedium,
-        ),
-        const SizedBox(height: 8),
-        TextField(
-          controller: _actionConfigController,
-          decoration: const InputDecoration(
-            labelText: 'Action configuration',
-            border: OutlineInputBorder(),
-          ),
-          maxLines: 3,
-        ),
-      ],
-    );
-  }
-
-  Widget _buildReactionStep() {
-    return Column(
-      crossAxisAlignment: CrossAxisAlignment.start,
-      children: [
-        const Text('Choose the service that will REACT:'),
-        const SizedBox(height: 8),
-        DropdownButtonFormField<String>(
-          value: _reactionService,
-          decoration: const InputDecoration(
-            labelText: 'Reaction service',
-            border: OutlineInputBorder(),
-          ),
-          items: kServicesOrder
-              .where((s) => kReactionOptions[s]?.isNotEmpty ?? false)
-              .map(
-                (s) => DropdownMenuItem(
-              value: s,
-              child: Text(prettyServiceName(s)),
-            ),
-          )
-              .toList(),
-          onChanged: (value) {
-            setState(() {
-              _reactionService = value;
-              _reactionKey = null;
-            });
-          },
-        ),
-        const SizedBox(height: 16),
-        DropdownButtonFormField<String>(
-          value: _reactionKey,
-          decoration: const InputDecoration(
-            labelText: 'Reaction',
-            border: OutlineInputBorder(),
-          ),
-          items: (_reactionService != null
-              ? (kReactionOptions[_reactionService] ?? [])
-              : <Map<String, String>>[])
-              .map(
-                (opt) => DropdownMenuItem(
-              value: opt['key']!,
-              child: Text(opt['label']!),
-            ),
-          )
-              .toList(),
-          onChanged: (value) {
-            setState(() {
-              _reactionKey = value;
-            });
-          },
-        ),
-      ],
-    );
-  }
-
-  Widget _buildConfirmStep() {
-    final actionServiceName =
-    _actionService != null ? prettyServiceName(_actionService!) : '-';
-    final reactionServiceName =
-    _reactionService != null ? prettyServiceName(_reactionService!) : '-';
-
-    return Column(
-      crossAxisAlignment: CrossAxisAlignment.start,
-      children: [
-        Text(
-          'Give your AREA a name and optionally configure the reaction:\n',
-          style: Theme.of(context).textTheme.bodyMedium,
-        ),
-        TextField(
-          controller: _areaNameController,
-          decoration: InputDecoration(
-            labelText: 'AREA name (optional)',
-            helperText:
-            'If left empty, a name like "$actionServiceName → $reactionServiceName" will be used.',
-            border: const OutlineInputBorder(),
-          ),
-        ),
-        const SizedBox(height: 16),
-        Text(
-          'Reaction configuration (optional).\n'
-              'Example: email recipient, Slack channel, etc.',
-          style: Theme.of(context).textTheme.bodyMedium,
-        ),
-        const SizedBox(height: 8),
-        TextField(
-          controller: _reactionConfigController,
-          decoration: const InputDecoration(
-            labelText: 'Reaction configuration',
-            border: OutlineInputBorder(),
-          ),
-          maxLines: 3,
+          time,
+          style: const TextStyle(fontSize: 12, color: Colors.black54),
         ),
       ],
     );
