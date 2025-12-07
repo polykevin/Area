@@ -1,61 +1,72 @@
 import 'package:flutter/foundation.dart';
 
-import '../api/areas_api.dart';
 import '../models/area.dart';
+import '../api/areas_api.dart';
 
-class AreasProvider extends ChangeNotifier {
-  final _api = AreasApi();
+class AreasProvider with ChangeNotifier {
+  final AreasApi _api = AreasApi();
 
-  List<Area> _areas = [];
-  bool _loading = false;
-  String? _error;
+  final List<Area> _areas = [];
+  bool loading = false;
+  String? error;
 
-  List<Area> get areas => _areas;
-  bool get loading => _loading;
-  String? get error => _error;
+  List<Area> get areas => List.unmodifiable(_areas);
 
-  Future<void> loadAreas({bool mockIfFail = true}) async {
-    _loading = true;
-    _error = null;
+  Future<void> loadAreas() async {
+    loading = true;
+    error = null;
     notifyListeners();
 
     try {
-      final result = await _api.getAreas();
-      _areas = result;
+      final fetched = await _api.getAreas();
+      _areas
+        ..clear()
+        ..addAll(fetched);
     } catch (e) {
-      if (mockIfFail) {
-        _areas = _mockAreas();
-        _error = 'Using mocked AREAs (backend not ready yet).';
-      } else {
-        _error = 'Failed to load AREAs: $e';
+      error = 'Failed to load areas';
+      if (kDebugMode) {
+        print('loadAreas error: $e');
       }
     } finally {
-      _loading = false;
+      loading = false;
       notifyListeners();
     }
   }
 
+  Future<void> refreshAreas() => loadAreas();
+
   Future<void> toggleArea(String id) async {
     try {
       final updated = await _api.toggleArea(id);
-      _areas = _areas.map((a) => a.id == id ? updated : a).toList();
-      notifyListeners();
+      final index = _areas.indexWhere((a) => a.id == id);
+      if (index != -1) {
+        _areas[index] = updated;
+        notifyListeners();
+      }
     } catch (e) {
-      _error = 'Failed to toggle AREA: $e';
+      error = 'Failed to toggle area';
+      if (kDebugMode) {
+        print('toggleArea error: $e');
+      }
       notifyListeners();
     }
   }
 
   Future<void> deleteArea(String id) async {
-    final old = List<Area>.from(_areas);
-    _areas = _areas.where((a) => a.id != id).toList();
+    final index = _areas.indexWhere((a) => a.id == id);
+    if (index == -1) return;
+
+    final removed = _areas.removeAt(index);
     notifyListeners();
 
     try {
       await _api.deleteArea(id);
     } catch (e) {
-      _error = 'Failed to delete AREA: $e';
-      _areas = old;
+      _areas.insert(index, removed);
+      error = 'Failed to delete area';
+      if (kDebugMode) {
+        print('deleteArea error: $e');
+      }
       notifyListeners();
     }
   }
@@ -67,53 +78,24 @@ class AreasProvider extends ChangeNotifier {
     required String reactionService,
     required String reactionLabel,
   }) async {
-    final newArea = Area(
-      id: DateTime.now().millisecondsSinceEpoch.toString(),
-      name: name,
-      actionService: actionService,
-      actionLabel: actionLabel,
-      reactionService: reactionService,
-      reactionLabel: reactionLabel,
-      isActive: true,
-      createdAt: DateTime.now(),
-    );
+    try {
+      final created = await _api.createArea(
+        name: name,
+        actionService: actionService,
+        actionLabel: actionLabel,
+        reactionService: reactionService,
+        reactionLabel: reactionLabel,
+      );
 
-    _areas = [newArea, ..._areas];
-    notifyListeners();
-  }
-
-  List<Area> _mockAreas() { //placeholders
-    return [
-      Area(
-        id: '1',
-        name: 'GitHub → Gmail',
-        actionService: 'github',
-        actionLabel: 'New issue in repo "area-backend"',
-        reactionService: 'gmail',
-        reactionLabel: 'Send email to me',
-        isActive: true,
-        createdAt: DateTime.now().subtract(const Duration(hours: 2)),
-      ),
-      Area(
-        id: '2',
-        name: 'Weather → Slack',
-        actionService: 'weather',
-        actionLabel: 'Rain chance > 60%',
-        reactionService: 'slack',
-        reactionLabel: 'Post alert to #weather',
-        isActive: false,
-        createdAt: DateTime.now().subtract(const Duration(days: 1)),
-      ),
-      Area(
-        id: '3',
-        name: 'Timer → RSS',
-        actionService: 'timer',
-        actionLabel: 'Every day at 09:00',
-        reactionService: 'rss',
-        reactionLabel: 'Check RSS feed and email summary',
-        isActive: true,
-        createdAt: DateTime.now().subtract(const Duration(days: 3)),
-      ),
-    ];
+      _areas.insert(0, created);
+      notifyListeners();
+    } catch (e) {
+      error = 'Failed to create area';
+      if (kDebugMode) {
+        print('createAreaLocal error: $e');
+      }
+      notifyListeners();
+      rethrow;
+    }
   }
 }

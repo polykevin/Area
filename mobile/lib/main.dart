@@ -39,8 +39,18 @@ class AreaApp extends StatelessWidget {
     return MaterialApp(
       title: 'AREA Mobile',
       theme: ThemeData(
-        colorScheme: ColorScheme.fromSeed(seedColor: Colors.teal),
-        useMaterial3: true,
+        brightness: Brightness.light,
+        scaffoldBackgroundColor: Colors.white,
+        fontFamily: 'SF Pro',
+        inputDecorationTheme: InputDecorationTheme(
+          filled: true,
+          fillColor: const Color(0xFFF2F2F7),
+          border: OutlineInputBorder(
+            borderRadius: BorderRadius.circular(12),
+            borderSide: BorderSide.none,
+          ),
+          contentPadding: const EdgeInsets.symmetric(horizontal: 16, vertical: 14),
+        ),
       ),
       debugShowCheckedModeBanner: false,
       // home: auth.isAuthenticated ? const HomeScreen() : const LoginScreen(),

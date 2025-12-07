@@ -10,12 +10,12 @@
 - ./gradlew clean
 - ./gradlew installDebug
 - adb shell am start -n com.example.kotlinpoc/.MainActivity
-- email: test@area.com, password: 123456 => login success!
 
 # ReactNativeLoginPOC:
 
 - npm install (for dependencies)
-- cd POCmobile/ReactNativeLoginPOC
+- cd POCmobile/ReactNativeLoginPOC/android
+- echo "sdk.dir=$HOME/Library/Android/sdk" > local.properties
 - terminal 1: npx react-native start
 - terminal 2: npx react-native run-android --device 127.0.0.1:5555
 
@@ -24,3 +24,5 @@
 - cd POCmobile/flutterloginpoc
 - flutter pub get
 - flutter run -d 127.0.0.1:5555
+
+email: test@area.com, password: 123456 => login success!
