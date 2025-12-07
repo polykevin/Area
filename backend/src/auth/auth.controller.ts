@@ -1,4 +1,13 @@
-import { Body, Controller, Get, Post, UseGuards, Req } from '@nestjs/common';
+import {
+  Res,
+  Body,
+  Controller,
+  Get,
+  Post,
+  UseGuards,
+  Req,
+} from '@nestjs/common';
+import type { Response } from 'express';
 import { JwtAuthGuard } from './jwt-auth.guard';
 import { AuthService } from './auth.service';
 import { AuthGuard } from '@nestjs/passport';
@@ -8,11 +17,13 @@ import type { Request } from 'express';
 import { GoogleIdTokenDto } from './dto/google-id-token.dto';
 
 interface RequestUser {
+  id?: number;
   email: string;
   provider?: string;
   providerId?: string;
   accessToken?: string;
   refreshToken?: string | null;
+  services?: string[];
 }
 
 interface OAuthProfile {
@@ -51,23 +62,27 @@ export class AuthController {
 
   @UseGuards(JwtAuthGuard)
   @Get('me')
-  getProfile(@Req() req: AuthenticatedRequest) {
-    return req.user;
+  async getProfile(@Req() req: AuthenticatedRequest) {
+    const user = req.user;
+    const services = user?.id ? await this.authService.getConnectedServices(user.id) : [];
+    return { ...user, services };
   }
 
   @Get('google')
   @UseGuards(AuthGuard('google'))
-  googleAuth(): void {
-  }
+  googleAuth(): void {}
 
   @Get('google/callback')
   @UseGuards(AuthGuard('google'))
-  async googleAuthRedirect(@Req() req: { user: OAuthProfile }) {
+  async googleAuthRedirect(
+    @Req() req: { user: OAuthProfile },
+    @Res() res: Response,
+  ) {
     if (!req.user) {
-      return { error: 'User not found in OAuth process' };
+        return res.redirect(`${process.env.FRONTEND_URL}/services?error=oauth_failed`);
     }
-
-    return this.authService.oauthLogin(req.user);
+    const token = await this.authService.oauthLogin(req.user);
+    return res.redirect(`${process.env.FRONTEND_URL}/services?token=${token}`);
   }
 
   @Post('google/mobile')

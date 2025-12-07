@@ -1,4 +1,6 @@
+"use client";
 import { ServiceCard } from "@/components/ServiceCard";
+import { useEffect, useState } from "react";
 
 const MOCK_SERVICES = [
   {
@@ -6,13 +8,13 @@ const MOCK_SERVICES = [
     category: "Developer tools",
     description:
       "Triggers based on commits, pull requests, issues and releases in your repositories.",
-    isConnected: true,
+    isConnected: false,
     logoSrc: "/services/github.png",
     actionsCount: 3,
     reactionsCount: 2,
   },
   {
-    name: "Gmail",
+    name: "google",
     category: "Communication",
     description:
       "React to incoming emails, labels or threads to automate notifications and workflows.",
@@ -44,9 +46,66 @@ const MOCK_SERVICES = [
 ];
 
 export default function ServicesPage() {
-  const connectedCount = MOCK_SERVICES.filter(
-    (s) => s.isConnected
-  ).length;
+  const [token, setToken] = useState<string | null>(null);
+  const [connectedServices, setConnectedServices] = useState<string[]>([]);
+  const [ready, setReady] = useState(false);
+
+  const fetchConnectedServices = async (authToken: string | null) => {
+    if (!authToken) return;
+    try {
+      const res = await fetch(`${process.env.NEXT_PUBLIC_API_URL}/auth/me`, {
+        headers: { Authorization: `Bearer ${authToken}` },
+      });
+      const user = await res.json();
+      if (user?.services) {setConnectedServices(user.services);console.log(user.services)};
+    } catch (err) {
+      console.error("Failed to fetch connected services:", err);
+    } finally {
+      setReady(true);
+    }
+  };
+
+  useEffect(() => {
+    const params = new URLSearchParams(window.location.search);
+    const connected = params.get("connected");
+    const savedToken = localStorage.getItem("token");
+
+    if (!savedToken) return;
+
+    const fetchServices = async () => {
+      try {
+        const res = await fetch(`${process.env.NEXT_PUBLIC_API_URL}/auth/me`, {
+          headers: { Authorization: `Bearer ${savedToken}` },
+        });
+        const user = await res.json();
+        if (user?.services) {setConnectedServices(user.services);console.log(user.services)};
+      } catch (err) {
+        console.error(err);
+      }
+    };
+
+    fetchServices();
+
+    if (connected) {
+      window.history.replaceState({}, document.title, "/services");
+    }
+  }, []);
+
+  const handleServiceConnect = (serviceName: string) => {
+    const savedToken = localStorage.getItem("token");
+    if (!savedToken) {
+      alert("You must be logged in first.");
+      return;
+    }
+
+    const payload = JSON.parse(atob(savedToken.split('.')[1]));
+    const userId = payload.sub;
+
+    window.location.href = `${process.env.NEXT_PUBLIC_API_URL}/oauth/${serviceName}/url?userId=${userId}`;
+  };
+
+
+  const connectedCount = connectedServices.length;
 
   return (
     <div
@@ -65,34 +124,14 @@ export default function ServicesPage() {
           marginBottom: "2rem",
         }}
       >
-        <h1
-          style={{
-            fontSize: "1.8rem",
-            fontWeight: 600,
-            marginBottom: "0.5rem",
-          }}
-        >
+        <h1 style={{ fontSize: "1.8rem", fontWeight: 600, marginBottom: "0.5rem" }}>
           Services
         </h1>
-
-        <p
-          style={{
-            fontSize: "0.9rem",
-            color: "#cbd5e1",
-            marginBottom: "0.75rem",
-          }}
-        >
+        <p style={{ fontSize: "0.9rem", color: "#cbd5e1", marginBottom: "0.75rem" }}>
           Connect external services to AREA.
         </p>
-
-        <p
-          style={{
-            fontSize: "0.8rem",
-            color: "#94a3b8",
-          }}
-        >
-          <strong>{connectedCount}</strong> connected ·{" "}
-          <strong>{MOCK_SERVICES.length}</strong> available
+        <p style={{ fontSize: "0.8rem", color: "#94a3b8" }}>
+          <strong>{connectedCount}</strong> connected · <strong>{MOCK_SERVICES.length}</strong> available
         </p>
       </header>
 
@@ -106,7 +145,12 @@ export default function ServicesPage() {
         }}
       >
         {MOCK_SERVICES.map((service) => (
-          <ServiceCard key={service.name} {...service} />
+          <ServiceCard
+            key={service.name}
+            {...service}
+            isConnected={connectedServices.includes(service.name)}
+            onConnect={() => handleServiceConnect(service.name)}
+          />
         ))}
       </div>
     </div>

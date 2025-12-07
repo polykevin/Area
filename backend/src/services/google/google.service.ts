@@ -16,7 +16,7 @@ export class GoogleService {
     const client = new google.auth.OAuth2(
       process.env.GOOGLE_CLIENT_ID,
       process.env.GOOGLE_CLIENT_SECRET,
-      process.env.GOOGLE_REDIRECT_URI,
+      process.env.GOOGLE_CALLBACK_URL,
     );
 
     client.setCredentials({
@@ -31,8 +31,8 @@ export class GoogleService {
       this.logger.log(`Refreshed Google token for user ${userId}`);
 
       await this.authRepo.updateTokens(userId, 'google', {
-        accessToken: tokens.access_token,
-        refreshToken: tokens.refresh_token ?? auth.refreshToken,
+        accessToken: tokens.access_token || undefined,
+        refreshToken: (tokens.refresh_token ?? auth.refreshToken) || undefined,
         expiresAt: tokens.expiry_date
           ? new Date(tokens.expiry_date)
           : null,
@@ -64,14 +64,16 @@ export class GoogleService {
     for (const msg of res.data.messages) {
       const full = await gmail.users.messages.get({
         userId: 'me',
-        id: msg.id,
+        id: msg.id ?? "",
       });
 
+      const headers = full.data.payload?.headers ?? [];
+
       messages.push({
-        id: msg.id,
-        subject: this.getHeader(full.data.payload.headers, 'Subject'),
-        from: this.getHeader(full.data.payload.headers, 'From'),
-        snippet: full.data.snippet,
+        id: msg.id ?? "",
+        subject: this.getHeader(headers, 'Subject') ?? "",
+        from: this.getHeader(headers, 'From') ?? "",
+        snippet: full.data.snippet ?? "",
       });
     }
 

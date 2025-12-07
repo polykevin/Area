@@ -1,0 +1,10 @@
+.git
+.gitignore
+build/
+android/.gradle/
+android/.idea/
+*.iml
+*.log
+*.apk
+.idea/
+packages/

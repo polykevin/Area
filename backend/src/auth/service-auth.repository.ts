@@ -1,5 +1,5 @@
 import { Injectable } from '@nestjs/common';
-import { PrismaService } from '../prisma.service';
+import { PrismaService } from '../prisma/prisma.service';
 
 @Injectable()
 export class ServiceAuthRepository {
@@ -52,6 +52,12 @@ export class ServiceAuthRepository {
     return this.prisma.serviceAuth.findMany({
       where: { service },
     });
+  }
+
+  async findAllByUser(userId: number) {
+    return this.prisma.serviceAuth.findMany({
+      where: {userId}
+    })
   }
 
   async updateTokens(

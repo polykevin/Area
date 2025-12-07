@@ -15,7 +15,8 @@ services:
       JWT_EXPIRES_IN: "1d"
       GOOGLE_CLIENT_ID: 1008857371236-3d09ddvj4l7p3deubnufbih0susfpt5a.apps.googleusercontent.com
       GOOGLE_CLIENT_SECRET: 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
-      GOOGLE_CALLBACK_URL: "http://area-dev.com:8080/auth/google/callback"
+      GOOGLE_CALLBACK_URL: "http://localhost:8080/oauth/google/callback"
+      FRONTEND_URL: "http://localhost:8081"
     volumes:
       - shared-volume:/shared
   client_mobile:
