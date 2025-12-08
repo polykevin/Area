@@ -24,30 +24,31 @@ class _AreasScreenState extends State<AreasScreen> {
   @override
   Widget build(BuildContext context) {
     return Scaffold(
-      backgroundColor: Colors.white,
+      backgroundColor: Theme.of(context).colorScheme.surface,
 
       appBar: AppBar(
-        backgroundColor: Colors.white,
+        backgroundColor: Theme.of(context).colorScheme.surface,
         elevation: 0,
         centerTitle: true,
-        title: const Text(
+        title: Text(
           'Existing areas',
           style: TextStyle(
-            color: Colors.black,
+            color: Theme.of(context).colorScheme.onSurface,
             fontWeight: FontWeight.bold,
           ),
         ),
       ),
 
       floatingActionButton: FloatingActionButton(
-        backgroundColor: Colors.black,
+        backgroundColor: Theme.of(context).colorScheme.primary,
+        foregroundColor: Theme.of(context).colorScheme.onPrimary,
         onPressed: () {
           Navigator.push(
             context,
             MaterialPageRoute(builder: (_) => const CreateAreaScreen()),
           );
         },
-        child: const Icon(Icons.add, color: Colors.white),
+        child: const Icon(Icons.add),
       ),
 
       body: Padding(
@@ -61,13 +62,13 @@ class _AreasScreenState extends State<AreasScreen> {
             final areas = provider.areas;
 
             if (areas.isEmpty) {
-              return const Center(
+              return Center(
                 child: Text(
                   'No AREAs yet.\nTap + to create one!',
                   textAlign: TextAlign.center,
                   style: TextStyle(
                     fontSize: 18,
-                    color: Colors.black54,
+                    color: Theme.of(context).colorScheme.onSurface.withOpacity(0.6),
                   ),
                 ),
               );
@@ -81,8 +82,8 @@ class _AreasScreenState extends State<AreasScreen> {
                     padding: const EdgeInsets.only(bottom: 8),
                     child: Text(
                       provider.error!,
-                      style: const TextStyle(
-                        color: Colors.orange,
+                      style: TextStyle(
+                        color: Theme.of(context).colorScheme.error,
                         fontSize: 12,
                       ),
                     ),
@@ -120,9 +121,9 @@ class _AreaRow extends StatelessWidget {
     return Container(
       padding: const EdgeInsets.symmetric(horizontal: 12, vertical: 14),
       decoration: BoxDecoration(
-        color: Colors.white,
+        color: Theme.of(context).colorScheme.surface,
         borderRadius: BorderRadius.circular(16),
-        border: Border.all(color: const Color(0xFFE0E0E0)),
+        border: Border.all(color: Theme.of(context).dividerColor),
       ),
       child: Row(
         crossAxisAlignment: CrossAxisAlignment.center,
@@ -132,14 +133,15 @@ class _AreaRow extends StatelessWidget {
             children: [
               _ServiceTag(
                 text: actionServiceName,
-                color: Colors.black,
+                color: Theme.of(context).colorScheme.primary,
               ),
               const SizedBox(width: 8),
-              const Icon(Icons.arrow_forward, size: 18),
+              Icon(Icons.arrow_forward,
+                  size: 18, color: Theme.of(context).iconTheme.color),
               const SizedBox(width: 8),
               _ServiceTag(
                 text: reactionServiceName,
-                color: Colors.green,
+                color: Colors.green, // keep accent color
               ),
             ],
           ),
@@ -153,9 +155,10 @@ class _AreaRow extends StatelessWidget {
                 Text(
                   area.name.isEmpty ? 'Unnamed AREA' : area.name,
                   overflow: TextOverflow.ellipsis,
-                  style: const TextStyle(
+                  style: TextStyle(
                     fontSize: 14,
                     fontWeight: FontWeight.w600,
+                    color: Theme.of(context).colorScheme.onSurface,
                   ),
                 ),
                 const SizedBox(height: 4),
@@ -163,9 +166,9 @@ class _AreaRow extends StatelessWidget {
                   '${area.actionLabel} → ${area.reactionLabel}',
                   maxLines: 2,
                   overflow: TextOverflow.ellipsis,
-                  style: const TextStyle(
+                  style: TextStyle(
                     fontSize: 11,
-                    color: Colors.black54,
+                    color: Theme.of(context).colorScheme.onSurface.withOpacity(0.6),
                   ),
                 ),
               ],
@@ -188,9 +191,9 @@ class _AreaRow extends StatelessWidget {
                     },
                   ),
                   IconButton(
-                    icon: const Icon(
+                    icon: Icon(
                       Icons.delete_outline,
-                      color: Colors.red,
+                      color: Theme.of(context).colorScheme.error,
                       size: 20,
                     ),
                     onPressed: () => _confirmDelete(context, area),
@@ -200,9 +203,9 @@ class _AreaRow extends StatelessWidget {
               if (createdAgo.isNotEmpty)
                 Text(
                   createdAgo,
-                  style: const TextStyle(
+                  style: TextStyle(
                     fontSize: 11,
-                    color: Colors.black54,
+                    color: Theme.of(context).colorScheme.onSurface.withOpacity(0.6),
                   ),
                 ),
             ],
@@ -217,17 +220,23 @@ class _AreaRow extends StatelessWidget {
       context: context,
       builder: (ctx) {
         return AlertDialog(
-          title: const Text('Delete AREA?'),
+          title: Text('Delete AREA?',
+              style: TextStyle(color: Theme.of(context).colorScheme.onSurface)),
           content: Text(
             'Are you sure you want to delete "${area.name.isEmpty ? 'this AREA' : area.name}"?',
+            style: TextStyle(color: Theme.of(context).colorScheme.onSurface),
           ),
           actions: [
             TextButton(
               onPressed: () => Navigator.pop(ctx),
-              child: const Text('Cancel'),
+              child: Text('Cancel',
+                  style: TextStyle(color: Theme.of(context).colorScheme.onSurface)),
             ),
             ElevatedButton(
-              style: ElevatedButton.styleFrom(backgroundColor: Colors.red),
+              style: ElevatedButton.styleFrom(
+                backgroundColor: Theme.of(context).colorScheme.error,
+                foregroundColor: Theme.of(context).colorScheme.onError,
+              ),
               onPressed: () {
                 Navigator.pop(ctx);
                 context.read<AreasProvider>().deleteArea(area.id);
@@ -260,8 +269,8 @@ class _ServiceTag extends StatelessWidget {
       ),
       child: Text(
         text,
-        style: const TextStyle(
-          color: Colors.white,
+        style: TextStyle(
+          color: Theme.of(context).colorScheme.onPrimary,
           fontSize: 13,
         ),
       ),
@@ -282,8 +291,6 @@ String _formatCreatedAgo(DateTime? createdAt) {
   return 'created just now';
 }
 
-/// Optional: if you don't want to import prettyServiceName from elsewhere,
-/// you can keep a local copy here or import it from your create_area file.
 String prettyServiceName(String key) {
   switch (key) {
     case 'timer':

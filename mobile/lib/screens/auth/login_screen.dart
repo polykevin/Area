@@ -57,21 +57,30 @@ class _LoginScreenState extends State<LoginScreen> {
 
   @override
   Widget build(BuildContext context) {
+    final scheme = Theme.of(context).colorScheme;
+
     return Scaffold(
-      backgroundColor: Colors.grey[100],
-      appBar: AppBar(title: const Text('Login')),
+      backgroundColor: scheme.surface,
+      appBar: AppBar(
+        title: Text(
+          'Login',
+          style: TextStyle(color: scheme.onSurface),
+        ),
+        backgroundColor: scheme.surface,
+        iconTheme: Theme.of(context).iconTheme,
+      ),
       body: Center(
         child: SingleChildScrollView(
           padding: const EdgeInsets.all(24.0),
           child: Column(
             mainAxisAlignment: MainAxisAlignment.center,
             children: [
-              const Text(
+              Text(
                 "Welcome Back",
                 style: TextStyle(
                   fontSize: 28,
                   fontWeight: FontWeight.bold,
-                  color: Colors.black87,
+                  color: scheme.onSurface,
                 ),
               ),
               const SizedBox(height: 40),
@@ -93,7 +102,7 @@ class _LoginScreenState extends State<LoginScreen> {
               if (_error != null)
                 Text(
                   _error!,
-                  style: const TextStyle(color: Colors.red),
+                  style: TextStyle(color: scheme.error),
                 ),
               const SizedBox(height: 16),
 
@@ -103,20 +112,21 @@ class _LoginScreenState extends State<LoginScreen> {
                   label: 'Login',
                   loading: _loading,
                   onPressed: _submit,
-                  backgroundColor: Colors.black,
-                  textColor: Colors.white,
+                  backgroundColor: scheme.primary,
+                  textColor: scheme.onPrimary,
                 ),
               ),
               const SizedBox(height: 20),
 
               Row(
-                children: const [
-                  Expanded(child: Divider()),
+                children: [
+                  const Expanded(child: Divider()),
                   Padding(
-                    padding: EdgeInsets.symmetric(horizontal: 8.0),
-                    child: Text("or"),
+                    padding: const EdgeInsets.symmetric(horizontal: 8.0),
+                    child: Text("or",
+                        style: TextStyle(color: scheme.onSurface)),
                   ),
-                  Expanded(child: Divider()),
+                  const Expanded(child: Divider()),
                 ],
               ),
               const SizedBox(height: 20),
@@ -129,7 +139,6 @@ class _LoginScreenState extends State<LoginScreen> {
                     final err = await auth.loginWithGoogle();
                     if (!context.mounted) return;
                     if (err == null) {
-                      // success
                       Navigator.pushReplacementNamed(context, HomeScreen.routeName);
                     } else {
                       ScaffoldMessenger.of(context).showSnackBar(
@@ -139,11 +148,11 @@ class _LoginScreenState extends State<LoginScreen> {
                   },
                   style: ElevatedButton.styleFrom(
                     backgroundColor: Colors.white,
-                    foregroundColor: Colors.black87,
+                    foregroundColor: Colors.black,
                     padding: const EdgeInsets.symmetric(vertical: 14),
                     shape: RoundedRectangleBorder(
                       borderRadius: BorderRadius.circular(6),
-                      side: const BorderSide(color: Colors.grey),
+                      side: BorderSide(color: scheme.outline),
                     ),
                   ),
                   icon: Image.asset('assets/icons/google.png', height: 24),
@@ -155,10 +164,12 @@ class _LoginScreenState extends State<LoginScreen> {
               Row(
                 mainAxisAlignment: MainAxisAlignment.center,
                 children: [
-                  const Text("Don't have an account?"),
+                  Text("Don't have an account?",
+                      style: TextStyle(color: scheme.onSurface)),
                   TextButton(
                     onPressed: _goToRegister,
-                    child: const Text("Register"),
+                    child: Text("Register",
+                        style: TextStyle(color: scheme.primary)),
                   ),
                 ],
               ),
