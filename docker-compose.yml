@@ -1,0 +1,50 @@
+services:
+  server:
+    build:
+      context: ./backend
+    container_name: area-server
+    ports:
+      - "8080:8080"
+    depends_on:
+      - db
+    environment:
+      DATABASE_URL: "postgresql://area:area@db:5432/area"
+    volumes:
+      - shared-volume:/shared
+  client_mobile:
+    build:
+      context: ./mobile
+    container_name: area_client_mobile
+    volumes:
+      - shared-volume:/shared
+    command: ["/bin/sh", "-c", "cp /app/build/app/outputs/flutter-apk/app-release.apk /shared/client.apk"]
+
+  client_web:
+    build:
+      context: ./web
+    container_name: area-client_web
+    ports:
+      - "8081:8081"
+    depends_on:
+      - server
+      - client_mobile
+    volumes:
+      - shared-volume:/shared
+    environment:
+      APK_PATH: "/shared/client.apk"
+
+  db:
+    image: postgres:15
+    container_name: area-db
+    environment:
+      POSTGRES_USER: area
+      POSTGRES_PASSWORD: area
+      POSTGRES_DB: area
+    ports:
+      - "5432:5432"
+    volumes:
+      - pgdata:/var/lib/postgresql/data
+
+volumes:
+  pgdata:
+  shared-volume:

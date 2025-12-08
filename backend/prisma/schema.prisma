@@ -1,0 +1,68 @@
+datasource db {
+  provider = "postgresql"
+  url      = env("DATABASE_URL")
+}
+
+generator client {
+  provider = "prisma-client-js"
+}
+
+model User {
+  id            Int               @id @default(autoincrement())
+  email         String            @unique
+  passwordHash  String?
+  role          String            @default("USER")
+  provider      String            @default("local")
+  providerId    String?
+  createdAt     DateTime          @default(now())
+  updatedAt     DateTime          @updatedAt
+
+  oauthCredentials OAuthCredential[]
+  serviceAuth ServiceAuth[]
+  areas Area[]
+}
+
+model OAuthCredential {
+  id           Int       @id @default(autoincrement())
+  provider     String
+  accessToken  String
+  refreshToken String?
+  expiresAt    DateTime?
+  userId       Int
+  user         User      @relation(fields: [userId], references: [id])
+}
+
+model ServiceAuth {
+  id              Int      @id @default(autoincrement())
+  userId          Int
+  service         String
+  providerUserId  String
+  accessToken     String
+  refreshToken    String?
+  expiresAt       DateTime?
+  metadata        Json?
+
+  user User @relation(fields: [userId], references: [id])
+
+  @@unique([userId, service])
+}
+
+model Area {
+  id             Int        @id @default(autoincrement())
+  userId         Int
+
+  name String @default("Area")
+  description String @default("Nice Area")
+
+  actionService  String
+  actionType     String
+  actionParams   Json
+
+  reactionService String
+  reactionType    String
+  reactionParams  Json
+
+  active          Boolean    @default(true)
+
+  user User @relation(fields: [userId], references: [id])
+}
