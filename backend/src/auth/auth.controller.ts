@@ -4,8 +4,7 @@ import { AuthService } from './auth.service';
 import { AuthGuard } from '@nestjs/passport';
 import { RegisterDto } from './dto/register.dto';
 import { LoginDto } from './dto/login.dto';
-import type { Request } from 'express';
-import { GoogleIdTokenDto } from './dto/google-id-token.dto';
+import { Request } from 'express';
 
 interface RequestUser {
   email: string;
@@ -17,7 +16,7 @@ interface RequestUser {
 
 interface OAuthProfile {
   email: string;
-  provider: string;
+  provider: string;       
   providerId: string;
   accessToken: string;
   refreshToken: string | null;
@@ -29,13 +28,13 @@ interface AuthenticatedRequest extends Request {
 
 @Controller('auth')
 export class AuthController {
-  constructor(private readonly authService: AuthService) {}
+  constructor(private authService: AuthService) {}
 
   @Get('health')
   getHealth() {
     return {
-      status: 'ok',
-      scope: 'auth',
+      status: "ok",
+      scope: "auth",
     };
   }
 
@@ -60,18 +59,11 @@ export class AuthController {
   googleAuth(): void {
   }
 
-  @Get('google/callback')
-  @UseGuards(AuthGuard('google'))
+  @Get("google/callback")
+  @UseGuards(AuthGuard("google"))
   async googleAuthRedirect(@Req() req: { user: OAuthProfile }) {
-    if (!req.user) {
-      return { error: 'User not found in OAuth process' };
-    }
-
+    if (!req.user)
+        return { error: 'User not found in OAuth process' };
     return this.authService.oauthLogin(req.user);
-  }
-
-  @Post('google/mobile')
-  async googleMobile(@Body() dto: GoogleIdTokenDto) {
-    return this.authService.oauthLoginWithIdToken(dto.idToken);
   }
 }
