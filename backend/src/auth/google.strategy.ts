@@ -1,6 +1,6 @@
 import { PassportStrategy } from "@nestjs/passport";
 import { Injectable } from '@nestjs/common';
-import { Strategy, Profile } from 'passport-google-oauth20';
+import { Strategy, Profile, StrategyOptions } from 'passport-google-oauth20';
 
 @Injectable()
 export class GoogleStrategy extends PassportStrategy(Strategy, 'google') {
@@ -9,28 +9,28 @@ export class GoogleStrategy extends PassportStrategy(Strategy, 'google') {
       clientID: process.env.GOOGLE_CLIENT_ID!,
       clientSecret: process.env.GOOGLE_CLIENT_SECRET!,
       callbackURL: process.env.GOOGLE_CALLBACK_URL!,
-      scope: ['email', 'profile'],
-    });
+      scope: [
+        'email',
+        'profile',
+        'https://www.googleapis.com/auth/gmail.readonly',
+      ],
+      accessType: 'offline',
+      prompt: 'consent',
+    } as StrategyOptions);
   }
 
   validate(
     accessToken: string,
     refreshToken: string,
     profile: Profile,
-  ): {
-    email: string;
-    provider: string;
-    providerId: string;
-    accessToken: string;
-    refreshToken: string | null;
-  } {
+  ) {
     const email = profile.emails?.[0]?.value ?? '';
     return {
       email,
-      provider: 'google',
+      provider: 'google' as const,
       providerId: profile.id,
       accessToken,
-      refreshToken,
+      refreshToken: refreshToken ?? null,
     };
   }
 }

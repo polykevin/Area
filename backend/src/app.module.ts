@@ -6,6 +6,7 @@ import { PrismaModule } from './prisma/prisma.module';
 import { AuthModule } from './auth/auth.module';
 import { GoogleStrategy } from './auth/google.strategy';
 import { JwtStrategy } from './auth/jwt.strategy';
+import { GoogleModule } from './google/google.module';
 
 @Module({
   imports: [
@@ -14,6 +15,7 @@ import { JwtStrategy } from './auth/jwt.strategy';
     }),
     PrismaModule,
     AuthModule,
+    GoogleModule,
   ],
   controllers: [AppController],
   providers: [AppService, GoogleStrategy,

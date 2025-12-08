@@ -12,11 +12,19 @@ const expiresIn: StringValue = (process.env.JWT_EXPIRES_IN as StringValue) ?? "1
 @Module({
   imports: [
     JwtModule.register({
-      secret: process.env.JWT_SECRET ?? "",
-      signOptions: { expiresIn },
+      secret: process.env.JWT_SECRET!,
+      signOptions: {
+        expiresIn,
+      },
     }),
   ],
   controllers: [AuthController],
-  providers: [AuthService, GoogleStrategy, JwtStrategy, PrismaService],
+  providers: [
+    AuthService,
+    GoogleStrategy,
+    JwtStrategy,
+    PrismaService,
+  ],
+  exports: [AuthService],
 })
 export class AuthModule {}

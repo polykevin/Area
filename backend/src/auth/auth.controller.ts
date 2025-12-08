@@ -4,26 +4,13 @@ import { AuthService } from './auth.service';
 import { AuthGuard } from '@nestjs/passport';
 import { RegisterDto } from './dto/register.dto';
 import { LoginDto } from './dto/login.dto';
-import { Request } from 'express';
 
-interface RequestUser {
+export interface OAuthProfile {
   email: string;
-  provider?: string;
-  providerId?: string;
-  accessToken?: string;
-  refreshToken?: string | null;
-}
-
-interface OAuthProfile {
-  email: string;
-  provider: string;       
+  provider: "google";
   providerId: string;
   accessToken: string;
   refreshToken: string | null;
-}
-
-interface AuthenticatedRequest extends Request {
-  user?: RequestUser;
 }
 
 @Controller('auth')
@@ -32,10 +19,7 @@ export class AuthController {
 
   @Get('health')
   getHealth() {
-    return {
-      status: "ok",
-      scope: "auth",
-    };
+    return this.authService.health();
   }
 
   @Post('register')
@@ -50,20 +34,19 @@ export class AuthController {
 
   @UseGuards(JwtAuthGuard)
   @Get('me')
-  getProfile(@Req() req: AuthenticatedRequest) {
+  getProfile(@Req() req) {
     return req.user;
   }
 
   @Get('google')
   @UseGuards(AuthGuard('google'))
-  googleAuth(): void {
+  async googleAuth() {
+    return;
   }
 
-  @Get("google/callback")
-  @UseGuards(AuthGuard("google"))
-  async googleAuthRedirect(@Req() req: { user: OAuthProfile }) {
-    if (!req.user)
-        return { error: 'User not found in OAuth process' };
-    return this.authService.oauthLogin(req.user);
+  @Get('google/callback')
+  @UseGuards(AuthGuard('google'))
+  async googleAuthRedirect(@Req() req) {
+    return this.authService.oauthLogin(req.user as OAuthProfile);
   }
 }
