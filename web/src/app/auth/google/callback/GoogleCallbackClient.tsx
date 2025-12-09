@@ -4,10 +4,16 @@ import { useEffect } from "react";
 import { useRouter } from "next/navigation";
 import { useAuth } from "@/components/AuthProvider";
 
+type AuthUser = {
+    id: number;
+    email: string;
+    name?: string;
+  };
+
 type SearchParams = { [key: string]: string | string[] | undefined };
 
 type Props = {
-  searchParams: SearchParams; // on le garde pour la signature mais on ne s'y fie plus
+  searchParams: SearchParams;
 };
 
 type JwtPayload = {
@@ -42,11 +48,9 @@ export default function GoogleCallbackClient({ searchParams }: Props) {
   const { loginFromApi } = useAuth();
 
   useEffect(() => {
-    // ✅ Lire directement la query string réelle
     const qs = typeof window !== "undefined" ? window.location.search : "";
     const params = new URLSearchParams(qs);
 
-    // On essaie plusieurs noms, au cas où le back change un jour
     const accessToken =
       params.get("access_token") ||
       params.get("token") ||
@@ -77,8 +81,7 @@ export default function GoogleCallbackClient({ searchParams }: Props) {
       email: payload.email,
     };
 
-    // hydrate AuthProvider comme après apiLogin
-    loginFromApi(user as any, accessToken);
+    loginFromApi(user as AuthUser, accessToken);
 
     router.replace("/areas");
   }, [router, loginFromApi, searchParams]);
