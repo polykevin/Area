@@ -10,6 +10,7 @@ import { GoogleModule } from './services/google/google.module';
 import { AreasModule } from './areas/area.module';
 import { IntegrationModule } from './services/integration.module';
 import { ScheduleModule } from '@nestjs/schedule';
+import { AboutController } from './about.controller';
 
 @Module({
   imports: [
@@ -23,7 +24,7 @@ import { ScheduleModule } from '@nestjs/schedule';
     GoogleModule,
     IntegrationModule
   ],
-  controllers: [AppController],
+  controllers: [AppController, AboutController],
   providers: [AppService, GoogleStrategy,
     JwtStrategy,],
 })
