@@ -8,6 +8,7 @@ type ServiceCardProps = {
   logoSrc: string;
   actionsCount?: number;
   reactionsCount?: number;
+  onConnect?: () => void;
 };
 
 export function ServiceCard({
@@ -18,6 +19,7 @@ export function ServiceCard({
   logoSrc,
   actionsCount,
   reactionsCount,
+  onConnect
 }: ServiceCardProps) {
   return (
     <article
@@ -137,6 +139,7 @@ export function ServiceCard({
             fontSize: "0.85rem",
             cursor: "pointer",
           }}
+          onClick={onConnect}
         >
           {isConnected ? "Manage" : "Connect"}
         </button>

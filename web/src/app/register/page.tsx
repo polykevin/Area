@@ -157,24 +157,6 @@ export default function RegisterPage() {
           — or —
         </div>
 
-        <button
-          type="button"
-          onClick={handleGoogleSignIn}
-          style={{
-            width: "100%",
-            background: "rgba(15,23,42,0.9)",
-            color: "#f9fafb",
-            borderRadius: 999,
-            padding: "0.55rem",
-            border: "1px solid rgba(148,163,184,0.6)",
-            fontSize: "0.85rem",
-            fontWeight: 500,
-            cursor: "pointer",
-          }}
-        >
-          Continue with Google
-        </button>
-
         <p className="card-footer">
           Already have an account?{" "}
           <Link href="/login" className="card-link">

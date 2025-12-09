@@ -13,6 +13,12 @@ export class GoogleStrategy extends PassportStrategy(Strategy, 'google') {
     });
   }
 
+  authorizationParams(): { [key: string]: string } {
+    return {
+      prompt: 'select_account',
+    };
+  }
+
   validate(
     accessToken: string,
     refreshToken: string,

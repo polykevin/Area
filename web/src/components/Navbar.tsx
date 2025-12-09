@@ -8,9 +8,7 @@ export function Navbar() {
   const { user, isReady } = useAuth();
   const [isMenuOpen, setIsMenuOpen] = useState(false);
 
-  if (!isReady) {
-    return null;
-  }
+  if (!isReady) return null;
 
   const displayName =
     user?.name || (user?.email ? user.email.split("@")[0] : "");
@@ -51,28 +49,16 @@ export function Navbar() {
             alignItems: "center",
           }}
         >
-          <Link
-            href="/services"
-            style={{
-              color: "#e5e7eb",
-              textDecoration: "none",
-              fontSize: "0.9rem",
-            }}
-          >
+          {/* 🔵 Animations UNIQUEMENT ICI */}
+          <Link href="/services" className="nav-link-main">
             Services
           </Link>
 
-          <Link
-            href="/areas"
-            style={{
-              color: "#e5e7eb",
-              textDecoration: "none",
-              fontSize: "0.9rem",
-            }}
-          >
+          <Link href="/areas" className="nav-link-main">
             My AREA
           </Link>
 
+          {/* Menu profil */}
           <div style={{ position: "relative" }}>
             <button
               type="button"
@@ -88,14 +74,12 @@ export function Navbar() {
                 cursor: "pointer",
               }}
             >
-              {/* Avatar rond */}
               <div
                 style={{
                   width: 28,
                   height: 28,
                   borderRadius: "999px",
-                  background:
-                    "linear-gradient(135deg,#3d3ea3ff)",
+                  background: "linear-gradient(135deg,#3b82f6,#8b5cf6)",
                   display: "flex",
                   alignItems: "center",
                   justifyContent: "center",
@@ -107,7 +91,6 @@ export function Navbar() {
                 {initial}
               </div>
 
-              {/* Nom */}
               <span
                 style={{
                   fontSize: "0.9rem",
@@ -116,13 +99,13 @@ export function Navbar() {
                   textOverflow: "ellipsis",
                   whiteSpace: "nowrap",
                   overflow: "hidden",
-                  textAlign: "left",
                 }}
               >
                 {displayName}
               </span>
             </button>
 
+            {/* Dropdown */}
             {isMenuOpen && (
               <div
                 style={{
@@ -196,6 +179,7 @@ export function Navbar() {
           >
             Sign in
           </Link>
+
           <Link href="/register">
             <button
               style={{

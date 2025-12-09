@@ -6,6 +6,10 @@ import { useRouter } from "next/navigation";
 import { useAuth } from "@/components/AuthProvider";
 import { apiLogin } from "@/lib/api";
 
+const GOOGLE_AUTH_URL =
+  (process.env.NEXT_PUBLIC_API_BASE_URL ?? "http://localhost:8080") +
+  "/auth/google";
+
 export default function LoginPage() {
   const { loginFromApi } = useAuth();
   const router = useRouter();
@@ -35,16 +39,16 @@ export default function LoginPage() {
       loginFromApi(res.user, res.access_token);
       router.push("/areas");
     } catch (err) {
-      const message = err instanceof Error ? err.message : "Login failed.";
+      const msg = err instanceof Error ? err.message : "Login failed.";
       setIsError(true);
-      setMessage(message);
+      setMessage(msg);
     } finally {
       setIsSubmitting(false);
     }
   }
 
   function handleGoogleSignIn() {
-    window.location.href = `${process.env.NEXT_PUBLIC_API_URL}/auth/google`;
+    window.location.href = GOOGLE_AUTH_URL;
   }
 
   return (
@@ -117,7 +121,7 @@ export default function LoginPage() {
 
           <button
             type="submit"
-            className="btn-primary"
+            className={`btn-primary btn-press`}
             disabled={isSubmitting}
           >
             {isSubmitting ? "Signing in..." : "Sign in"}
@@ -147,17 +151,8 @@ export default function LoginPage() {
         <button
           type="button"
           onClick={handleGoogleSignIn}
-          style={{
-            width: "100%",
-            background: "rgba(15,23,42,0.9)",
-            color: "#f9fafb",
-            borderRadius: 999,
-            padding: "0.55rem",
-            border: "1px solid rgba(148,163,184,0.6)",
-            fontSize: "0.85rem",
-            fontWeight: 500,
-            cursor: "pointer",
-          }}
+          className="btn-dark"
+          style={{ width: "100%" }}
         >
           Continue with Google
         </button>

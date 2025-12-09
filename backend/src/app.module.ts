@@ -1,9 +1,12 @@
 import { Module } from '@nestjs/common';
 import { ConfigModule } from '@nestjs/config';
-import { AppController } from './app.controller';
-import { AppService } from './app.service';
-import { PrismaModule } from './prisma/prisma.module';
+import { ScheduleModule } from '@nestjs/schedule';
 import { AuthModule } from './auth/auth.module';
+import { AreasModule } from './areas/area.module';
+import { IntegrationModule } from './services/integration.module';
+import { AutomationEngine } from './automation/engine.service';
+import { PrismaModule } from './prisma/prisma.module';
+import { GoogleModule } from './services/google/google.module';
 
 @Module({
   imports: [
@@ -12,8 +15,17 @@ import { AuthModule } from './auth/auth.module';
     }),
     PrismaModule,
     AuthModule,
+
+    AuthModule,
+    AreasModule,
+    IntegrationModule,
+    ScheduleModule.forRoot(),
   ],
-  controllers: [AppController],
-  providers: [AppService],
+  providers: [
+    AutomationEngine,
+  ],
+  exports: [
+    AutomationEngine,
+  ]
 })
 export class AppModule {}

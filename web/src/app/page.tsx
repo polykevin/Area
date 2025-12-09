@@ -27,8 +27,7 @@ const avatarStyle: CSSProperties = {
   width: 42,
   height: 42,
   borderRadius: "999px",
-  background:
-    "conic-gradient(from 160deg, #22c55e)",
+  background: "conic-gradient(from 160deg, #22c55e)",
   opacity: 0.75,
 };
 
@@ -155,17 +154,8 @@ export default function HomePage() {
         >
           <Link href="/register">
             <button
-              style={{
-                width: 160,
-                padding: "0.6rem 1.1rem",
-                borderRadius: 999,
-                border: "none",
-                background: "#3b82f6",
-                color: "#f9fafb",
-                cursor: "pointer",
-                fontSize: "0.9rem",
-                fontWeight: 600,
-              }}
+              className="btn-hero-primary"
+              style={{ width: 160 }}
             >
               Get Started Free
             </button>
@@ -173,16 +163,8 @@ export default function HomePage() {
 
           <Link href="/login">
             <button
-              style={{
-                width: 150,
-                borderRadius: 10,
-                padding: "0.55rem",
-                border: "1px solid rgba(148,163,184,0.6)",
-                background: "rgba(15,23,42,0.9)",
-                color: "#f9fafb",
-                cursor: "pointer",
-                fontSize: "0.9rem",
-              }}
+              className="btn-hero-secondary"
+              style={{ width: 150 }}
             >
               Sign in
             </button>

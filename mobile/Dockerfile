@@ -1,10 +1,14 @@
-FROM cirrusci/flutter:latest
+FROM ghcr.io/cirruslabs/flutter:3.38.4
 
 WORKDIR /app
 
-COPY . .
+COPY pubspec.yaml pubspec.lock ./
 
 RUN flutter pub get
+
+COPY . .
+
+RUN flutter pub get --offline
 
 RUN flutter build apk --release
 
