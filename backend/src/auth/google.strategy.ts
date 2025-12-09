@@ -1,4 +1,4 @@
-import { PassportStrategy } from '@nestjs/passport';
+import { PassportStrategy } from "@nestjs/passport";
 import { Injectable } from '@nestjs/common';
 import { Strategy, Profile } from 'passport-google-oauth20';
 
@@ -11,6 +11,12 @@ export class GoogleStrategy extends PassportStrategy(Strategy, 'google') {
       callbackURL: process.env.GOOGLE_CALLBACK_URL!,
       scope: ['email', 'profile'],
     });
+  }
+
+  authorizationParams(): { [key: string]: string } {
+    return {
+      prompt: 'select_account',
+    };
   }
 
   validate(

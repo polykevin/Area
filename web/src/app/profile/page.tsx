@@ -21,7 +21,6 @@ export default function ProfilePage() {
 
   const displayName =
     user.name || (user.email ? user.email.split("@")[0] : "User");
-  const initial = displayName.charAt(0).toUpperCase();
 
   return (
     <main
