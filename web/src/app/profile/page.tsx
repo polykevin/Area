@@ -81,7 +81,6 @@ export default function ProfilePage() {
             gap: "0.75rem",
           }}
         >
-
         </div>
       </header>
 

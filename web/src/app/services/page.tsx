@@ -46,24 +46,7 @@ const MOCK_SERVICES = [
 ];
 
 export default function ServicesPage() {
-  const [token, setToken] = useState<string | null>(null);
   const [connectedServices, setConnectedServices] = useState<string[]>([]);
-  const [ready, setReady] = useState(false);
-
-  const fetchConnectedServices = async (authToken: string | null) => {
-    if (!authToken) return;
-    try {
-      const res = await fetch(`${process.env.NEXT_PUBLIC_API_URL}/auth/me`, {
-        headers: { Authorization: `Bearer ${authToken}` },
-      });
-      const user = await res.json();
-      if (user?.services) {setConnectedServices(user.services);console.log(user.services)};
-    } catch (err) {
-      console.error("Failed to fetch connected services:", err);
-    } finally {
-      setReady(true);
-    }
-  };
 
   useEffect(() => {
     const params = new URLSearchParams(window.location.search);
@@ -101,7 +84,9 @@ export default function ServicesPage() {
     const payload = JSON.parse(atob(savedToken.split('.')[1]));
     const userId = payload.sub;
 
-    window.location.href = `${process.env.NEXT_PUBLIC_API_URL}/oauth/${serviceName}/url?userId=${userId}`;
+    window.location.assign(
+      `${process.env.NEXT_PUBLIC_API_URL}/oauth/${serviceName}/url?userId=${userId}`
+    );
   };
 
 
