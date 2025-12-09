@@ -2,6 +2,16 @@ import { Injectable, Logger } from '@nestjs/common';
 import { ServiceAuthRepository } from '../../auth/service-auth.repository';
 import { GmailMessage } from './google.interface';
 import { google } from 'googleapis';
+import { Credentials } from 'google-auth-library';
+import { gmail_v1 } from 'googleapis';
+
+interface ServiceAuth {
+  userId: number;
+  accessToken: string | null;
+  refreshToken: string | null;
+  expiresAt: Date | null;
+  metadata?: ({ email?: string } & Record<string, unknown>) | null;
+}
 
 @Injectable()
 export class GoogleService {
@@ -27,15 +37,13 @@ export class GoogleService {
 
     if (auth.expiresAt && auth.expiresAt.getTime() < Date.now()) {
       const newTokens = await client.refreshAccessToken();
-      const tokens = newTokens.credentials;
+      const tokens: Credentials = newTokens.credentials;
       this.logger.log(`Refreshed Google token for user ${userId}`);
 
       await this.authRepo.updateTokens(userId, 'google', {
         accessToken: tokens.access_token || undefined,
         refreshToken: (tokens.refresh_token ?? auth.refreshToken) || undefined,
-        expiresAt: tokens.expiry_date
-          ? new Date(tokens.expiry_date)
-          : null,
+        expiresAt: tokens.expiry_date ? new Date(tokens.expiry_date) : null,
       });
 
       client.setCredentials(tokens);
@@ -48,7 +56,7 @@ export class GoogleService {
     return google.gmail({ version: 'v1', auth: client });
   }
 
-  async listNewEmails(userAuth: any) {
+  async listNewEmails(userAuth: Pick<ServiceAuth, 'userId'>) {
     const gmail = await this.getGmailClient(userAuth.userId);
 
     const res = await gmail.users.messages.list({
@@ -64,25 +72,28 @@ export class GoogleService {
     for (const msg of res.data.messages) {
       const full = await gmail.users.messages.get({
         userId: 'me',
-        id: msg.id ?? "",
+        id: msg.id ?? '',
       });
 
       const headers = full.data.payload?.headers ?? [];
 
       messages.push({
-        id: msg.id ?? "",
-        subject: this.getHeader(headers, 'Subject') ?? "",
-        from: this.getHeader(headers, 'From') ?? "",
-        snippet: full.data.snippet ?? "",
+        id: msg.id ?? '',
+        subject: this.getHeader(headers, 'Subject') ?? '',
+        from: this.getHeader(headers, 'From') ?? '',
+        snippet: full.data.snippet ?? '',
       });
     }
 
     return messages;
   }
 
-  private getHeader(headers: any[], name: string) {
-    const found = headers.find(h => h.name === name);
-    return found ? found.value : null;
+  private getHeader(
+    headers: gmail_v1.Schema$MessagePartHeader[],
+    name: string,
+  ) {
+    const found = headers.find((h) => h?.name === name);
+    return found && found.value ? found.value : null;
   }
 
   async sendEmail(userId: number, rawMessage: string) {

@@ -10,19 +10,9 @@ import { NewEmailHook } from './google/hooks/new-email.hook';
 import { googleIntegration } from './google/google.integration';
 
 @Module({
-  imports: [
-    GoogleModule,
-    AuthModule,
-    AreasModule,
-  ],
-  providers: [
-    ServiceRegistry,
-    AutomationEngine,
-  ],
-  exports: [
-    ServiceRegistry,
-    AutomationEngine,
-  ],
+  imports: [GoogleModule, AuthModule, AreasModule],
+  providers: [ServiceRegistry, AutomationEngine],
+  exports: [ServiceRegistry, AutomationEngine],
 })
 export class IntegrationModule {
   constructor(
@@ -34,7 +24,7 @@ export class IntegrationModule {
   ) {
     newEmailHook.setEngine(engine);
     registry.register(
-      googleIntegration(googleService, authRepo, engine, newEmailHook)
+      googleIntegration(googleService, authRepo, engine, newEmailHook),
     );
   }
 }

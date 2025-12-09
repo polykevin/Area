@@ -1,10 +1,24 @@
 import { Injectable } from '@nestjs/common';
 import { GoogleOAuthProvider } from './providers/google.oauth';
 
+export interface OAuthTokens {
+  access_token?: string;
+  refresh_token?: string | null;
+  expiry_date?: number | null;
+  id_token?: string;
+}
+
+export interface OAuthProfile {
+  id?: string;
+  email?: string;
+  name?: string;
+  [key: string]: unknown;
+}
+
 export interface OAuthProvider {
   getAuthUrl(state?: string): string;
-  exchangeCode(code: string): Promise<any>;
-  getUserProfile(tokens: any): Promise<any>;
+  exchangeCode(code: string): Promise<OAuthTokens>;
+  getUserProfile(tokens: OAuthTokens): Promise<OAuthProfile>;
 }
 
 @Injectable()

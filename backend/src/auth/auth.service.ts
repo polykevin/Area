@@ -7,7 +7,6 @@ import { PrismaService } from '../prisma/prisma.service';
 import { JwtService } from '@nestjs/jwt';
 import * as bcrypt from 'bcrypt';
 import { OAuth2Client } from 'google-auth-library';
-import { ServiceAuthRepository } from './service-auth.repository';
 
 interface OAuthProfile {
   email: string;
@@ -22,7 +21,6 @@ export class AuthService {
   constructor(
     private prisma: PrismaService,
     private jwtService: JwtService,
-    private serviceAuthRepo: ServiceAuthRepository,
   ) {}
 
   async register(email: string, password: string) {
@@ -83,78 +81,53 @@ export class AuthService {
       },
     };
   }
-  private signToken(user: { id: number; email: string }) {
-    return this.jwtService.sign({ sub: user.id, email: user.email });
-  }
   async oauthLogin(profile: OAuthProfile) {
     const { email, provider, providerId, accessToken, refreshToken } = profile;
 
-    let user = await this.prisma.user.findFirst({
-      where: {
-        provider: profile.provider,
-        providerId: profile.providerId,
-      },
+    let user = await this.prisma.user.findUnique({
+      where: { email },
     });
 
     if (!user) {
-      user = await this.prisma.user.upsert({
-        where: { email: profile.email },
-        update: {
-          provider: profile.provider,
-          providerId: profile.providerId,
-        },
-        create: {
-          email: profile.email,
-          provider: profile.provider,
-          providerId: profile.providerId,
+      user = await this.prisma.user.create({
+        data: {
+          email,
+          provider,
+          providerId,
+          oauthCredentials: {
+            create: {
+              provider,
+              accessToken,
+              refreshToken,
+            },
+          },
         },
       });
     }
 
-    return this.signToken({ id: user.id, email: user.email });
-    // let user = await this.prisma.user.findUnique({
-    //   where: { email },
-    // });
+    const payload = { sub: user.id, email: user.email };
+    const access_token = await this.jwtService.signAsync(payload);
 
-    // if (!user) {
-    //   user = await this.prisma.user.create({
-    //     data: {
-    //       email,
-    //       provider,
-    //       providerId,
-    //       oauthCredentials: {
-    //         create: {
-    //           provider,
-    //           accessToken,
-    //           refreshToken,
-    //         },
-    //       },
-    //     },
-    //   });
-    // }
-
-    // const payload = { sub: user.id, email: user.email };
-    // const access_token = await this.jwtService.signAsync(payload);
-
-    // return {
-    //   message: 'OAuth login successful',
-    //   access_token,
-    //   user: {
-    //     id: user.id,
-    //     email: user.email,
-    //     createdAt: user.createdAt,
-    //   },
-    // };
+    return {
+      message: 'OAuth login successful',
+      access_token,
+      user: {
+        id: user.id,
+        email: user.email,
+        createdAt: user.createdAt,
+      },
+    };
   }
 
   private googleClient = new OAuth2Client(
-    '1008857371236-3d09ddvj4l7p3deubnufbih0susfpt5a.apps.googleusercontent.com'
+    '1008857371236-3d09ddvj4l7p3deubnufbih0susfpt5a.apps.googleusercontent.com',
   );
 
   async oauthLoginWithIdToken(idToken: string) {
     const ticket = await this.googleClient.verifyIdToken({
       idToken,
-      audience: '1008857371236-3d09ddvj4l7p3deubnufbih0susfpt5a.apps.googleusercontent.com',
+      audience:
+        '1008857371236-3d09ddvj4l7p3deubnufbih0susfpt5a.apps.googleusercontent.com',
     });
 
     const payload = ticket.getPayload();
@@ -191,16 +164,10 @@ export class AuthService {
     const tokenPayload = { sub: user.id, email: user.email };
 
     return {
-      message: "Google mobile login successful",
+      message: 'Google mobile login successful',
       access_token: await this.jwtService.signAsync(tokenPayload),
     };
   }
-
-  async getConnectedServices(userId: number) {
-    const records = await this.serviceAuthRepo.findAllByUser(userId);
-    return records.map(r => r.service);
-  }
-
   health() {
     return { status: 'ok', scope: 'auth' };
   }

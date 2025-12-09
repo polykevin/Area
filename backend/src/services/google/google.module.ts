@@ -7,10 +7,7 @@ import { NewEmailHook } from './hooks/new-email.hook';
 import { ServiceRegistry } from '../service.registry';
 
 @Module({
-  imports: [
-    PrismaModule,
-    AreasModule
-  ],
+  imports: [PrismaModule, AreasModule],
   providers: [
     GoogleService,
     ServiceAuthRepository,

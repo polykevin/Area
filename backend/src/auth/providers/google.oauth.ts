@@ -1,11 +1,11 @@
 import { google } from 'googleapis';
-import { OAuth2Client } from 'google-auth-library';
+import { OAuthProfile, OAuthTokens } from '../oauth.factory';
 
 export class GoogleOAuthProvider {
   private oauth2 = new google.auth.OAuth2(
     process.env.GOOGLE_CLIENT_ID,
     process.env.GOOGLE_CLIENT_SECRET,
-    process.env.GOOGLE_CALLBACK_URL
+    process.env.GOOGLE_CALLBACK_URL,
   );
 
   getAuthUrl(state?: string) {
@@ -22,20 +22,20 @@ export class GoogleOAuthProvider {
     });
   }
 
-  async exchangeCode(code: string) {
+  async exchangeCode(code: string): Promise<OAuthTokens> {
     const { tokens } = await this.oauth2.getToken(code);
     return {
       access_token: tokens.access_token ?? undefined,
       refresh_token: tokens.refresh_token ?? null,
       expiry_date: tokens.expiry_date ?? null,
-      id_token: tokens.id_token ?? undefined
+      id_token: tokens.id_token ?? undefined,
     };
   }
 
-  async getUserProfile(tokens: { id_token?: string; access_token?: string}) {
+  async getUserProfile(tokens: OAuthTokens): Promise<OAuthProfile> {
     if (tokens.id_token) {
       const ticket = await this.oauth2.verifyIdToken({
-        idToken: tokens.id_token!,
+        idToken: tokens.id_token,
         audience: process.env.GOOGLE_CLIENT_ID,
       });
       const payload = ticket.getPayload();
@@ -50,9 +50,9 @@ export class GoogleOAuthProvider {
     const oauth2 = google.oauth2('v2').userinfo;
     const { data } = await oauth2.get({ auth: this.oauth2 });
     return {
-      id: data.id,
-      email: data.email,
-      name: data.name,
+      id: data.id ?? undefined,
+      email: data.email ?? undefined,
+      name: data.name ?? undefined,
     };
   }
 }

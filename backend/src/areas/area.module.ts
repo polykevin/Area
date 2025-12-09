@@ -8,14 +8,7 @@ import { AreasService } from './area.service';
 @Module({
   imports: [PrismaModule],
   controllers: [AreasController],
-  providers: [
-    PrismaService,
-    AreaRepository,
-    AreasService
-  ],
-  exports: [
-    AreaRepository,
-    AreasService
-  ]
+  providers: [PrismaService, AreaRepository, AreasService],
+  exports: [AreaRepository, AreasService],
 })
 export class AreasModule {}
