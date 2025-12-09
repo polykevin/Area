@@ -94,8 +94,7 @@ export function Navbar() {
                   width: 28,
                   height: 28,
                   borderRadius: "999px",
-                  background:
-                    "linear-gradient(135deg,#3d3ea3ff)",
+                  background: "linear-gradient(135deg,#3d3ea3ff)",
                   display: "flex",
                   alignItems: "center",
                   justifyContent: "center",
@@ -186,29 +185,11 @@ export function Navbar() {
         </div>
       ) : (
         <div style={{ display: "flex", gap: "1rem", alignItems: "center" }}>
-          <Link
-            href="/login"
-            style={{
-              color: "#e5e7eb",
-              textDecoration: "none",
-              fontSize: "0.9rem",
-            }}
-          >
+          <Link href="/login" className="btn-nav-secondary">
             Sign in
           </Link>
           <Link href="/register">
-            <button
-              style={{
-                padding: "0.45rem 0.95rem",
-                borderRadius: 999,
-                border: "none",
-                background: "#2563eb",
-                color: "#fff",
-                fontWeight: 500,
-                cursor: "pointer",
-                fontSize: "0.85rem",
-              }}
-            >
+            <button type="button" className="btn-nav-primary">
               Get Started
             </button>
           </Link>

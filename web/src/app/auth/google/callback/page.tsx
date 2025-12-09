@@ -31,11 +31,14 @@ export default function GoogleCallbackPage() {
       return () => clearTimeout(timeout);
     }
 
+    // token is guaranteed to be present past this point
+    const accessToken = token;
+
     async function finishLogin() {
       try {
         const res = await fetch(`${API_BASE_URL}/auth/me`, {
           headers: {
-            Authorization: `Bearer ${token}`,
+            Authorization: `Bearer ${accessToken}`,
           },
         });
 
@@ -50,7 +53,7 @@ export default function GoogleCallbackPage() {
             id: me.id,
             email: me.email,
           },
-          token,
+          accessToken,
         );
 
         router.replace("/areas");

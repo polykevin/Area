@@ -20,199 +20,283 @@ export default function ProfilePage() {
   }
 
   const displayName =
-    user.name ||
-    (user.email ? user.email.split("@")[0] : "User");
+    user.name || (user.email ? user.email.split("@")[0] : "User");
+  const initial = displayName.charAt(0).toUpperCase();
 
   return (
-    <div
+    <main
       style={{
-        paddingTop: "6rem",
-        paddingBottom: "4rem",
-        maxWidth: 900,
-        margin: "0 auto",
+        minHeight: "100vh",
+        padding: "6rem 3rem 3rem",
+        backgroundColor: "#020617",
         color: "#e5e7eb",
       }}
     >
-      {/* Header */}
-      <header style={{ marginBottom: "2rem" }}>
-        <h1
-          style={{
-            fontSize: "2rem",
-            fontWeight: 600,
-            marginBottom: "0.35rem",
-          }}
-        >
-          Profile
-        </h1>
-        <p
-          style={{
-            color: "#9ca3af",
-            fontSize: "0.95rem",
-          }}
-        >
-          Manage your account settings.
-        </p>
-      </header>
-
-      {/* Account information card */}
-      <section
+      {/* Header global */}
+      <header
         style={{
-          background: "rgba(15,23,42,0.95)",
-          borderRadius: 20,
-          border: "1px solid rgba(148,163,184,0.35)",
-          padding: "1.4rem 1.6rem",
-          marginBottom: "1.5rem",
-          boxShadow:
-            "0 18px 45px rgba(15,23,42,0.85), 0 0 0 1px rgba(15,23,42,0.9)",
+          maxWidth: 900,
+          margin: "0 auto 2rem",
+          display: "flex",
+          justifyContent: "space-between",
+          alignItems: "center",
+          gap: "1rem",
         }}
       >
-        <div
-          style={{
-            marginBottom: "1.2rem",
-            display: "flex",
-            justifyContent: "space-between",
-            alignItems: "center",
-            gap: "1rem",
-          }}
-        >
-          <div>
-            <h2
-              style={{
-                fontSize: "1rem",
-                fontWeight: 500,
-                marginBottom: "0.15rem",
-              }}
-            >
-              Account Information
-            </h2>
-            <p
-              style={{
-                fontSize: "0.85rem",
-                color: "#9ca3af",
-              }}
-            >
-              Your personal account details.
-            </p>
-          </div>
-
-          <button
-            type="button"
+        <div>
+          <p
             style={{
-              padding: "0.4rem 0.9rem",
-              borderRadius: 999,
-              border: "1px solid rgba(148,163,184,0.5)",
-              background: "transparent",
-              color: "#e5e7eb",
-              fontSize: "0.8rem",
-              cursor: "not-allowed",
-              opacity: 0.5,
+              fontSize: "0.75rem",
+              color: "#64748b",
+              letterSpacing: "0.18em",
+              textTransform: "uppercase",
+              marginBottom: "0.3rem",
             }}
           >
-            Edit (soon)
-          </button>
+            Account
+          </p>
+          <h1
+            style={{
+              fontSize: "1.9rem",
+              fontWeight: 600,
+              marginBottom: "0.3rem",
+            }}
+          >
+            Profile
+          </h1>
+          <p
+            style={{
+              color: "#9ca3af",
+              fontSize: "0.95rem",
+            }}
+          >
+            Manage your AREA account and security.
+          </p>
         </div>
 
-        {/* Name + email */}
         <div
           style={{
-            display: "grid",
-            gridTemplateColumns: "minmax(0, 1fr)",
-            rowGap: "1rem",
+            display: "flex",
+            alignItems: "center",
+            gap: "0.75rem",
           }}
         >
-          <div>
-            <p
-              style={{
-                fontSize: "0.8rem",
-                color: "#9ca3af",
-                marginBottom: "0.25rem",
-              }}
-            >
-              Name
-            </p>
-            <p
-              style={{
-                fontSize: "0.95rem",
-                fontWeight: 500,
-              }}
-            >
-              {displayName}
-            </p>
-          </div>
 
-          <div>
-            <p
-              style={{
-                fontSize: "0.8rem",
-                color: "#9ca3af",
-                marginBottom: "0.25rem",
-              }}
-            >
-              Email
-            </p>
-            <p
-              style={{
-                fontSize: "0.95rem",
-                fontWeight: 500,
-              }}
-            >
-              {user.email}
-            </p>
-          </div>
         </div>
-      </section>
+      </header>
 
-      {/* Danger zone */}
-      <section
+      <div
         style={{
-          background: "rgba(15,23,42,0.95)",
-          borderRadius: 20,
-          border: "1px solid rgba(248,113,113,0.5)",
-          padding: "1.4rem 1.6rem",
-          boxShadow:
-            "0 18px 45px rgba(15,23,42,0.85), 0 0 0 1px rgba(15,23,42,0.9)",
+          maxWidth: 900,
+          margin: "0 auto",
+          display: "grid",
+          gridTemplateColumns: "minmax(0, 2fr) minmax(0, 1.3fr)",
+          gap: "1.5rem",
         }}
       >
-        <h2
+        <section
           style={{
-            fontSize: "1rem",
-            fontWeight: 500,
-            marginBottom: "0.2rem",
-            color: "#fecaca",
+            background: "rgba(15,23,42,0.95)",
+            borderRadius: 20,
+            border: "1px solid rgba(148,163,184,0.35)",
+            padding: "1.6rem 1.7rem",
+            boxShadow:
+              "0 18px 45px rgba(15,23,42,0.85), 0 0 0 1px rgba(15,23,42,0.9)",
           }}
         >
-          Danger Zone
-        </h2>
-        <p
-          style={{
-            fontSize: "0.85rem",
-            color: "#fca5a5",
-            marginBottom: "1rem",
-          }}
-        >
-          Irreversible actions related to your account.
-        </p>
+          <div
+            style={{
+              marginBottom: "1.4rem",
+              display: "flex",
+              justifyContent: "space-between",
+              alignItems: "center",
+              gap: "1rem",
+            }}
+          >
+            <div>
+              <h2
+                style={{
+                  fontSize: "1rem",
+                  fontWeight: 500,
+                  marginBottom: "0.15rem",
+                }}
+              >
+                Account Information
+              </h2>
+              <p
+                style={{
+                  fontSize: "0.85rem",
+                  color: "#9ca3af",
+                }}
+              >
+                Basic information about your AREA identity.
+              </p>
+            </div>
 
-        <button
-          type="button"
-          onClick={() => {
-            logout();
-            router.push("/");
-          }}
+            <button
+              type="button"
+              style={{
+                padding: "0.4rem 0.9rem",
+                borderRadius: 999,
+                border: "1px solid rgba(148,163,184,0.5)",
+                background: "transparent",
+                color: "#e5e7eb",
+                fontSize: "0.8rem",
+                cursor: "not-allowed",
+                opacity: 0.5,
+              }}
+            >
+              Edit (soon)
+            </button>
+          </div>
+
+          <div
+            style={{
+              display: "grid",
+              gridTemplateColumns: "minmax(0, 1fr)",
+              rowGap: "1.1rem",
+            }}
+          >
+            <div>
+              <p
+                style={{
+                  fontSize: "0.8rem",
+                  color: "#9ca3af",
+                  marginBottom: "0.25rem",
+                }}
+              >
+                Name
+              </p>
+              <p
+                style={{
+                  fontSize: "0.95rem",
+                  fontWeight: 500,
+                }}
+              >
+                {displayName}
+              </p>
+            </div>
+
+            <div>
+              <p
+                style={{
+                  fontSize: "0.8rem",
+                  color: "#9ca3af",
+                  marginBottom: "0.25rem",
+                }}
+              >
+                Email
+              </p>
+              <p
+                style={{
+                  fontSize: "0.95rem",
+                  fontWeight: 500,
+                }}
+              >
+                {user.email}
+              </p>
+            </div>
+          </div>
+        </section>
+
+        <section
           style={{
-            padding: "0.55rem 1.1rem",
-            borderRadius: 999,
-            border: "none",
-            background: "#ef4444",
-            color: "#f9fafb",
-            fontSize: "0.9rem",
-            fontWeight: 500,
-            cursor: "pointer",
+            background: "rgba(15,23,42,0.95)",
+            borderRadius: 20,
+            border: "1px solid rgba(248,113,113,0.4)",
+            padding: "1.6rem 1.7rem",
+            boxShadow:
+              "0 18px 45px rgba(15,23,42,0.85), 0 0 0 1px rgba(15,23,42,0.9)",
           }}
         >
-          Logout
-        </button>
-      </section>
-    </div>
+          <h2
+            style={{
+              fontSize: "1rem",
+              fontWeight: 500,
+              marginBottom: "0.25rem",
+              color: "#fecaca",
+            }}
+          >
+            Danger Zone
+          </h2>
+          <p
+            style={{
+              fontSize: "0.85rem",
+              color: "#fca5a5",
+              marginBottom: "1.1rem",
+            }}
+          >
+            Session and account related critical actions.
+          </p>
+
+          <div
+            style={{
+              display: "flex",
+              flexDirection: "column",
+              gap: "0.75rem",
+            }}
+          >
+            <div>
+              <p
+                style={{
+                  fontSize: "0.8rem",
+                  color: "#fecaca",
+                  marginBottom: "0.2rem",
+                }}
+              >
+                Logout
+              </p>
+              <p
+                style={{
+                  fontSize: "0.8rem",
+                  color: "#fca5a5",
+                  marginBottom: "0.55rem",
+                }}
+              >
+                Ends your current session on this browser.
+              </p>
+
+              <button
+                type="button"
+                onClick={() => {
+                  logout();
+                  router.push("/");
+                }}
+                style={{
+                  padding: "0.55rem 1.1rem",
+                  borderRadius: 999,
+                  border: "none",
+                  background: "#ef4444",
+                  color: "#f9fafb",
+                  fontSize: "0.9rem",
+                  fontWeight: 500,
+                  cursor: "pointer",
+                }}
+              >
+                Logout
+              </button>
+            </div>
+
+            <div
+              style={{
+                marginTop: "0.8rem",
+                paddingTop: "0.7rem",
+                borderTop: "1px solid rgba(248,113,113,0.3)",
+              }}
+            >
+              <p
+                style={{
+                  fontSize: "0.78rem",
+                  color: "#fca5a5",
+                }}
+              >
+                More account controls will be available later
+                (delete account, revoke tokens, ...).
+              </p>
+            </div>
+          </div>
+        </section>
+      </div>
+    </main>
   );
 }
