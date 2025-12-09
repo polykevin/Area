@@ -81,23 +81,7 @@ export default function ProfilePage() {
             gap: "0.75rem",
           }}
         >
-          <div
-            aria-label="Profile initial"
-            style={{
-              width: 42,
-              height: 42,
-              borderRadius: "50%",
-              display: "grid",
-              placeItems: "center",
-              fontWeight: 600,
-              color: "#f8fafc",
-              background: "linear-gradient(135deg, #3b82f6, #8b5cf6)",
-              border: "1px solid rgba(148,163,184,0.4)",
-              boxShadow: "0 10px 20px rgba(59,130,246,0.25)",
-            }}
-          >
-            {initial}
-          </div>
+          
         </div>
       </header>
 
@@ -151,16 +135,7 @@ export default function ProfilePage() {
 
             <button
               type="button"
-              style={{
-                padding: "0.4rem 0.9rem",
-                borderRadius: 999,
-                border: "1px solid rgba(148,163,184,0.5)",
-                background: "transparent",
-                color: "#e5e7eb",
-                fontSize: "0.8rem",
-                cursor: "not-allowed",
-                opacity: 0.5,
-              }}
+              className="btn-profile-edit"
             >
               Edit (soon)
             </button>
@@ -274,19 +249,10 @@ export default function ProfilePage() {
 
               <button
                 type="button"
+                className="btn-profile-logout"
                 onClick={() => {
                   logout();
                   router.push("/");
-                }}
-                style={{
-                  padding: "0.55rem 1.1rem",
-                  borderRadius: 999,
-                  border: "none",
-                  background: "#ef4444",
-                  color: "#f9fafb",
-                  fontSize: "0.9rem",
-                  fontWeight: 500,
-                  cursor: "pointer",
                 }}
               >
                 Logout
@@ -306,8 +272,8 @@ export default function ProfilePage() {
                   color: "#fca5a5",
                 }}
               >
-                More account controls will be available later
-                (delete account, revoke tokens, ...).
+                More account controls will be available later (delete account,
+                revoke tokens, ...).
               </p>
             </div>
           </div>
