@@ -4,6 +4,7 @@ import { useRouter } from "next/navigation";
 import { useEffect } from "react";
 import { useAuth } from "@/components/AuthProvider";
 import { AreaWizard } from "@/components/AreaWizard";
+import { apiFetch } from "@/lib/api";
 import type { Area } from "@/types/area";
 
 export default function NewAreaPage() {
@@ -17,11 +18,39 @@ export default function NewAreaPage() {
     }
   }, [isReady, user, router]);
 
-  function handleCreate(area: Area) {
-    // TODO: send to backend later
-    // now it's just log and redirect to /areas
-    console.log("Created AREA (mock):", area);
-    router.push("/areas");
+  async function handleCreate(area: Area) {
+    try {
+      const dto = {
+        name: area.name,
+        description: area.description,
+        actionService: area.actionService,
+        actionType: area.actionType,
+        actionParams: area.actionParams,
+        reactionService: area.reactionService,
+        reactionType: area.reactionType,
+        reactionParams: area.reactionParams,
+        active: area.active
+      };
+
+      const res = await apiFetch("/areas", {
+        method: "POST",
+        headers: {
+          "Content-Type": "application/json",
+        },
+        body: JSON.stringify(dto),
+      });
+
+      if (!res.ok) {
+        console.error(await res.text());
+        alert("Failed to create AREA");
+        return;
+      }
+
+      router.push("/areas");
+    } catch (err) {
+      console.error(err);
+      alert("Network Error");
+    }
   }
 
   if (!isReady || !user) {

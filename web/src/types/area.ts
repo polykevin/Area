@@ -3,14 +3,13 @@ export type AreaStatus = "active" | "paused";
 export type AreaTriggerType = "webhook" | "polling";
 
 export interface Area {
-  id: string;
   name: string;
-  description?: string;
-  status: AreaStatus;
-  triggerService: string;
-  triggerAction: string;
+  description: string;
+  actionService: string;
+  actionType: string;
+  actionParams: any;
   reactionService: string;
-  reactionAction: string;
-  createdAt: string;
-  triggerType: AreaTriggerType;
+  reactionType: string;
+  reactionParams: any;
+  active: boolean;
 }

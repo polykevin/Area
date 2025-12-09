@@ -11,13 +11,15 @@ services:
       DATABASE_URL: "postgresql://area:area@db:5432/area"
     volumes:
       - shared-volume:/shared
-  client_mobile:
-    build:
-      context: ./mobile
-    container_name: area_client_mobile
-    volumes:
-      - shared-volume:/shared
-    command: ["/bin/sh", "-c", "cp /app/build/app/outputs/flutter-apk/app-release.apk /shared/client.apk"]
+    env_file:
+      - ./backend/.env
+  # client_mobile:
+  #   build:
+  #     context: ./mobile
+  #   container_name: area_client_mobile
+  #   volumes:
+  #     - shared-volume:/shared
+  #   command: ["/bin/sh", "-c", "cp /app/build/app/outputs/flutter-apk/app-release.apk /shared/client.apk"]
 
   client_web:
     build:
@@ -27,11 +29,13 @@ services:
       - "8081:8081"
     depends_on:
       - server
-      - client_mobile
+      # - client_mobile
     volumes:
       - shared-volume:/shared
     environment:
       APK_PATH: "/shared/client.apk"
+    env_file:
+      - ./web/.env
 
   db:
     image: postgres:15

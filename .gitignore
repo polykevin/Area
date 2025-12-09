@@ -4,6 +4,7 @@ yarn-debug.log*
 yarn-error.log*
 backend/.env
 .env.*
+.env
 !.env.example
 logs/
 *.log

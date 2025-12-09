@@ -11,7 +11,9 @@ RUN npx prisma generate
 COPY . .
 
 RUN npm run build
+COPY entrypoint.sh /app/entrypoint.sh
+RUN chmod +x /app/entrypoint.sh
 
 EXPOSE 8080
 
-CMD ["node", "dist/main.js"]
+CMD ["/app/entrypoint.sh"]
