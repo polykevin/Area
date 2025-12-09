@@ -6,6 +6,10 @@ import { useRouter } from "next/navigation";
 import { useAuth } from "@/components/AuthProvider";
 import { apiLogin } from "@/lib/api";
 
+const GOOGLE_AUTH_URL =
+  (process.env.NEXT_PUBLIC_API_BASE_URL ?? "http://localhost:8080") +
+  "/auth/google";
+
 export default function LoginPage() {
   const { loginFromApi } = useAuth();
   const router = useRouter();
@@ -35,16 +39,16 @@ export default function LoginPage() {
       loginFromApi(res.user, res.access_token);
       router.push("/areas");
     } catch (err) {
-      const message = err instanceof Error ? err.message : "Login failed.";
+      const msg = err instanceof Error ? err.message : "Login failed.";
       setIsError(true);
-      setMessage(message);
+      setMessage(msg);
     } finally {
       setIsSubmitting(false);
     }
   }
 
   function handleGoogleSignIn() {
-    window.location.href = `${process.env.NEXT_PUBLIC_API_URL}/auth/google`;
+    window.location.href = GOOGLE_AUTH_URL;
   }
 
   return (

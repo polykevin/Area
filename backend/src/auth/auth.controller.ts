@@ -79,10 +79,16 @@ export class AuthController {
     @Res() res: Response,
   ) {
     if (!req.user) {
-        return res.redirect(`${process.env.FRONTEND_URL}/services?error=oauth_failed`);
+      return res.redirect(
+        `${process.env.FRONTEND_URL}/auth/google/callback?error=oauth_failed`,
+      );
     }
-    const token = await this.authService.oauthLogin(req.user);
-    return res.redirect(`${process.env.FRONTEND_URL}/services?token=${token}`);
+
+    const jwt = await this.authService.oauthLogin(req.user);
+
+    return res.redirect(
+      `${process.env.FRONTEND_URL}/auth/google/callback?access_token=${jwt}`,
+    );
   }
 
   @Post('google/mobile')
