@@ -4,6 +4,7 @@ import 'package:flutter/material.dart';
 import 'package:provider/provider.dart';
 
 import '../../providers/auth_provider.dart';
+import '../../providers/theme_provider.dart';
 import '../areas/areas_screen.dart';
 import '../services/services_screen.dart';
 import '../auth/login_screen.dart';
@@ -43,6 +44,7 @@ class _HomeScreenState extends State<HomeScreen> {
   Widget build(BuildContext context) {
     final auth = context.watch<AuthProvider>();
 
+    // Avatar setup
     final avatarUrl = auth.avatarUrl;
     ImageProvider? avatarImage;
     if (avatarUrl != null) {
@@ -83,18 +85,20 @@ class _HomeScreenState extends State<HomeScreen> {
         child: ListView(
           padding: EdgeInsets.zero,
           children: [
-            SizedBox(
-              height: 100,
+            SizedBox (
+              height: 120,
               child: DrawerHeader(
-                decoration: const BoxDecoration(color: Colors.blue),
+                decoration: BoxDecoration(
+                  color: Theme.of(context).colorScheme.primary,
+                ),
                 child: Align(
                   alignment: Alignment.centerLeft,
                   child: Text(
                     'Menu',
                     style: Theme.of(context)
-                        .textTheme
-                        .titleLarge
-                        ?.copyWith(color: Colors.white),
+                      .textTheme
+                      .titleLarge
+                      ?.copyWith(color: Theme.of(context).colorScheme.onPrimary),
                   ),
                 ),
               ),
@@ -126,9 +130,30 @@ class _HomeScreenState extends State<HomeScreen> {
               title: const Text('Register'),
               onTap: _goToRegister,
             ),
+            const Divider(),
+
+            Consumer<ThemeProvider>(
+              builder: (context, themeProvider, _) {
+                return ListTile(
+                  leading: Icon(
+                    themeProvider.isDark ? Icons.dark_mode : Icons.light_mode,
+                    color: Theme.of(context).iconTheme.color,
+                  ),
+                  title: Text(
+                    themeProvider.isDark ? 'Switch to Light Theme' : 'Switch to Dark Theme',
+                    style: Theme.of(context).textTheme.bodyLarge,
+                  ),
+                  onTap: () {
+                    themeProvider.toggleTheme();
+                    Navigator.pop(context);
+                  },
+                );
+              },
+            ),
           ],
         ),
       ),
+      // Body
       body: _screens[_index],
     );
   }
