@@ -1,13 +1,17 @@
 import { Body, Controller, Get, Post, UseGuards, Req } from '@nestjs/common';
 import { JwtAuthGuard } from './jwt-auth.guard';
+import { UnauthorizedException } from '@nestjs/common';
 import { AuthService } from './auth.service';
 import { AuthGuard } from '@nestjs/passport';
 import { RegisterDto } from './dto/register.dto';
 import { LoginDto } from './dto/login.dto';
 import type { Request } from 'express';
 import { GoogleIdTokenDto } from './dto/google-id-token.dto';
+import { Prisma } from '@prisma/client';
+import { PrismaService } from '../prisma/prisma.service';
 
 interface RequestUser {
+  id: number;
   email: string;
   provider?: string;
   providerId?: string;
@@ -29,7 +33,7 @@ interface AuthenticatedRequest extends Request {
 
 @Controller('auth')
 export class AuthController {
-  constructor(private readonly authService: AuthService) {}
+  constructor(private readonly authService: AuthService, private readonly prisma: PrismaService) {}
 
   @Get('health')
   getHealth() {
@@ -51,8 +55,26 @@ export class AuthController {
 
   @UseGuards(JwtAuthGuard)
   @Get('me')
-  getProfile(@Req() req: AuthenticatedRequest) {
-    return req.user;
+  async getProfile(@Req() req: AuthenticatedRequest) {
+    if (!req.user) {
+      throw new UnauthorizedException();
+    }
+
+    const user = await this.prisma.user.findUnique({
+      where: { id: req.user.id },
+      include: {
+        serviceAuth: {
+          select: {
+            id: true,
+            service: true,
+            accessToken: true,
+            refreshToken: true,
+          },
+        },
+      },
+    });
+
+    return user;
   }
 
   @Get('google')
