@@ -18,7 +18,6 @@ export const sendEmailReaction = {
       text,
     });
 
-    console.log("gg", token);
     await googleService.sendEmail(token.userId, rawMessage);
 
     return { success: true };
