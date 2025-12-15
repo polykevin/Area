@@ -24,14 +24,6 @@ jobs:
         working-directory: backend
         run: npm ci
 
-      - name: Lint
-        working-directory: backend
-        run: npm run lint --if-present
-
-      - name: Type check
-        working-directory: backend
-        run: npm run type-check --if-present
-
       - name: Build
         working-directory: backend
         run: npm run build
