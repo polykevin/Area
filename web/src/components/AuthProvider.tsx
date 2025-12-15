@@ -28,7 +28,8 @@ const STORAGE_KEY = "area-auth";
 type AuthSnapshot = { user: User | null; token: string | null; isReady: boolean };
 
 const listeners = new Set<() => void>();
-let authState: AuthSnapshot = { user: null, token: null, isReady: false };
+const serverSnapshot: AuthSnapshot = { user: null, token: null, isReady: false };
+let authState: AuthSnapshot = { ...serverSnapshot };
 
 function parseStoredAuth(): { user: User | null; token: string | null } {
   if (typeof window === "undefined") return { user: null, token: null };
@@ -50,7 +51,7 @@ function loadClientAuth() {
 }
 
 function getServerSnapshot(): AuthSnapshot {
-  return { user: null, token: null, isReady: false };
+  return serverSnapshot;
 }
 
 function getClientSnapshot(): AuthSnapshot {

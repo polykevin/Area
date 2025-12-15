@@ -7,6 +7,7 @@ import { PrismaService } from '../prisma/prisma.service';
 import { JwtService } from '@nestjs/jwt';
 import * as bcrypt from 'bcrypt';
 import { OAuth2Client } from 'google-auth-library';
+import { ServiceAuthRepository } from './service-auth.repository';
 
 interface OAuthProfile {
   email: string;
@@ -21,6 +22,7 @@ export class AuthService {
   constructor(
     private prisma: PrismaService,
     private jwtService: JwtService,
+    private serviceAuthRepo: ServiceAuthRepository,
   ) {}
 
   async register(email: string, password: string) {
@@ -81,42 +83,68 @@ export class AuthService {
       },
     };
   }
+  private signToken(user: { id: number; email: string }) {
+    return this.jwtService.sign({ sub: user.id, email: user.email });
+  }
   async oauthLogin(profile: OAuthProfile) {
     const { email, provider, providerId, accessToken, refreshToken } = profile;
 
-    let user = await this.prisma.user.findUnique({
-      where: { email },
+    let user = await this.prisma.user.findFirst({
+      where: {
+        provider: profile.provider,
+        providerId: profile.providerId,
+      },
     });
 
     if (!user) {
-      user = await this.prisma.user.create({
-        data: {
-          email,
-          provider,
-          providerId,
-          oauthCredentials: {
-            create: {
-              provider,
-              accessToken,
-              refreshToken,
-            },
-          },
+      user = await this.prisma.user.upsert({
+        where: { email: profile.email },
+        update: {
+          provider: profile.provider,
+          providerId: profile.providerId,
+        },
+        create: {
+          email: profile.email,
+          provider: profile.provider,
+          providerId: profile.providerId,
         },
       });
     }
 
-    const payload = { sub: user.id, email: user.email };
-    const access_token = await this.jwtService.signAsync(payload);
+    return this.signToken({ id: user.id, email: user.email });
+    // let user = await this.prisma.user.findUnique({
+    //   where: { email },
+    // });
 
-    return {
-      message: 'OAuth login successful',
-      access_token,
-      user: {
-        id: user.id,
-        email: user.email,
-        createdAt: user.createdAt,
-      },
-    };
+    // if (!user) {
+    //   user = await this.prisma.user.create({
+    //     data: {
+    //       email,
+    //       provider,
+    //       providerId,
+    //       oauthCredentials: {
+    //         create: {
+    //           provider,
+    //           accessToken,
+    //           refreshToken,
+    //         },
+    //       },
+    //     },
+    //   });
+    // }
+
+    // const payload = { sub: user.id, email: user.email };
+    // const access_token = await this.jwtService.signAsync(payload);
+
+    // return {
+    //   message: 'OAuth login successful',
+    //   access_token,
+    //   user: {
+    //     id: user.id,
+    //     email: user.email,
+    //     createdAt: user.createdAt,
+    //   },
+    // };
   }
 
   private googleClient = new OAuth2Client(
@@ -167,6 +195,12 @@ export class AuthService {
       access_token: await this.jwtService.signAsync(tokenPayload),
     };
   }
+
+  async getConnectedServices(userId: number) {
+    const records = await this.serviceAuthRepo.findAllByUser(userId);
+    return records.map(r => r.service);
+  }
+
   health() {
     return { status: 'ok', scope: 'auth' };
   }

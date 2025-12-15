@@ -9,10 +9,10 @@ services:
       - db
     environment:
       DATABASE_URL: "postgresql://area:area@db:5432/area"
-    volumes:
-      - shared-volume:/shared
     env_file:
       - ./backend/.env
+    volumes:
+      - shared-volume:/shared
   # client_mobile:
   #   build:
   #     context: ./mobile

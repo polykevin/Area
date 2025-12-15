@@ -38,9 +38,9 @@ export class OauthController {
       service: provider,
       provider_user_id: profile.id ?? '',
       access_token: tokens.access_token ?? '',
-      refresh_token: tokens.refresh_token ?? null,
+      refresh_token: tokens.refresh_token ?? undefined,
       metadata: profile,
     });
-    return res.redirect(`http://localhost:8081/services?connected=${provider}`);
+    return res.redirect(`${process.env.FRONTEND_URL}/services?connected=${provider}`);
   }
 }
