@@ -1,6 +1,5 @@
 import { Injectable } from '@nestjs/common';
 import { PrismaService } from '../prisma/prisma.service';
-import { Prisma } from '@prisma/client';
 
 @Injectable()
 export class ServiceAuthRepository {
@@ -13,12 +12,8 @@ export class ServiceAuthRepository {
     access_token: string;
     refresh_token?: string;
     expires_at?: Date | null;
-    metadata?: unknown;
+    metadata?: any;
   }) {
-    const metadata = data.metadata
-      ? (JSON.parse(JSON.stringify(data.metadata)) as Prisma.InputJsonValue)
-      : Prisma.JsonNull;
-
     return this.prisma.serviceAuth.upsert({
       where: {
         userId_service: {
@@ -33,14 +28,14 @@ export class ServiceAuthRepository {
         accessToken: data.access_token,
         refreshToken: data.refresh_token,
         expiresAt: data.expires_at ? new Date(data.expires_at) : null,
-        metadata,
+        metadata: data.metadata || {},
       },
       update: {
         providerUserId: data.provider_user_id,
         accessToken: data.access_token,
         refreshToken: data.refresh_token,
         expiresAt: data.expires_at ? new Date(data.expires_at) : null,
-        metadata,
+        metadata: data.metadata || {},
       },
     });
   }
@@ -61,8 +56,8 @@ export class ServiceAuthRepository {
 
   async findAllByUser(userId: number) {
     return this.prisma.serviceAuth.findMany({
-      where: { userId },
-    });
+      where: {userId}
+    })
   }
 
   async updateTokens(
@@ -72,17 +67,16 @@ export class ServiceAuthRepository {
       accessToken?: string;
       refreshToken?: string;
       expiresAt?: Date | null;
-    },
+    }
   ) {
     return this.prisma.serviceAuth.update({
       where: { userId_service: { userId, service } },
       data: {
         accessToken: data.accessToken,
         refreshToken: data.refreshToken,
-        expiresAt:
-          data.expiresAt !== undefined && data.expiresAt !== null
-            ? new Date(data.expiresAt)
-            : null,
+        expiresAt: data.expiresAt !== undefined && data.expiresAt !== null
+          ? new Date(data.expiresAt)
+          : null,
       },
     });
   }

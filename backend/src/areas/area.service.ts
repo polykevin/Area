@@ -19,7 +19,7 @@ export class AreasService {
       where: { id, userId },
     });
 
-    if (!area) throw new NotFoundException('Area not found');
+    if (!area) throw new NotFoundException("Area not found");
     return area;
   }
 

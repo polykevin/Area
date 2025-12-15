@@ -6,7 +6,6 @@ import '../home/home_screen.dart';
 import '../../widgets/app_button.dart';
 import '../../widgets/app_text_field.dart';
 
-
 class RegisterScreen extends StatefulWidget {
   static const routeName = 'register';
   const RegisterScreen({super.key});
@@ -50,23 +49,33 @@ class _RegisterScreenState extends State<RegisterScreen> {
 
   @override
   Widget build(BuildContext context) {
+    final scheme = Theme.of(context).colorScheme;
+
     return Scaffold(
-      backgroundColor: Colors.grey[100],
-      appBar: AppBar(title: const Text('Register')),
+      backgroundColor: scheme.surface,
+      appBar: AppBar(
+        title: Text(
+          'Register',
+          style: TextStyle(color: scheme.onSurface),
+        ),
+        backgroundColor: scheme.surface,
+        iconTheme: Theme.of(context).iconTheme,
+      ),
       body: Center(
         child: SingleChildScrollView(
           padding: const EdgeInsets.all(24.0),
           child: Column(
             mainAxisAlignment: MainAxisAlignment.center,
             children: [
-              const Icon(Icons.person_add, size: 80, color: Colors.blue),
+              Icon(Icons.person_add,
+                  size: 80, color: scheme.primary), // adaptive accent
               const SizedBox(height: 20),
-              const Text(
+              Text(
                 "Create Your Account",
                 style: TextStyle(
                   fontSize: 28,
                   fontWeight: FontWeight.bold,
-                  color: Colors.black87,
+                  color: scheme.onSurface,
                 ),
               ),
               const SizedBox(height: 40),
@@ -88,7 +97,7 @@ class _RegisterScreenState extends State<RegisterScreen> {
               if (_error != null)
                 Text(
                   _error!,
-                  style: const TextStyle(color: Colors.red),
+                  style: TextStyle(color: scheme.error),
                 ),
               const SizedBox(height: 16),
 
@@ -98,21 +107,23 @@ class _RegisterScreenState extends State<RegisterScreen> {
                   label: 'Register',
                   loading: _loading,
                   onPressed: _submit,
-                  backgroundColor: Colors.black,
-                  textColor: Colors.white,
+                  backgroundColor: scheme.primary,
+                  textColor: scheme.onPrimary,
                   borderRadius: 6.0,
                 ),
               ),
               const SizedBox(height: 20),
 
               Row(
-                children: const [
-                  Expanded(child: Divider()),
+                children: [
+                  const Expanded(child: Divider()),
                   Padding(
-                    padding: EdgeInsets.symmetric(horizontal: 8.0),
-                    child: Text("or sign up with"),
+                    padding: const EdgeInsets.symmetric(horizontal: 8.0),
+                    child: Text("or sign up with",
+                        style: TextStyle(
+                            color: scheme.onSurface.withOpacity(0.7))),
                   ),
-                  Expanded(child: Divider()),
+                  const Expanded(child: Divider()),
                 ],
               ),
               const SizedBox(height: 20),
@@ -125,8 +136,8 @@ class _RegisterScreenState extends State<RegisterScreen> {
                     final err = await auth.loginWithGoogle();
                     if (!context.mounted) return;
                     if (err == null) {
-                      // success
-                      Navigator.pushReplacementNamed(context, HomeScreen.routeName);
+                      Navigator.pushReplacementNamed(
+                          context, HomeScreen.routeName);
                     } else {
                       ScaffoldMessenger.of(context).showSnackBar(
                         SnackBar(content: Text(err)),
@@ -135,10 +146,10 @@ class _RegisterScreenState extends State<RegisterScreen> {
                   },
                   style: ElevatedButton.styleFrom(
                     backgroundColor: Colors.white,
-                    foregroundColor: Colors.black87,
+                    foregroundColor: Colors.black,
                     shape: RoundedRectangleBorder(
                       borderRadius: BorderRadius.circular(6),
-                      side: const BorderSide(color: Colors.grey),
+                      side: BorderSide(color: scheme.outline),
                     ),
                     padding: const EdgeInsets.symmetric(vertical: 14),
                   ),

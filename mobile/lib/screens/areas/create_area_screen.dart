@@ -356,18 +356,18 @@ class _CreateAreaScreenState extends State<CreateAreaScreen> {
     return Scaffold(
       appBar: AppBar(
         elevation: 0,
-        backgroundColor: Colors.white,
+        backgroundColor: Theme.of(context).colorScheme.surface,
         leading: IconButton(
-          icon: const Icon(Icons.arrow_back, color: Colors.black),
+          icon: Icon(Icons.arrow_back, color: Colors.black),
           onPressed: () => Navigator.of(context).pop(),
         ),
         centerTitle: true,
-        title: const Text(
+        title: Text(
           'Create an AREA',
-          style: TextStyle(color: Colors.black, fontWeight: FontWeight.bold),
+          style: TextStyle(color: Theme.of(context).colorScheme.onSurface, fontWeight: FontWeight.bold),
         ),
       ),
-      backgroundColor: Colors.white,
+      backgroundColor: Theme.of(context).colorScheme.surface,
       body: Padding(
         padding: const EdgeInsets.symmetric(horizontal: 24),
         child: ListView(
@@ -419,15 +419,18 @@ class _CreateAreaScreenState extends State<CreateAreaScreen> {
               height: 50,
               child: ElevatedButton(
                 style: ElevatedButton.styleFrom(
-                  backgroundColor: Colors.black,
+                  backgroundColor: Theme.of(context).colorScheme.primary,
                   shape: RoundedRectangleBorder(
                     borderRadius: BorderRadius.circular(12),
                   ),
                 ),
                 onPressed: _submit,
-                child: const Text(
+                child: Text(
                   'Create area',
-                  style: TextStyle(fontSize: 16),
+                  style: TextStyle (
+                    fontSize: 16,
+                    color : Theme.of(context).colorScheme.onPrimary,
+                  )
                 ),
               ),
             ),
@@ -478,7 +481,10 @@ class _ServiceBox extends StatelessWidget {
         ),
         child: Text(
           label,
-          style: const TextStyle(fontSize: 16),
+          style: TextStyle(
+            fontSize: 16,
+            color: Theme.of(context).colorScheme.primary,
+            ),
         ),
       ),
     );
@@ -505,7 +511,7 @@ class _ExistingAreaRow extends StatelessWidget {
         Container(
           padding: const EdgeInsets.symmetric(horizontal: 20, vertical: 12),
           decoration: BoxDecoration(
-            color: Colors.black,
+            color: Theme.of(context).colorScheme.primary,
             borderRadius: BorderRadius.circular(12),
           ),
           child: Text(from, style: const TextStyle(color: Colors.white)),
@@ -529,7 +535,7 @@ class _ExistingAreaRow extends StatelessWidget {
         const Spacer(),
         Text(
           time,
-          style: const TextStyle(fontSize: 12, color: Colors.black54),
+          style: TextStyle(fontSize: 12, color: Theme.of(context).colorScheme.onSurface),
         ),
       ],
     );

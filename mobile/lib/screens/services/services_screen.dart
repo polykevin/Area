@@ -1,7 +1,12 @@
 import 'package:flutter/material.dart';
 import 'package:provider/provider.dart';
 import '../../providers/auth_provider.dart';
+<<<<<<< HEAD
 
+=======
+import '../../providers/theme_provider.dart';
+import 'service_screen.dart';
+>>>>>>> main
 class ServicesScreen extends StatefulWidget {
   const ServicesScreen({super.key});
 
@@ -12,7 +17,11 @@ class ServicesScreen extends StatefulWidget {
 class _ServicesScreenState extends State<ServicesScreen> {
   final TextEditingController _searchController = TextEditingController();
   String _query = '';
+<<<<<<< HEAD
   int _columns = 2;
+=======
+  int _columns = 2; // default grid mode
+>>>>>>> main
 
   final List<Map<String, dynamic>> _allServices = [
     {"name": "Spotify", "color": Colors.green},
@@ -27,6 +36,12 @@ class _ServicesScreenState extends State<ServicesScreen> {
 
   @override
   Widget build(BuildContext context) {
+<<<<<<< HEAD
+=======
+    final auth = context.watch<AuthProvider>();
+
+    // Filter services based on query
+>>>>>>> main
     final filtered = _allServices
         .where((s) => s["name"]
             .toString()
@@ -35,6 +50,7 @@ class _ServicesScreenState extends State<ServicesScreen> {
         .toList();
 
     return Scaffold(
+      backgroundColor: Theme.of(context).colorScheme.surface,
       body: Padding(
         padding: const EdgeInsets.symmetric(horizontal: 16),
         child: Column(
@@ -42,19 +58,24 @@ class _ServicesScreenState extends State<ServicesScreen> {
           children: [
             const SizedBox(height: 16),
 
+<<<<<<< HEAD
             // Grey header area
+=======
+            // header area
+>>>>>>> main
             Container(
               height: 120,
               decoration: BoxDecoration(
-                color: Colors.grey.shade300,
+                color: Theme.of(context).colorScheme.secondary.withOpacity((0.1)),
                 borderRadius: BorderRadius.circular(16),
               ),
-              child: const Center(
+              child: Center(
                 child: Text(
                   "SERVICES",
                   style: TextStyle(
                     fontSize: 28,
                     fontWeight: FontWeight.bold,
+                    color: Theme.of(context).colorScheme.onSurface,
                   ),
                 ),
               ),
@@ -72,8 +93,16 @@ class _ServicesScreenState extends State<ServicesScreen> {
                       controller: _searchController,
                       decoration: InputDecoration(
                         hintText: "Search...",
+<<<<<<< HEAD
                         prefixIcon: const Icon(Icons.search, size: 20),
                         contentPadding: const EdgeInsets.symmetric(vertical: 8),
+=======
+                        prefixIcon: Icon(Icons.search,
+                            size: 20,
+                            color: Theme.of(context).iconTheme.color),
+                        contentPadding:
+                            const EdgeInsets.symmetric(vertical: 8),
+>>>>>>> main
                         border: OutlineInputBorder(
                           borderRadius: BorderRadius.circular(8),
                         ),
@@ -97,6 +126,7 @@ class _ServicesScreenState extends State<ServicesScreen> {
                     });
                   },
                   borderRadius: BorderRadius.circular(8),
+<<<<<<< HEAD
                   selectedColor: Colors.black,
                   color: Colors.black,
                   children: const [
@@ -111,6 +141,22 @@ class _ServicesScreenState extends State<ServicesScreen> {
                     Padding(
                       padding: EdgeInsets.symmetric(horizontal: 8),
                       child: Icon(Icons.apps),
+=======
+                  selectedColor: Theme.of(context).colorScheme.onSurface,
+                  color: Theme.of(context).colorScheme.onSurface,
+                  children: const [
+                    Padding(
+                      padding: EdgeInsets.symmetric(horizontal: 8),
+                      child: Icon(Icons.view_agenda), // list
+                    ),
+                    Padding(
+                      padding: EdgeInsets.symmetric(horizontal: 8),
+                      child: Icon(Icons.grid_view), // 2-column
+                    ),
+                    Padding(
+                      padding: EdgeInsets.symmetric(horizontal: 8),
+                      child: Icon(Icons.apps), // 3-column
+>>>>>>> main
                     ),
                   ],
                 ),
@@ -128,6 +174,7 @@ class _ServicesScreenState extends State<ServicesScreen> {
                   crossAxisCount: _columns,
                   crossAxisSpacing: 16,
                   mainAxisSpacing: 16,
+<<<<<<< HEAD
                   childAspectRatio: _columns == 1 ? 5 : (_columns == 2 ? 1.6 : 1),
                   children: filtered.map((s) {
                     return AnimatedContainer(
@@ -144,6 +191,38 @@ class _ServicesScreenState extends State<ServicesScreen> {
                             fontSize: 18,
                             fontWeight: FontWeight.w600,
                             color: Colors.white,
+=======
+                  childAspectRatio:
+                      _columns == 1 ? 5 : (_columns == 2 ? 1.6 : 1),
+                  children: filtered.map((s) {
+                    return GestureDetector(
+                      onTap: () {
+                        Navigator.of(context).push(
+                          MaterialPageRoute(
+                            builder: (_) => ServiceScreen(
+                              name: s["name"] as String,
+                              bannerColor: s["color"] as Color,
+                              logoAsset: "",
+                            ),
+                          ),
+                        );
+                      },
+                      child: AnimatedContainer(
+                        duration: const Duration(milliseconds: 300),
+                        curve: Curves.easeInOut,
+                        decoration: BoxDecoration(
+                          color: s["color"] as Color,
+                          borderRadius: BorderRadius.circular(12),
+                        ),
+                        child: Center(
+                          child: Text(
+                            s["name"] as String,
+                            style: TextStyle(
+                              fontSize: 18,
+                              fontWeight: FontWeight.w600,
+                              color: Colors.white,
+                            ),
+>>>>>>> main
                           ),
                         ),
                       ),

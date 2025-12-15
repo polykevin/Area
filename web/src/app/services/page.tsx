@@ -1,6 +1,8 @@
 "use client";
+
 import { ServiceCard } from "@/components/ServiceCard";
 import { useEffect, useState } from "react";
+import { useAuth } from "@/components/AuthProvider";
 
 const MOCK_SERVICES = [
   {
@@ -46,49 +48,49 @@ const MOCK_SERVICES = [
 ];
 
 export default function ServicesPage() {
+  const { user, token, isReady } = useAuth();
   const [connectedServices, setConnectedServices] = useState<string[]>([]);
 
   useEffect(() => {
-    const params = new URLSearchParams(window.location.search);
-    const connected = params.get("connected");
-    const savedToken = localStorage.getItem("token");
-
-    if (!savedToken) return;
+    if (!isReady) return;
+    if (!token) return;
 
     const fetchServices = async () => {
       try {
-        const res = await fetch(`${process.env.NEXT_PUBLIC_API_URL}/auth/me`, {
-          headers: { Authorization: `Bearer ${savedToken}` },
-        });
-        const user = await res.json();
-        if (user?.services) {setConnectedServices(user.services);console.log(user.services)};
+        const res = await fetch(
+          `${process.env.NEXT_PUBLIC_API_URL}/auth/me`,
+          { headers: { Authorization: `Bearer ${token}` } }
+        );
+
+        const data = await res.json();
+
+        if (data?.serviceAuth) {
+          const services = data.serviceAuth.map((s: { serviceName?: string; service?: string }) => s.serviceName ?? s.service);
+          setConnectedServices(services);
+        }
       } catch (err) {
-        console.error(err);
+        console.error("Failed to load services:", err);
       }
     };
 
     fetchServices();
 
-    if (connected) {
-      window.history.replaceState({}, document.title, "/services");
+    const params = new URLSearchParams(window.location.search);
+    if (params.get("connected")) {
+      window.history.replaceState({}, "", "/services");
+      fetchServices();
     }
-  }, []);
+  }, [isReady, token]);
 
   const handleServiceConnect = (serviceName: string) => {
-    const savedToken = localStorage.getItem("token");
-    if (!savedToken) {
+    if (!token || !user) {
       alert("You must be logged in first.");
       return;
     }
 
-    const payload = JSON.parse(atob(savedToken.split('.')[1]));
-    const userId = payload.sub;
-
-    window.location.assign(
-      `${process.env.NEXT_PUBLIC_API_URL}/oauth/${serviceName}/url?userId=${userId}`
-    );
+    window.location.href =
+      `${process.env.NEXT_PUBLIC_API_URL}/oauth/${serviceName}/url?userId=${user.id}`;
   };
-
 
   const connectedCount = connectedServices.length;
 
@@ -116,7 +118,8 @@ export default function ServicesPage() {
           Connect external services to AREA.
         </p>
         <p style={{ fontSize: "0.8rem", color: "#94a3b8" }}>
-          <strong>{connectedCount}</strong> connected · <strong>{MOCK_SERVICES.length}</strong> available
+          <strong>{connectedCount}</strong> connected ·{" "}
+          <strong>{MOCK_SERVICES.length}</strong> available
         </p>
       </header>
 

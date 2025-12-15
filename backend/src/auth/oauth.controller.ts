@@ -1,12 +1,8 @@
-import { Controller, Get, Param, Query, Res } from '@nestjs/common';
-import {
-  OauthFactoryService,
-  OAuthProvider,
-  OAuthTokens,
-  OAuthProfile,
-} from './oauth.factory';
+import { Controller, Get, Param, Query, Req, Res } from '@nestjs/common';
+import { OauthFactoryService } from './oauth.factory';
 import { ServiceAuthRepository } from './service-auth.repository';
-import type { Response } from 'express';
+import type { Request, Response } from 'express';
+
 
 @Controller('oauth')
 export class OauthController {
@@ -19,9 +15,9 @@ export class OauthController {
   getAuthUrl(
     @Param('provider') provider: string,
     @Query('userId') userId: string,
-    @Res() res: Response,
+    @Res() res: Response
   ) {
-    const oauth: OAuthProvider = this.oauthFactory.create(provider);
+    const oauth = this.oauthFactory.create(provider);
     const url = oauth.getAuthUrl(userId);
     return res.redirect(url);
   }
@@ -31,11 +27,11 @@ export class OauthController {
     @Param('provider') provider: string,
     @Query('code') code: string,
     @Query('state') userId: string,
-    @Res() res: Response,
+    @Res() res: Response
   ) {
-    const oauth: OAuthProvider = this.oauthFactory.create(provider);
-    const tokens: OAuthTokens = await oauth.exchangeCode(code);
-    const profile: OAuthProfile = await oauth.getUserProfile(tokens);
+    const oauth = this.oauthFactory.create(provider);
+    const tokens = await oauth.exchangeCode(code);
+    const profile = await oauth.getUserProfile(tokens);
 
     await this.authRepo.saveOrUpdate({
       userId: Number(userId),
@@ -45,8 +41,6 @@ export class OauthController {
       refresh_token: tokens.refresh_token ?? undefined,
       metadata: profile,
     });
-    return res.redirect(
-      `${process.env.FRONTEND_URL}/services?connected=${provider}`,
-    );
+    return res.redirect(`${process.env.FRONTEND_URL}/services?connected=${provider}`);
   }
 }

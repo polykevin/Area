@@ -1,42 +1,19 @@
 "use client";
 
 import Link from "next/link";
-import { useEffect } from "react";
+import { useEffect, useState } from "react";
 import { useRouter } from "next/navigation";
 import { useAuth } from "@/components/AuthProvider";
 import type { Area } from "@/types/area";
 import { AreaCard } from "@/components/AreaCard";
-
-const MOCK_AREAS: Area[] = [
-  {
-    id: "1",
-    name: "Sync GitHub issues to Discord",
-    description: "When a new issue is created on GitHub, send a message to Discord.",
-    status: "active",
-    triggerService: "GitHub",
-    triggerAction: "New issue in repository",
-    reactionService: "Discord",
-    reactionAction: "Send message to channel",
-    createdAt: new Date().toISOString(),
-    triggerType: "webhook",
-  },
-  {
-    id: "2",
-    name: "Morning summary by email",
-    description: "Every day at 8 AM, send me a summary email.",
-    status: "paused",
-    triggerService: "Scheduler",
-    triggerAction: "Every day at 08:00",
-    reactionService: "Gmail",
-    reactionAction: "Send email",
-    createdAt: new Date().toISOString(),
-    triggerType: "polling",
-  },
-];
+import { apiFetch } from "@/lib/api";
+import { v4 as uuidv4 } from "uuid";
 
 export default function AreasPage() {
   const { user, isReady } = useAuth();
   const router = useRouter();
+  const [areas, setAreas] = useState<Area[] | null>(null);
+  const [loading, setLoading] = useState(true);
 
   useEffect(() => {
     if (!isReady) return;
@@ -45,11 +22,47 @@ export default function AreasPage() {
     }
   }, [isReady, user, router]);
 
+    useEffect(() => {
+    if (!user) return;
+
+    async function loadAreas() {
+      try {
+        const res = await apiFetch("/areas", {
+          method: "GET",
+        });
+
+        if (!res.ok) {
+          console.error("Failed to fetch areas:", await res.text());
+          setAreas([]);
+          return;
+        }
+
+        const data = await res.json();
+        setAreas(data);
+      } catch (err) {
+        console.error("Network error:", err);
+        setAreas([]);
+      } finally {
+        setLoading(false);
+      }
+    }
+
+    loadAreas();
+  }, [user]);
+
   if (!isReady || !user) {
     return null;
   }
 
-  const areas: Area[] = MOCK_AREAS;
+   if (loading) {
+    return (
+      <div style={{ paddingTop: "6rem", textAlign: "center", color: "#e5e7eb" }}>
+        Loading your AREAs...
+      </div>
+    );
+  }
+
+  const noAreas = !areas || areas.length === 0;
 
   return (
     <div
@@ -103,7 +116,7 @@ export default function AreasPage() {
         </Link>
       </header>
 
-      {areas.length === 0 ? (
+      {noAreas ? (
         <div
           style={{
             borderRadius: 18,
@@ -142,7 +155,7 @@ export default function AreasPage() {
           }}
         >
           {areas.map((area) => (
-            <AreaCard key={area.id} area={area} />
+            <AreaCard key={uuidv4()} area={area} />
           ))}
         </div>
       )}

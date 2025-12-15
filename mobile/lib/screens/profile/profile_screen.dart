@@ -17,7 +17,8 @@ class ProfileScreen extends StatelessWidget {
     if (user?.provider == 'google') {
       ScaffoldMessenger.of(context).showSnackBar(
         const SnackBar(
-          content: Text('Profile photo comes from Google. Change it in your Google account.'),
+          content: Text(
+              'Profile photo comes from Google. Change it in your Google account.'),
         ),
       );
       return;
@@ -69,8 +70,13 @@ class ProfileScreen extends StatelessWidget {
 
     return Scaffold(
       appBar: AppBar(
-        title: const Text('Profile'),
+        title: Text(
+          'Profile',
+          style: TextStyle(color: Theme.of(context).colorScheme.onSurface),
+        ),
         centerTitle: true,
+        backgroundColor: Theme.of(context).colorScheme.surface,
+        iconTheme: Theme.of(context).iconTheme,
       ),
       body: Padding(
         padding: const EdgeInsets.all(24),
@@ -83,13 +89,15 @@ class ProfileScreen extends StatelessWidget {
                 children: [
                   CircleAvatar(
                     radius: 40,
-                    backgroundColor: Colors.purple.shade100,
+                    backgroundColor:
+                        Theme.of(context).colorScheme.secondary.withOpacity(0.3),
                     backgroundImage: avatarImage,
-                    child: avatarImage == null ? const Icon(
-                      Icons.person,
-                      size: 40,
-                      color: Colors.white,
-                    )
+                    child: avatarImage == null
+                        ? Icon(
+                            Icons.person,
+                            size: 40,
+                            color: Theme.of(context).colorScheme.onSecondary,
+                          )
                         : null,
                   ),
                   if (!isGoogle)
@@ -100,14 +108,14 @@ class ProfileScreen extends StatelessWidget {
                         onTap: () => _changeAvatar(context),
                         child: Container(
                           padding: const EdgeInsets.all(6),
-                          decoration: const BoxDecoration(
-                            color: Colors.black87,
+                          decoration: BoxDecoration(
+                            color: Theme.of(context).colorScheme.primary,
                             shape: BoxShape.circle,
                           ),
-                          child: const Icon(
+                          child: Icon(
                             Icons.camera_alt,
                             size: 18,
-                            color: Colors.white,
+                            color: Theme.of(context).colorScheme.onPrimary,
                           ),
                         ),
                       ),
@@ -118,32 +126,38 @@ class ProfileScreen extends StatelessWidget {
             const SizedBox(height: 8),
             Text(
               displayName,
-              style: const TextStyle(
+              style: TextStyle(
                 fontSize: 22,
                 fontWeight: FontWeight.bold,
+                color: Theme.of(context).colorScheme.onSurface,
               ),
             ),
             const SizedBox(height: 4),
             Text(
               email,
-              style: const TextStyle(fontSize: 14, color: Colors.black54),
+              style: TextStyle(
+                fontSize: 14,
+                color: Theme.of(context).colorScheme.onSurface.withOpacity(0.6),
+              ),
             ),
             const SizedBox(height: 24),
-            const Divider(),
+            Divider(color: Theme.of(context).dividerColor),
             const SizedBox(height: 8),
             _InfoRow(label: 'User ID', value: user?.id.toString() ?? '-'),
             _InfoRow(label: 'Provider', value: provider),
             _InfoRow(
               label: 'Created at',
-              value: createdAt != null ? DateFormat('dd.MM.yyyy HH:mm:ss')
-                  .format(createdAt.toLocal()) : '-',
+              value: createdAt != null
+                  ? DateFormat('dd.MM.yyyy HH:mm:ss').format(createdAt.toLocal())
+                  : '-',
             ),
             const Spacer(),
             SizedBox(
               width: double.infinity,
               child: ElevatedButton(
                 style: ElevatedButton.styleFrom(
-                  backgroundColor: Colors.black,
+                  backgroundColor: Theme.of(context).colorScheme.primary,
+                  foregroundColor: Theme.of(context).colorScheme.onPrimary,
                   padding: const EdgeInsets.symmetric(vertical: 14),
                   shape: RoundedRectangleBorder(
                     borderRadius: BorderRadius.circular(12),
@@ -180,15 +194,19 @@ class _InfoRow extends StatelessWidget {
         children: [
           Text(
             '$label: ',
-            style: const TextStyle(
+            style: TextStyle(
               fontWeight: FontWeight.w600,
               fontSize: 14,
+              color: Theme.of(context).colorScheme.onSurface,
             ),
           ),
           Expanded(
             child: Text(
               value,
-              style: const TextStyle(fontSize: 14),
+              style: TextStyle(
+                fontSize: 14,
+                color: Theme.of(context).colorScheme.onSurface,
+              ),
               overflow: TextOverflow.ellipsis,
             ),
           ),

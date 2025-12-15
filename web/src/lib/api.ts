@@ -1,4 +1,6 @@
-export const API_BASE_URL =
+import { useAuth } from "@/components/AuthProvider";
+
+const API_BASE_URL =
   process.env.NEXT_PUBLIC_API_BASE_URL ?? "http://localhost:8080";
 
 type AuthResponse = {
@@ -8,6 +10,8 @@ type AuthResponse = {
     email: string;
   };
 };
+
+const STORAGE_KEY = "area-auth";
 
 async function safeErrorMessage(res: Response): Promise<string | null> {
   try {
@@ -62,4 +66,28 @@ export async function apiRegister(
   }
 
   return res.json();
+}
+
+export async function apiFetch(
+  path: string,
+  options: RequestInit = {}
+): Promise<Response> {
+  const raw = typeof window !== "undefined" ? localStorage.getItem(STORAGE_KEY) : null;
+  let token: string | null = null;
+  if (raw) {
+    try {
+      const parsed = JSON.parse(raw) as { token?: string };
+      token = parsed.token || null;
+    } catch {}
+  }
+
+  const headers = {
+    ...(options.headers || {}),
+    ...(token ? { Authorization: `Bearer ${token}` } : {}),
+  };
+
+  return fetch(`${process.env.NEXT_PUBLIC_API_URL}${path}`, {
+    ...options,
+    headers,
+  });
 }

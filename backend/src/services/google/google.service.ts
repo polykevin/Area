@@ -2,16 +2,6 @@ import { Injectable, Logger } from '@nestjs/common';
 import { ServiceAuthRepository } from '../../auth/service-auth.repository';
 import { GmailMessage } from './google.interface';
 import { google } from 'googleapis';
-import { Credentials } from 'google-auth-library';
-import { gmail_v1 } from 'googleapis';
-
-interface ServiceAuth {
-  userId: number;
-  accessToken: string | null;
-  refreshToken: string | null;
-  expiresAt: Date | null;
-  metadata?: ({ email?: string } & Record<string, unknown>) | null;
-}
 
 @Injectable()
 export class GoogleService {
@@ -37,7 +27,7 @@ export class GoogleService {
 
     if (auth.expiresAt && auth.expiresAt.getTime() < Date.now()) {
       const newTokens = await client.refreshAccessToken();
-      const tokens: Credentials = newTokens.credentials;
+      const tokens = newTokens.credentials;
       this.logger.log(`Refreshed Google token for user ${userId}`);
 
       await this.authRepo.updateTokens(userId, 'google', {
@@ -56,7 +46,7 @@ export class GoogleService {
     return google.gmail({ version: 'v1', auth: client });
   }
 
-  async listNewEmails(userAuth: Pick<ServiceAuth, 'userId'>) {
+  async listNewEmails(userAuth: any) {
     const gmail = await this.getGmailClient(userAuth.userId);
 
     const res = await gmail.users.messages.list({
@@ -88,12 +78,9 @@ export class GoogleService {
     return messages;
   }
 
-  private getHeader(
-    headers: gmail_v1.Schema$MessagePartHeader[],
-    name: string,
-  ) {
-    const found = headers.find((h) => h?.name === name);
-    return found && found.value ? found.value : null;
+  private getHeader(headers: any[], name: string) {
+    const found = headers.find((h) => h.name === name);
+    return found ? found.value : null;
   }
 
   async sendEmail(userId: number, rawMessage: string) {
