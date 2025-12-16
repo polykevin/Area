@@ -25,31 +25,31 @@ class _AreasScreenState extends State<AreasScreen> {
   Widget build(BuildContext context) {
     return Scaffold(
       backgroundColor: Colors.white,
-
       appBar: AppBar(
         backgroundColor: Colors.white,
         elevation: 0,
         centerTitle: true,
         title: const Text(
-          'Existing areas',
+          'Existing AREAs',
           style: TextStyle(
             color: Colors.black,
             fontWeight: FontWeight.bold,
           ),
         ),
       ),
-
       floatingActionButton: FloatingActionButton(
         backgroundColor: Colors.black,
-        onPressed: () {
-          Navigator.push(
+        onPressed: () async {
+          final created = await Navigator.push<bool>(
             context,
             MaterialPageRoute(builder: (_) => const CreateAreaScreen()),
           );
+          if (created == true && mounted) {
+            context.read<AreasProvider>().loadAreas();
+          }
         },
         child: const Icon(Icons.add, color: Colors.white),
       ),
-
       body: Padding(
         padding: const EdgeInsets.symmetric(horizontal: 16, vertical: 8),
         child: Consumer<AreasProvider>(
@@ -79,22 +79,43 @@ class _AreasScreenState extends State<AreasScreen> {
                 if (provider.error != null)
                   Padding(
                     padding: const EdgeInsets.only(bottom: 8),
-                    child: Text(
-                      provider.error!,
-                      style: const TextStyle(
-                        color: Colors.orange,
-                        fontSize: 12,
+                    child: Container(
+                      padding: const EdgeInsets.all(10),
+                      decoration: BoxDecoration(
+                        color: Colors.red.shade50,
+                        borderRadius: BorderRadius.circular(8),
+                        border: Border.all(color: Colors.red.shade200),
+                      ),
+                      child: Row(
+                        children: [
+                          const Icon(Icons.error_outline,
+                              color: Colors.red, size: 18),
+                          const SizedBox(width: 8),
+                          Expanded(
+                            child: Text(
+                              provider.error!,
+                              style: const TextStyle(
+                                color: Colors.red,
+                                fontSize: 13,
+                              ),
+                            ),
+                          ),
+                        ],
                       ),
                     ),
                   ),
                 Expanded(
-                  child: ListView.separated(
-                    itemCount: areas.length,
-                    separatorBuilder: (_, __) => const SizedBox(height: 12),
-                    itemBuilder: (context, index) {
-                      final area = areas[index];
-                      return _AreaRow(area: area);
-                    },
+                  child: RefreshIndicator(
+                    onRefresh: () => provider.loadAreas(),
+                    child: ListView.separated(
+                      itemCount: areas.length,
+                      separatorBuilder: (_, __) =>
+                      const SizedBox(height: 8),
+                      itemBuilder: (context, index) {
+                        final area = areas[index];
+                        return _AreaCard(area: area);
+                      },
+                    ),
                   ),
                 ),
               ],
@@ -106,16 +127,22 @@ class _AreasScreenState extends State<AreasScreen> {
   }
 }
 
-class _AreaRow extends StatelessWidget {
+class _AreaCard extends StatelessWidget {
   final Area area;
 
-  const _AreaRow({required this.area});
+  const _AreaCard({required this.area});
 
   @override
   Widget build(BuildContext context) {
     final actionServiceName = prettyServiceName(area.actionService);
     final reactionServiceName = prettyServiceName(area.reactionService);
-    final createdAgo = _formatCreatedAgo(area.createdAt);
+
+    final title = '$actionServiceName → $reactionServiceName';
+
+    final actionDescription =
+    prettyActionType(area.actionService, area.actionType);
+    final reactionDescription =
+    prettyReactionType(area.reactionService, area.reactionType);
 
     return Container(
       padding: const EdgeInsets.symmetric(horizontal: 12, vertical: 14),
@@ -143,15 +170,13 @@ class _AreaRow extends StatelessWidget {
               ),
             ],
           ),
-
           const SizedBox(width: 16),
-
           Expanded(
             child: Column(
               crossAxisAlignment: CrossAxisAlignment.start,
               children: [
                 Text(
-                  area.name.isEmpty ? 'Unnamed AREA' : area.name,
+                  title,
                   overflow: TextOverflow.ellipsis,
                   style: const TextStyle(
                     fontSize: 14,
@@ -160,20 +185,18 @@ class _AreaRow extends StatelessWidget {
                 ),
                 const SizedBox(height: 4),
                 Text(
-                  '${area.actionLabel} → ${area.reactionLabel}',
+                  'IF $actionDescription\nTHEN $reactionDescription',
                   maxLines: 2,
                   overflow: TextOverflow.ellipsis,
                   style: const TextStyle(
-                    fontSize: 11,
+                    fontSize: 12,
                     color: Colors.black54,
                   ),
                 ),
               ],
             ),
           ),
-
           const SizedBox(width: 8),
-
           Column(
             crossAxisAlignment: CrossAxisAlignment.end,
             children: [
@@ -181,7 +204,7 @@ class _AreaRow extends StatelessWidget {
                 mainAxisSize: MainAxisSize.min,
                 children: [
                   Switch(
-                    value: area.isActive,
+                    value: area.active,
                     activeColor: Colors.green,
                     onChanged: (_) {
                       context.read<AreasProvider>().toggleArea(area.id);
@@ -197,14 +220,6 @@ class _AreaRow extends StatelessWidget {
                   ),
                 ],
               ),
-              if (createdAgo.isNotEmpty)
-                Text(
-                  createdAgo,
-                  style: const TextStyle(
-                    fontSize: 11,
-                    color: Colors.black54,
-                  ),
-                ),
             ],
           ),
         ],
@@ -218,8 +233,8 @@ class _AreaRow extends StatelessWidget {
       builder: (ctx) {
         return AlertDialog(
           title: const Text('Delete AREA?'),
-          content: Text(
-            'Are you sure you want to delete "${area.name.isEmpty ? 'this AREA' : area.name}"?',
+          content: const Text(
+            'Are you sure you want to delete this AREA?',
           ),
           actions: [
             TextButton(
@@ -227,7 +242,8 @@ class _AreaRow extends StatelessWidget {
               child: const Text('Cancel'),
             ),
             ElevatedButton(
-              style: ElevatedButton.styleFrom(backgroundColor: Colors.red),
+              style:
+              ElevatedButton.styleFrom(backgroundColor: Colors.red),
               onPressed: () {
                 Navigator.pop(ctx);
                 context.read<AreasProvider>().deleteArea(area.id);
@@ -269,21 +285,6 @@ class _ServiceTag extends StatelessWidget {
   }
 }
 
-// ------- helpers -------
-
-String _formatCreatedAgo(DateTime? createdAt) {
-  if (createdAt == null) return '';
-  final diff = DateTime.now().difference(createdAt);
-
-  if (diff.inDays >= 2) return 'created ${diff.inDays}d ago';
-  if (diff.inDays == 1) return 'created 1d ago';
-  if (diff.inHours >= 1) return 'created ${diff.inHours}h ago';
-  if (diff.inMinutes >= 1) return 'created ${diff.inMinutes}m ago';
-  return 'created just now';
-}
-
-/// Optional: if you don't want to import prettyServiceName from elsewhere,
-/// you can keep a local copy here or import it from your create_area file.
 String prettyServiceName(String key) {
   switch (key) {
     case 'timer':
@@ -291,6 +292,8 @@ String prettyServiceName(String key) {
     case 'github':
       return 'GitHub';
     case 'gmail':
+      return 'Gmail';
+    case 'google':
       return 'Gmail';
     case 'weather':
       return 'Weather';
@@ -301,4 +304,28 @@ String prettyServiceName(String key) {
     default:
       return key;
   }
+}
+
+String prettyActionType(String service, String type) {
+  if (service == 'google' || service == 'gmail') {
+    switch (type) {
+      case 'new_email':
+        return 'a new email is received';
+      default:
+        return type;
+    }
+  }
+  return type;
+}
+
+String prettyReactionType(String service, String type) {
+  if (service == 'google' || service == 'gmail') {
+    switch (type) {
+      case 'send_email':
+        return 'send an email';
+      default:
+        return type;
+    }
+  }
+  return type;
 }

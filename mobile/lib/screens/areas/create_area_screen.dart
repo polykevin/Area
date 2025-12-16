@@ -4,88 +4,16 @@ import 'package:provider/provider.dart';
 import '../../providers/areas_provider.dart';
 
 const kActionOptions = {
-  'timer': [
-    {'key': 'timer_every_x_minutes', 'label': 'Every X minutes'},
-    {'key': 'timer_at_time', 'label': 'At a specific time'},
-    {'key': 'timer_daily', 'label': 'Every day at HH:MM'},
-  ],
-  'github': [
-    {'key': 'github_new_issue', 'label': 'New issue in repo'},
-    {'key': 'github_new_pr', 'label': 'New pull request'},
-    {'key': 'github_new_push', 'label': 'New push on branch'},
-  ],
-  'gmail': [
-    {'key': 'gmail_new_email', 'label': 'New email received'},
-    {'key': 'gmail_from_sender', 'label': 'New email from specific sender'},
-    {'key': 'gmail_with_subject', 'label': 'Email with subject keyword'},
-  ],
-  'weather': [
-    {'key': 'weather_temp_below', 'label': 'Temperature below threshold'},
-    {'key': 'weather_temp_above', 'label': 'Temperature above threshold'},
-    {'key': 'weather_rain_chance', 'label': 'Rain chance above X%'},
-  ],
-  'slack': [
-    {'key': 'slack_new_message', 'label': 'New message in channel'},
-    {'key': 'slack_mention_me', 'label': 'I am mentioned'},
-  ],
-  'rss': [
-    {'key': 'rss_new_item', 'label': 'New RSS feed item'},
+  'google': [
+    {'key': 'new_email', 'label': 'New email received'},
   ],
 };
 
 const kReactionOptions = {
-  'timer': [
-    {'key': 'timer_log', 'label': 'Log a debug message'},
-  ],
-  'github': [
-    {'key': 'github_create_issue', 'label': 'Create issue'},
-    {'key': 'github_comment_issue', 'label': 'Comment on issue'},
-  ],
-  'gmail': [
-    {'key': 'gmail_send_email', 'label': 'Send an email'},
-    {'key': 'gmail_send_to_self', 'label': 'Send an email to me'},
-  ],
-  'weather': [
-    {'key': 'weather_send_alert_email', 'label': 'Send weather alert email'},
-    {'key': 'weather_create_github_issue', 'label': 'Create GitHub issue'},
-  ],
-  'slack': [
-    {'key': 'slack_send_channel_msg', 'label': 'Send message to channel'},
-    {'key': 'slack_send_dm', 'label': 'Send DM to me'},
-  ],
-  'rss': [
-    {'key': 'rss_email_summary', 'label': 'Email RSS summary'},
-    {'key': 'rss_create_issue', 'label': 'Create GitHub issue with title'},
+  'google': [
+    {'key': 'send_email', 'label': 'Send email'},
   ],
 };
-
-const kServicesOrder = [
-  'timer',
-  'github',
-  'gmail',
-  'weather',
-  'slack',
-  'rss',
-];
-
-String prettyServiceName(String key) {
-  switch (key) {
-    case 'timer':
-      return 'Timer';
-    case 'github':
-      return 'GitHub';
-    case 'gmail':
-      return 'Gmail';
-    case 'weather':
-      return 'Weather';
-    case 'slack':
-      return 'Slack';
-    case 'rss':
-      return 'RSS';
-    default:
-      return key;
-  }
-}
 
 class CreateAreaScreen extends StatefulWidget {
   const CreateAreaScreen({super.key});
@@ -95,33 +23,50 @@ class CreateAreaScreen extends StatefulWidget {
 }
 
 class _CreateAreaScreenState extends State<CreateAreaScreen> {
-
   String? _actionService;
   String? _actionKey;
-
-  final _actionConfigController = TextEditingController();
 
   String? _reactionService;
   String? _reactionKey;
 
   final _areaNameController = TextEditingController();
-  final _reactionConfigController = TextEditingController();
+  final _fromController = TextEditingController();
+  final _toController = TextEditingController();
+  final _subjectController = TextEditingController(text: 'AREA test');
+  final _textController = TextEditingController(
+    text: 'You received a new email matching your AREA rule.',
+  );
+
+  bool _submitting = false;
+
+  @override
+  void initState() {
+    super.initState();
+    _actionService = 'google';
+    _reactionService = 'google';
+  }
 
   @override
   void dispose() {
-    _actionConfigController.dispose();
     _areaNameController.dispose();
-    _reactionConfigController.dispose();
+    _fromController.dispose();
+    _toController.dispose();
+    _subjectController.dispose();
+    _textController.dispose();
     super.dispose();
   }
 
   Future<void> _submit() async {
     if (_actionService == null || _actionKey == null) {
-      _showError('Please choose an action service and an action.');
+      _showError('Please choose an action.');
       return;
     }
     if (_reactionService == null || _reactionKey == null) {
-      _showError('Please choose a reaction service and a reaction.');
+      _showError('Please choose a reaction.');
+      return;
+    }
+    if (_toController.text.trim().isEmpty) {
+      _showError('Please enter a recipient email for the reaction.');
       return;
     }
 
@@ -129,77 +74,78 @@ class _CreateAreaScreenState extends State<CreateAreaScreen> {
 
     final actionService = _actionService!;
     final reactionService = _reactionService!;
-
-    final actionLabel = _findActionLabel(actionService, _actionKey!);
-    final reactionLabel = _findReactionLabel(reactionService, _reactionKey!);
+    final actionType = _actionKey!;
+    final reactionType = _reactionKey!;
 
     final name = _areaNameController.text.trim().isEmpty
         ? '${prettyServiceName(actionService)} → ${prettyServiceName(reactionService)}'
         : _areaNameController.text.trim();
 
-    await areasProvider.createAreaLocal(
-      name: name,
-      actionService: actionService,
-      actionLabel: actionLabel,
-      reactionService: reactionService,
-      reactionLabel: reactionLabel,
-    );
+    final actionParams = <String, dynamic>{};
+    if (_fromController.text.trim().isNotEmpty) {
+      actionParams['from'] = _fromController.text.trim();
+    }
 
-    if (!mounted) return;
+    final reactionParams = <String, dynamic>{
+      'to': _toController.text.trim(),
+      'subject': _subjectController.text.trim(),
+      'text': _textController.text.trim(),
+    };
 
-    Navigator.of(context).pop();
+    setState(() {
+      _submitting = true;
+    });
 
-    ScaffoldMessenger.of(context).showSnackBar(
-      SnackBar(content: Text('AREA "$name" created')),
-    );
+    try {
+      await areasProvider.createArea(
+        name: name,
+        actionService: actionService,
+        actionType: actionType,
+        actionParams: actionParams,
+        reactionService: reactionService,
+        reactionType: reactionType,
+        reactionParams: reactionParams,
+      );
+
+      if (!mounted) return;
+      Navigator.of(context).pop(true);
+      ScaffoldMessenger.of(context).showSnackBar(
+        SnackBar(content: Text('AREA "$name" created')),
+      );
+    } catch (e) {
+      _showError(e.toString());
+    } finally {
+      if (mounted) {
+        setState(() {
+          _submitting = false;
+        });
+      }
+    }
   }
 
-  String _findActionLabel(String service, String key) {
-    final list = kActionOptions[service] ?? [];
-    final found =
-    list.firstWhere((e) => e['key'] == key, orElse: () => {'label': key});
-    return found['label'] as String;
-  }
-
-  String _findReactionLabel(String service, String key) {
-    final list = kReactionOptions[service] ?? [];
-    final found =
-    list.firstWhere((e) => e['key'] == key, orElse: () => {'label': key});
-    return found['label'] as String;
-  }
-
-  void _showError(String msg) {
-    ScaffoldMessenger.of(context).showSnackBar(
-      SnackBar(content: Text(msg)),
-    );
-  }
-
-  Future<void> _pickActionDialog() async {
-    String? tempService = _actionService;
-    String? tempKey = _actionKey;
-
-    await showDialog(
+  void _pickAction() {
+    showDialog(
       context: context,
       builder: (ctx) {
-        return StatefulBuilder(
-          builder: (ctx, setStateDialog) {
-            final availableServices = kServicesOrder
-                .where((s) => kActionOptions[s]?.isNotEmpty ?? false)
-                .toList();
+        String? tempService = _actionService ?? 'google';
+        String? tempKey = _actionKey;
 
-            final actionsForService = tempService != null
-                ? (kActionOptions[tempService] ?? [])
-                : <Map<String, String>>[];
+        final services = kActionOptions.keys.toList();
+
+        return StatefulBuilder(
+          builder: (context, setStateDialog) {
+            final actionsForService =
+                kActionOptions[tempService] ?? <Map<String, String>>[];
 
             return AlertDialog(
-              title: const Text('Select action'),
+              title: const Text('Choose action'),
               content: Column(
                 mainAxisSize: MainAxisSize.min,
                 children: [
                   DropdownButtonFormField<String>(
                     value: tempService,
                     decoration: const InputDecoration(labelText: 'Service'),
-                    items: availableServices
+                    items: services
                         .map(
                           (s) => DropdownMenuItem(
                         value: s,
@@ -221,8 +167,8 @@ class _CreateAreaScreenState extends State<CreateAreaScreen> {
                     items: actionsForService
                         .map(
                           (opt) => DropdownMenuItem(
-                        value: opt['key']!,
-                        child: Text(opt['label']!),
+                        value: opt['key'] as String,
+                        child: Text(opt['label'] as String),
                       ),
                     )
                         .toList(),
@@ -249,7 +195,7 @@ class _CreateAreaScreenState extends State<CreateAreaScreen> {
                     Navigator.of(ctx).pop();
                   }
                       : null,
-                  child: const Text('Use'),
+                  child: const Text('OK'),
                 ),
               ],
             );
@@ -259,32 +205,29 @@ class _CreateAreaScreenState extends State<CreateAreaScreen> {
     );
   }
 
-  Future<void> _pickReactionDialog() async {
-    String? tempService = _reactionService;
-    String? tempKey = _reactionKey;
-
-    await showDialog(
+  void _pickReaction() {
+    showDialog(
       context: context,
       builder: (ctx) {
-        return StatefulBuilder(
-          builder: (ctx, setStateDialog) {
-            final availableServices = kServicesOrder
-                .where((s) => kReactionOptions[s]?.isNotEmpty ?? false)
-                .toList();
+        String? tempService = _reactionService ?? 'google';
+        String? tempKey = _reactionKey;
 
-            final reactionsForService = tempService != null
-                ? (kReactionOptions[tempService] ?? [])
-                : <Map<String, String>>[];
+        final services = kReactionOptions.keys.toList();
+
+        return StatefulBuilder(
+          builder: (context, setStateDialog) {
+            final reactionsForService =
+                kReactionOptions[tempService] ?? <Map<String, String>>[];
 
             return AlertDialog(
-              title: const Text('Select reaction'),
+              title: const Text('Choose reaction'),
               content: Column(
                 mainAxisSize: MainAxisSize.min,
                 children: [
                   DropdownButtonFormField<String>(
                     value: tempService,
                     decoration: const InputDecoration(labelText: 'Service'),
-                    items: availableServices
+                    items: services
                         .map(
                           (s) => DropdownMenuItem(
                         value: s,
@@ -302,12 +245,13 @@ class _CreateAreaScreenState extends State<CreateAreaScreen> {
                   const SizedBox(height: 12),
                   DropdownButtonFormField<String>(
                     value: tempKey,
-                    decoration: const InputDecoration(labelText: 'Reaction'),
+                    decoration:
+                    const InputDecoration(labelText: 'Reaction'),
                     items: reactionsForService
                         .map(
                           (opt) => DropdownMenuItem(
-                        value: opt['key']!,
-                        child: Text(opt['label']!),
+                        value: opt['key'] as String,
+                        child: Text(opt['label'] as String),
                       ),
                     )
                         .toList(),
@@ -334,7 +278,7 @@ class _CreateAreaScreenState extends State<CreateAreaScreen> {
                     Navigator.of(ctx).pop();
                   }
                       : null,
-                  child: const Text('Use'),
+                  child: const Text('OK'),
                 ),
               ],
             );
@@ -344,110 +288,129 @@ class _CreateAreaScreenState extends State<CreateAreaScreen> {
     );
   }
 
+  String _describeSelectedAction() {
+    if (_actionService == null || _actionKey == null) {
+      return 'Tap to choose...';
+    }
+    final label = _findActionLabel(_actionService!, _actionKey!);
+    return '${prettyServiceName(_actionService!)} • $label';
+  }
+
+  String _describeSelectedReaction() {
+    if (_reactionService == null || _reactionKey == null) {
+      return 'Tap to choose...';
+    }
+    final label = _findReactionLabel(_reactionService!, _reactionKey!);
+    return '${prettyServiceName(_reactionService!)} • $label';
+  }
+
+  String _findActionLabel(String service, String key) {
+    final list = kActionOptions[service] ?? [];
+    final found =
+    list.firstWhere((e) => e['key'] == key, orElse: () => {'label': key});
+    return found['label'] as String;
+  }
+
+  String _findReactionLabel(String service, String key) {
+    final list = kReactionOptions[service] ?? [];
+    final found =
+    list.firstWhere((e) => e['key'] == key, orElse: () => {'label': key});
+    return found['label'] as String;
+  }
+
+  void _showError(String msg) {
+    ScaffoldMessenger.of(context).showSnackBar(
+      SnackBar(content: Text(msg)),
+    );
+  }
+
   @override
   Widget build(BuildContext context) {
-    final actionLabel = _actionService == null
-        ? 'Service 1'
-        : prettyServiceName(_actionService!);
-    final reactionLabel = _reactionService == null
-        ? 'Service 2'
-        : prettyServiceName(_reactionService!);
+    final theme = Theme.of(context);
 
     return Scaffold(
       appBar: AppBar(
-        elevation: 0,
-        backgroundColor: Colors.white,
-        leading: IconButton(
-          icon: const Icon(Icons.arrow_back, color: Colors.black),
-          onPressed: () => Navigator.of(context).pop(),
-        ),
-        centerTitle: true,
-        title: const Text(
-          'Create an AREA',
-          style: TextStyle(color: Colors.black, fontWeight: FontWeight.bold),
-        ),
+        title: const Text('Create AREA'),
       ),
-      backgroundColor: Colors.white,
-      body: Padding(
-        padding: const EdgeInsets.symmetric(horizontal: 24),
-        child: ListView(
+      body: SingleChildScrollView(
+        padding: const EdgeInsets.all(16),
+        child: Column(
+          crossAxisAlignment: CrossAxisAlignment.start,
           children: [
-            const SizedBox(height: 16),
-
-            const Text('Name', style: TextStyle(fontSize: 16)),
-            const SizedBox(height: 4),
             TextField(
               controller: _areaNameController,
               decoration: const InputDecoration(
-                hintText: 'My cool AREA',
+                labelText: 'AREA name (optional)',
               ),
             ),
-
-            const SizedBox(height: 12),
-
-            const Text('Value', style: TextStyle(fontSize: 16)),
-            const SizedBox(height: 4),
-            TextField(
-              controller: _actionConfigController,
-              decoration: const InputDecoration(
-                hintText: 'Optional config / value',
-              ),
-            ),
-
-            const SizedBox(height: 32),
-
-            Row(
-              mainAxisAlignment: MainAxisAlignment.center,
-              children: [
-                _ServiceBox(
-                  label: actionLabel,
-                  onTap: _pickActionDialog,
-                ),
-                const SizedBox(width: 16),
-                const Icon(Icons.arrow_forward, size: 36),
-                const SizedBox(width: 16),
-                _ServiceBox(
-                  label: reactionLabel,
-                  onTap: _pickReactionDialog,
-                ),
-              ],
-            ),
-
             const SizedBox(height: 24),
-
-            SizedBox(
-              height: 50,
-              child: ElevatedButton(
-                style: ElevatedButton.styleFrom(
-                  backgroundColor: Colors.black,
-                  shape: RoundedRectangleBorder(
-                    borderRadius: BorderRadius.circular(12),
-                  ),
-                ),
-                onPressed: _submit,
-                child: const Text(
-                  'Create area',
-                  style: TextStyle(fontSize: 16),
-                ),
+            Text(
+              'IF',
+              style: theme.textTheme.titleMedium!
+                  .copyWith(fontWeight: FontWeight.bold),
+            ),
+            const SizedBox(height: 8),
+            _PickerTile(
+              title: 'Trigger',
+              description: _describeSelectedAction(),
+              onTap: _pickAction,
+            ),
+            const SizedBox(height: 8),
+            TextField(
+              controller: _fromController,
+              decoration: const InputDecoration(
+                labelText: 'Only when email is from (optional)',
+                hintText: 'someone@example.com',
               ),
             ),
-
-            const SizedBox(height: 32),
-            const Divider(),
-            const SizedBox(height: 12),
-
-            const Text(
-              'Existing areas',
-              style: TextStyle(fontSize: 20, fontWeight: FontWeight.bold),
+            const SizedBox(height: 24),
+            Text(
+              'THEN',
+              style: theme.textTheme.titleMedium!
+                  .copyWith(fontWeight: FontWeight.bold),
             ),
-
-            const SizedBox(height: 16),
-
-            _ExistingAreaRow(
-              from: 'Github',
-              to: 'Spotify',
-              title: 'music push',
-              time: 'created 2d ago',
+            const SizedBox(height: 8),
+            _PickerTile(
+              title: 'Action',
+              description: _describeSelectedReaction(),
+              onTap: _pickReaction,
+            ),
+            const SizedBox(height: 8),
+            TextField(
+              controller: _toController,
+              decoration: const InputDecoration(
+                labelText: 'Send email to',
+                hintText: 'you@example.com',
+              ),
+            ),
+            const SizedBox(height: 8),
+            TextField(
+              controller: _subjectController,
+              decoration: const InputDecoration(
+                labelText: 'Subject',
+              ),
+            ),
+            const SizedBox(height: 8),
+            TextField(
+              controller: _textController,
+              decoration: const InputDecoration(
+                labelText: 'Message body',
+              ),
+              maxLines: 3,
+            ),
+            const SizedBox(height: 32),
+            SizedBox(
+              width: double.infinity,
+              child: ElevatedButton(
+                onPressed: _submitting ? null : _submit,
+                child: _submitting
+                    ? const SizedBox(
+                  width: 18,
+                  height: 18,
+                  child: CircularProgressIndicator(strokeWidth: 2),
+                )
+                    : const Text('Create AREA'),
+              ),
             ),
           ],
         ),
@@ -456,82 +419,68 @@ class _CreateAreaScreenState extends State<CreateAreaScreen> {
   }
 }
 
-class _ServiceBox extends StatelessWidget {
-  final String label;
+class _PickerTile extends StatelessWidget {
+  final String title;
+  final String description;
   final VoidCallback onTap;
 
-  const _ServiceBox({
-    required this.label,
+  const _PickerTile({
+    required this.title,
+    required this.description,
     required this.onTap,
   });
 
   @override
   Widget build(BuildContext context) {
+    final theme = Theme.of(context);
+
     return InkWell(
-      borderRadius: BorderRadius.circular(12),
       onTap: onTap,
-      child: Container(
-        padding: const EdgeInsets.symmetric(horizontal: 20, vertical: 14),
+      borderRadius: BorderRadius.circular(12),
+      child: Ink(
+        padding: const EdgeInsets.symmetric(horizontal: 12, vertical: 14),
         decoration: BoxDecoration(
-          color: const Color(0xFFEAE4FF),
+          color: Colors.grey.shade100,
           borderRadius: BorderRadius.circular(12),
+          border: Border.all(color: Colors.grey.shade300),
         ),
-        child: Text(
-          label,
-          style: const TextStyle(fontSize: 16),
+        child: Row(
+          children: [
+            Icon(Icons.bolt, color: theme.colorScheme.primary),
+            const SizedBox(width: 12),
+            Expanded(
+              child: Column(
+                crossAxisAlignment: CrossAxisAlignment.start,
+                children: [
+                  Text(
+                    title,
+                    style: theme.textTheme.bodyMedium!
+                        .copyWith(fontWeight: FontWeight.bold),
+                  ),
+                  const SizedBox(height: 4),
+                  Text(
+                    description,
+                    style: theme.textTheme.bodySmall!
+                        .copyWith(color: Colors.black54),
+                  ),
+                ],
+              ),
+            ),
+            const Icon(Icons.chevron_right),
+          ],
         ),
       ),
     );
   }
 }
 
-class _ExistingAreaRow extends StatelessWidget {
-  final String from;
-  final String to;
-  final String title;
-  final String time;
-
-  const _ExistingAreaRow({
-    required this.from,
-    required this.to,
-    required this.title,
-    required this.time,
-  });
-
-  @override
-  Widget build(BuildContext context) {
-    return Row(
-      children: [
-        Container(
-          padding: const EdgeInsets.symmetric(horizontal: 20, vertical: 12),
-          decoration: BoxDecoration(
-            color: Colors.black,
-            borderRadius: BorderRadius.circular(12),
-          ),
-          child: Text(from, style: const TextStyle(color: Colors.white)),
-        ),
-        const SizedBox(width: 16),
-        Column(
-          children: [
-            Text(title, style: const TextStyle(fontSize: 14)),
-            const Icon(Icons.arrow_forward),
-          ],
-        ),
-        const SizedBox(width: 16),
-        Container(
-          padding: const EdgeInsets.symmetric(horizontal: 20, vertical: 12),
-          decoration: BoxDecoration(
-            color: Colors.green,
-            borderRadius: BorderRadius.circular(12),
-          ),
-          child: Text(to, style: const TextStyle(color: Colors.white)),
-        ),
-        const Spacer(),
-        Text(
-          time,
-          style: const TextStyle(fontSize: 12, color: Colors.black54),
-        ),
-      ],
-    );
+String prettyServiceName(String key) {
+  switch (key) {
+    case 'google':
+      return 'Gmail';
+    case 'gmail':
+      return 'Gmail';
+    default:
+      return key;
   }
 }
