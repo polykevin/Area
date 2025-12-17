@@ -1,8 +1,8 @@
 import 'package:flutter/material.dart';
 import 'package:provider/provider.dart';
-
 import 'providers/areas_provider.dart';
 import 'providers/services_provider.dart';
+import 'providers/theme_provider.dart';
 import 'providers/auth_provider.dart';
 
 import 'api/areas_api.dart';
@@ -19,15 +19,10 @@ void main() async {
   runApp(
     MultiProvider(
       providers: [
-        // Auth provider (already initialized above)
         ChangeNotifierProvider<AuthProvider>.value(value: authProvider),
-
-        // Services provider
         ChangeNotifierProvider<ServicesProvider>(
           create: (_) => ServicesProvider(),
         ),
-
-        // Areas provider, wired to backend
         ChangeNotifierProvider<AreasProvider>(
           create: (_) {
             // TODO: adjust to your real backend URL
@@ -44,6 +39,9 @@ void main() async {
             );
           },
         ),
+        ChangeNotifierProvider<ThemeProvider>(
+          create: (_) => ThemeProvider(),
+        ),
       ],
       child: const AreaApp(),
     ),
@@ -57,13 +55,21 @@ class AreaApp extends StatelessWidget {
   Widget build(BuildContext context) {
     final auth = Provider.of<AuthProvider>(context);
     print("JWT FROM AUTH PROVIDER: ${auth.accessToken}");
+    final themeProvider = context.watch<ThemeProvider>();
 
     return MaterialApp(
       title: 'AREA Mobile',
+
+      // Light theme
       theme: ThemeData(
         brightness: Brightness.light,
         scaffoldBackgroundColor: Colors.white,
         fontFamily: 'SF Pro',
+        textTheme: const TextTheme(
+          bodyLarge: TextStyle(color: Colors.black), // text1
+          bodyMedium: TextStyle(color: Colors.black),
+          titleMedium: TextStyle(color: Colors.white), // text2
+        ),
         inputDecorationTheme: InputDecorationTheme(
           filled: true,
           fillColor: const Color(0xFFF2F2F7),
@@ -74,7 +80,42 @@ class AreaApp extends StatelessWidget {
           contentPadding:
           const EdgeInsets.symmetric(horizontal: 16, vertical: 14),
         ),
+        appBarTheme: const AppBarTheme(
+          backgroundColor: Colors.white,
+          foregroundColor: Colors.black,
+          elevation: 0,
+        ),
       ),
+
+      // Dark theme
+      darkTheme: ThemeData(
+        brightness: Brightness.dark,
+        scaffoldBackgroundColor: Colors.black,
+        fontFamily: 'SF Pro',
+        textTheme: const TextTheme(
+          bodyLarge: TextStyle(color: Colors.white), // text1
+          bodyMedium: TextStyle(color: Colors.white),
+          titleMedium: TextStyle(color: Colors.black), // text2
+        ),
+        inputDecorationTheme: InputDecorationTheme(
+          filled: true,
+          fillColor: const Color(0xFF2C2C2E),
+          border: OutlineInputBorder(
+            borderRadius: BorderRadius.circular(12),
+            borderSide: BorderSide.none,
+          ),
+          contentPadding: const EdgeInsets.symmetric(horizontal: 16, vertical: 14),
+        ),
+        appBarTheme: const AppBarTheme(
+          backgroundColor: Colors.black,
+          foregroundColor: Colors.white,
+          elevation: 0,
+        ),
+      ),
+
+      // Theme mode from provider
+      themeMode: themeProvider.themeMode,
+
       debugShowCheckedModeBanner: false,
       home: auth.isAuthenticated ? const HomeScreen() : const LoginScreen(),
       routes: {

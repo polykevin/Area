@@ -23,32 +23,32 @@ class _AreasScreenState extends State<AreasScreen> {
 
   @override
   Widget build(BuildContext context) {
+    final theme = Theme.of(context);
+
     return Scaffold(
-      backgroundColor: Colors.white,
+      backgroundColor: theme.colorScheme.surface,
       appBar: AppBar(
-        backgroundColor: Colors.white,
+        backgroundColor: theme.colorScheme.surface,
         elevation: 0,
         centerTitle: true,
-        title: const Text(
-          'Existing AREAs',
+        title: Text(
+          'Existing areas',
           style: TextStyle(
-            color: Colors.black,
+            color: theme.colorScheme.onSurface,
             fontWeight: FontWeight.bold,
           ),
         ),
       ),
       floatingActionButton: FloatingActionButton(
-        backgroundColor: Colors.black,
-        onPressed: () async {
-          final created = await Navigator.push<bool>(
+        backgroundColor: theme.colorScheme.primary,
+        foregroundColor: theme.colorScheme.onPrimary,
+        onPressed: () {
+          Navigator.push(
             context,
             MaterialPageRoute(builder: (_) => const CreateAreaScreen()),
           );
-          if (created == true && mounted) {
-            context.read<AreasProvider>().loadAreas();
-          }
         },
-        child: const Icon(Icons.add, color: Colors.white),
+        child: const Icon(Icons.add),
       ),
       body: Padding(
         padding: const EdgeInsets.symmetric(horizontal: 16, vertical: 8),
@@ -61,13 +61,13 @@ class _AreasScreenState extends State<AreasScreen> {
             final areas = provider.areas;
 
             if (areas.isEmpty) {
-              return const Center(
+              return Center(
                 child: Text(
                   'No AREAs yet.\nTap + to create one!',
                   textAlign: TextAlign.center,
                   style: TextStyle(
                     fontSize: 18,
-                    color: Colors.black54,
+                    color: theme.colorScheme.onSurface.withOpacity(0.6),
                   ),
                 ),
               );
@@ -79,43 +79,22 @@ class _AreasScreenState extends State<AreasScreen> {
                 if (provider.error != null)
                   Padding(
                     padding: const EdgeInsets.only(bottom: 8),
-                    child: Container(
-                      padding: const EdgeInsets.all(10),
-                      decoration: BoxDecoration(
-                        color: Colors.red.shade50,
-                        borderRadius: BorderRadius.circular(8),
-                        border: Border.all(color: Colors.red.shade200),
-                      ),
-                      child: Row(
-                        children: [
-                          const Icon(Icons.error_outline,
-                              color: Colors.red, size: 18),
-                          const SizedBox(width: 8),
-                          Expanded(
-                            child: Text(
-                              provider.error!,
-                              style: const TextStyle(
-                                color: Colors.red,
-                                fontSize: 13,
-                              ),
-                            ),
-                          ),
-                        ],
+                    child: Text(
+                      provider.error!,
+                      style: TextStyle(
+                        color: theme.colorScheme.error,
+                        fontSize: 12,
                       ),
                     ),
                   ),
                 Expanded(
-                  child: RefreshIndicator(
-                    onRefresh: () => provider.loadAreas(),
-                    child: ListView.separated(
-                      itemCount: areas.length,
-                      separatorBuilder: (_, __) =>
-                      const SizedBox(height: 8),
-                      itemBuilder: (context, index) {
-                        final area = areas[index];
-                        return _AreaCard(area: area);
-                      },
-                    ),
+                  child: ListView.separated(
+                    itemCount: areas.length,
+                    separatorBuilder: (_, __) => const SizedBox(height: 12),
+                    itemBuilder: (context, index) {
+                      final area = areas[index];
+                      return _AreaRow(area: area);
+                    },
                   ),
                 ),
               ],
@@ -127,29 +106,31 @@ class _AreasScreenState extends State<AreasScreen> {
   }
 }
 
-class _AreaCard extends StatelessWidget {
+class _AreaRow extends StatelessWidget {
   final Area area;
 
-  const _AreaCard({required this.area});
+  const _AreaRow({required this.area});
 
   @override
   Widget build(BuildContext context) {
+    final theme = Theme.of(context);
+
     final actionServiceName = prettyServiceName(area.actionService);
     final reactionServiceName = prettyServiceName(area.reactionService);
 
-    final title = '$actionServiceName → $reactionServiceName';
+    final actionLabel = prettyType(area.actionType);
+    final reactionLabel = prettyType(area.reactionType);
 
-    final actionDescription =
-    prettyActionType(area.actionService, area.actionType);
-    final reactionDescription =
-    prettyReactionType(area.reactionService, area.reactionType);
+    final isActive = area.active;
+
+    final displayName = '$actionServiceName → $reactionServiceName';
 
     return Container(
       padding: const EdgeInsets.symmetric(horizontal: 12, vertical: 14),
       decoration: BoxDecoration(
-        color: Colors.white,
+        color: theme.colorScheme.surface,
         borderRadius: BorderRadius.circular(16),
-        border: Border.all(color: const Color(0xFFE0E0E0)),
+        border: Border.all(color: theme.dividerColor),
       ),
       child: Row(
         crossAxisAlignment: CrossAxisAlignment.center,
@@ -159,14 +140,16 @@ class _AreaCard extends StatelessWidget {
             children: [
               _ServiceTag(
                 text: actionServiceName,
-                color: Colors.black,
+                color: theme.colorScheme.primary,
+                textColor: theme.colorScheme.onPrimary,
               ),
               const SizedBox(width: 8),
-              const Icon(Icons.arrow_forward, size: 18),
+              Icon(Icons.arrow_forward, size: 18, color: theme.iconTheme.color),
               const SizedBox(width: 8),
               _ServiceTag(
                 text: reactionServiceName,
                 color: Colors.green,
+                textColor: Colors.white,
               ),
             ],
           ),
@@ -176,49 +159,45 @@ class _AreaCard extends StatelessWidget {
               crossAxisAlignment: CrossAxisAlignment.start,
               children: [
                 Text(
-                  title,
+                  displayName,
                   overflow: TextOverflow.ellipsis,
-                  style: const TextStyle(
+                  style: TextStyle(
                     fontSize: 14,
                     fontWeight: FontWeight.w600,
+                    color: theme.colorScheme.onSurface,
                   ),
                 ),
                 const SizedBox(height: 4),
                 Text(
-                  'IF $actionDescription\nTHEN $reactionDescription',
+                  '$actionLabel → $reactionLabel',
                   maxLines: 2,
                   overflow: TextOverflow.ellipsis,
-                  style: const TextStyle(
-                    fontSize: 12,
-                    color: Colors.black54,
+                  style: TextStyle(
+                    fontSize: 11,
+                    color: theme.colorScheme.onSurface.withOpacity(0.6),
                   ),
                 ),
               ],
             ),
           ),
           const SizedBox(width: 8),
-          Column(
-            crossAxisAlignment: CrossAxisAlignment.end,
+          Row(
+            mainAxisSize: MainAxisSize.min,
             children: [
-              Row(
-                mainAxisSize: MainAxisSize.min,
-                children: [
-                  Switch(
-                    value: area.active,
-                    activeColor: Colors.green,
-                    onChanged: (_) {
-                      context.read<AreasProvider>().toggleArea(area.id);
-                    },
-                  ),
-                  IconButton(
-                    icon: const Icon(
-                      Icons.delete_outline,
-                      color: Colors.red,
-                      size: 20,
-                    ),
-                    onPressed: () => _confirmDelete(context, area),
-                  ),
-                ],
+              Switch(
+                value: isActive,
+                activeColor: Colors.green,
+                onChanged: (_) {
+                  context.read<AreasProvider>().toggleArea(area.id);
+                },
+              ),
+              IconButton(
+                icon: Icon(
+                  Icons.delete_outline,
+                  color: theme.colorScheme.error,
+                  size: 20,
+                ),
+                onPressed: () => _confirmDelete(context, area),
               ),
             ],
           ),
@@ -228,22 +207,33 @@ class _AreaCard extends StatelessWidget {
   }
 
   void _confirmDelete(BuildContext context, Area area) {
+    final theme = Theme.of(context);
+
     showDialog(
       context: context,
       builder: (ctx) {
         return AlertDialog(
-          title: const Text('Delete AREA?'),
-          content: const Text(
+          title: Text(
+            'Delete AREA?',
+            style: TextStyle(color: theme.colorScheme.onSurface),
+          ),
+          content: Text(
             'Are you sure you want to delete this AREA?',
+            style: TextStyle(color: theme.colorScheme.onSurface),
           ),
           actions: [
             TextButton(
               onPressed: () => Navigator.pop(ctx),
-              child: const Text('Cancel'),
+              child: Text(
+                'Cancel',
+                style: TextStyle(color: theme.colorScheme.onSurface),
+              ),
             ),
             ElevatedButton(
-              style:
-              ElevatedButton.styleFrom(backgroundColor: Colors.red),
+              style: ElevatedButton.styleFrom(
+                backgroundColor: theme.colorScheme.error,
+                foregroundColor: theme.colorScheme.onError,
+              ),
               onPressed: () {
                 Navigator.pop(ctx);
                 context.read<AreasProvider>().deleteArea(area.id);
@@ -260,10 +250,12 @@ class _AreaCard extends StatelessWidget {
 class _ServiceTag extends StatelessWidget {
   final String text;
   final Color color;
+  final Color textColor;
 
   const _ServiceTag({
     required this.text,
     required this.color,
+    required this.textColor,
   });
 
   @override
@@ -276,8 +268,8 @@ class _ServiceTag extends StatelessWidget {
       ),
       child: Text(
         text,
-        style: const TextStyle(
-          color: Colors.white,
+        style: TextStyle(
+          color: textColor,
           fontSize: 13,
         ),
       ),
@@ -287,14 +279,14 @@ class _ServiceTag extends StatelessWidget {
 
 String prettyServiceName(String key) {
   switch (key) {
+    case 'google':
+      return 'Gmail';
+    case 'gmail':
+      return 'Gmail';
     case 'timer':
       return 'Timer';
     case 'github':
       return 'GitHub';
-    case 'gmail':
-      return 'Gmail';
-    case 'google':
-      return 'Gmail';
     case 'weather':
       return 'Weather';
     case 'slack':
@@ -306,26 +298,6 @@ String prettyServiceName(String key) {
   }
 }
 
-String prettyActionType(String service, String type) {
-  if (service == 'google' || service == 'gmail') {
-    switch (type) {
-      case 'new_email':
-        return 'a new email is received';
-      default:
-        return type;
-    }
-  }
-  return type;
-}
-
-String prettyReactionType(String service, String type) {
-  if (service == 'google' || service == 'gmail') {
-    switch (type) {
-      case 'send_email':
-        return 'send an email';
-      default:
-        return type;
-    }
-  }
-  return type;
+String prettyType(String key) {
+  return key.replaceAll('_', ' ');
 }

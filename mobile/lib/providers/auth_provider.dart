@@ -28,6 +28,7 @@ class AuthProvider extends ChangeNotifier {
   bool get isAuthenticated => _tokens != null;
   User? get user => _user;
   bool get isGoogleUser => _user?.isGoogle ?? false;
+  String? get accessToken => _tokens?.accessToken;
 
   String? get avatarUrl {
     if (!isGoogleUser && _localAvatarPath != null && _localAvatarPath!.isNotEmpty) {
@@ -134,16 +135,23 @@ class AuthProvider extends ChangeNotifier {
 
   Future<String?> loginWithGoogle() async {
     try {
+      await _googleSignIn.signOut();
+
       final account = await _googleSignIn.signIn();
       if (account == null) {
         return 'Login canceled';
       }
+
       _googleAccount = account;
+
       final auth = await account.authentication;
       final idToken = auth.idToken;
+
       if (idToken == null || idToken.isEmpty) {
         return 'Failed to retrieve idToken from Google';
       }
+
+      debugPrint('GOOGLE ID TOKEN (first 40 chars): ${idToken.substring(0, 40)}...');
 
       final json = await _authApi.loginWithGoogleIdToken(idToken);
 
@@ -158,13 +166,20 @@ class AuthProvider extends ChangeNotifier {
       _localAvatarIndex = 0;
       _localAvatarPath = null;
 
+      debugPrint('LOGIN OK, JWT = ${tokens.accessToken}');
       notifyListeners();
       return null;
-    } catch (e) {
+    } catch (e, st) {
+      debugPrint('Google login failed: $e');
+      debugPrint('STACKTRACE: $st');
+
       await logout();
+
       return 'Google login failed: ${e.toString()}';
     }
   }
+
+
 
   Future<String?> loginWithGoogleToken(String token) async {
     try {

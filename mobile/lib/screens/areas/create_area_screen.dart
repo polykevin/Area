@@ -195,7 +195,7 @@ class _CreateAreaScreenState extends State<CreateAreaScreen> {
                     Navigator.of(ctx).pop();
                   }
                       : null,
-                  child: const Text('OK'),
+                  child: const Text('Use'),
                 ),
               ],
             );
@@ -245,8 +245,7 @@ class _CreateAreaScreenState extends State<CreateAreaScreen> {
                   const SizedBox(height: 12),
                   DropdownButtonFormField<String>(
                     value: tempKey,
-                    decoration:
-                    const InputDecoration(labelText: 'Reaction'),
+                    decoration: const InputDecoration(labelText: 'Reaction'),
                     items: reactionsForService
                         .map(
                           (opt) => DropdownMenuItem(
@@ -278,7 +277,7 @@ class _CreateAreaScreenState extends State<CreateAreaScreen> {
                     Navigator.of(ctx).pop();
                   }
                       : null,
-                  child: const Text('OK'),
+                  child: const Text('Use'),
                 ),
               ],
             );
@@ -330,17 +329,31 @@ class _CreateAreaScreenState extends State<CreateAreaScreen> {
 
     return Scaffold(
       appBar: AppBar(
-        title: const Text('Create AREA'),
+        elevation: 0,
+        backgroundColor: Theme.of(context).colorScheme.surface,
+        leading: IconButton(
+          icon: Icon(Icons.arrow_back, color: Colors.black),
+          onPressed: () => Navigator.of(context).pop(),
+        ),
+        centerTitle: true,
+        title: Text(
+          'Create an AREA',
+          style: TextStyle(color: Theme.of(context).colorScheme.onSurface, fontWeight: FontWeight.bold),
+        ),
       ),
-      body: SingleChildScrollView(
-        padding: const EdgeInsets.all(16),
-        child: Column(
-          crossAxisAlignment: CrossAxisAlignment.start,
+      backgroundColor: Theme.of(context).colorScheme.surface,
+      body: Padding(
+        padding: const EdgeInsets.symmetric(horizontal: 24),
+        child: ListView(
           children: [
+            const SizedBox(height: 16),
+
+            const Text('Name', style: TextStyle(fontSize: 16)),
+            const SizedBox(height: 4),
             TextField(
               controller: _areaNameController,
               decoration: const InputDecoration(
-                labelText: 'AREA name (optional)',
+                hintText: 'My cool AREA',
               ),
             ),
             const SizedBox(height: 24),
@@ -350,10 +363,14 @@ class _CreateAreaScreenState extends State<CreateAreaScreen> {
                   .copyWith(fontWeight: FontWeight.bold),
             ),
             const SizedBox(height: 8),
-            _PickerTile(
-              title: 'Trigger',
-              description: _describeSelectedAction(),
-              onTap: _pickAction,
+            Row(
+              mainAxisAlignment: MainAxisAlignment.center,
+              children: [
+                _ServiceBox(
+                  label: _describeSelectedAction(),
+                  onTap: _pickAction,
+                ),
+              ],
             ),
             const SizedBox(height: 8),
             TextField(
@@ -370,10 +387,14 @@ class _CreateAreaScreenState extends State<CreateAreaScreen> {
                   .copyWith(fontWeight: FontWeight.bold),
             ),
             const SizedBox(height: 8),
-            _PickerTile(
-              title: 'Action',
-              description: _describeSelectedReaction(),
-              onTap: _pickReaction,
+            Row(
+              mainAxisAlignment: MainAxisAlignment.center,
+              children: [
+                _ServiceBox(
+                  label: _describeSelectedReaction(),
+                  onTap: _pickReaction,
+                ),
+              ],
             ),
             const SizedBox(height: 8),
             TextField(
@@ -400,17 +421,41 @@ class _CreateAreaScreenState extends State<CreateAreaScreen> {
             ),
             const SizedBox(height: 32),
             SizedBox(
-              width: double.infinity,
+              height: 50,
               child: ElevatedButton(
-                onPressed: _submitting ? null : _submit,
-                child: _submitting
-                    ? const SizedBox(
-                  width: 18,
-                  height: 18,
-                  child: CircularProgressIndicator(strokeWidth: 2),
-                )
-                    : const Text('Create AREA'),
+                style: ElevatedButton.styleFrom(
+                  backgroundColor: Theme.of(context).colorScheme.primary,
+                  shape: RoundedRectangleBorder(
+                    borderRadius: BorderRadius.circular(12),
+                  ),
+                ),
+                onPressed: _submit,
+                child: Text(
+                  'Create area',
+                  style: TextStyle (
+                    fontSize: 16,
+                    color : Theme.of(context).colorScheme.onPrimary,
+                  )
+                ),
               ),
+            ),
+
+            const SizedBox(height: 32),
+            const Divider(),
+            const SizedBox(height: 12),
+
+            const Text(
+              'Existing areas',
+              style: TextStyle(fontSize: 20, fontWeight: FontWeight.bold),
+            ),
+
+            const SizedBox(height: 16),
+
+            _ExistingAreaRow(
+              from: 'Github',
+              to: 'Spotify',
+              title: 'music push',
+              time: 'created 2d ago',
             ),
           ],
         ),
@@ -419,57 +464,86 @@ class _CreateAreaScreenState extends State<CreateAreaScreen> {
   }
 }
 
-class _PickerTile extends StatelessWidget {
-  final String title;
-  final String description;
+class _ServiceBox extends StatelessWidget {
+  final String label;
   final VoidCallback onTap;
 
-  const _PickerTile({
-    required this.title,
-    required this.description,
+  const _ServiceBox({
+    required this.label,
     required this.onTap,
   });
 
   @override
   Widget build(BuildContext context) {
-    final theme = Theme.of(context);
 
     return InkWell(
-      onTap: onTap,
       borderRadius: BorderRadius.circular(12),
-      child: Ink(
-        padding: const EdgeInsets.symmetric(horizontal: 12, vertical: 14),
+      onTap: onTap,
+      child: Container(
+        padding: const EdgeInsets.symmetric(horizontal: 20, vertical: 14),
         decoration: BoxDecoration(
-          color: Colors.grey.shade100,
+          color: const Color(0xFFEAE4FF),
           borderRadius: BorderRadius.circular(12),
-          border: Border.all(color: Colors.grey.shade300),
         ),
-        child: Row(
-          children: [
-            Icon(Icons.bolt, color: theme.colorScheme.primary),
-            const SizedBox(width: 12),
-            Expanded(
-              child: Column(
-                crossAxisAlignment: CrossAxisAlignment.start,
-                children: [
-                  Text(
-                    title,
-                    style: theme.textTheme.bodyMedium!
-                        .copyWith(fontWeight: FontWeight.bold),
-                  ),
-                  const SizedBox(height: 4),
-                  Text(
-                    description,
-                    style: theme.textTheme.bodySmall!
-                        .copyWith(color: Colors.black54),
-                  ),
-                ],
-              ),
+        child: Text(
+          label,
+          style: TextStyle(
+            fontSize: 16,
+            color: Theme.of(context).colorScheme.primary,
             ),
-            const Icon(Icons.chevron_right),
-          ],
         ),
       ),
+    );
+  }
+}
+
+class _ExistingAreaRow extends StatelessWidget {
+  final String from;
+  final String to;
+  final String title;
+  final String time;
+
+  const _ExistingAreaRow({
+    required this.from,
+    required this.to,
+    required this.title,
+    required this.time,
+  });
+
+  @override
+  Widget build(BuildContext context) {
+    return Row(
+      children: [
+        Container(
+          padding: const EdgeInsets.symmetric(horizontal: 20, vertical: 12),
+          decoration: BoxDecoration(
+            color: Theme.of(context).colorScheme.primary,
+            borderRadius: BorderRadius.circular(12),
+          ),
+          child: Text(from, style: const TextStyle(color: Colors.white)),
+        ),
+        const SizedBox(width: 16),
+        Column(
+          children: [
+            Text(title, style: const TextStyle(fontSize: 14)),
+            const Icon(Icons.arrow_forward),
+          ],
+        ),
+        const SizedBox(width: 16),
+        Container(
+          padding: const EdgeInsets.symmetric(horizontal: 20, vertical: 12),
+          decoration: BoxDecoration(
+            color: Colors.green,
+            borderRadius: BorderRadius.circular(12),
+          ),
+          child: Text(to, style: const TextStyle(color: Colors.white)),
+        ),
+        const Spacer(),
+        Text(
+          time,
+          style: TextStyle(fontSize: 12, color: Theme.of(context).colorScheme.onSurface),
+        ),
+      ],
     );
   }
 }
@@ -480,6 +554,16 @@ String prettyServiceName(String key) {
       return 'Gmail';
     case 'gmail':
       return 'Gmail';
+    case 'timer':
+      return 'Timer';
+    case 'github':
+      return 'GitHub';
+    case 'weather':
+      return 'Weather';
+    case 'slack':
+      return 'Slack';
+    case 'rss':
+      return 'RSS';
     default:
       return key;
   }
