@@ -13,7 +13,7 @@ export class JwtStrategy extends PassportStrategy(Strategy) {
   constructor(private readonly prisma: PrismaService) {
     super({
       jwtFromRequest: ExtractJwt.fromAuthHeaderAsBearerToken(),
-      secretOrKey: process.env.JWT_SECRET || 'dev-secret-key-area',
+      secretOrKey:  process.env.JWT_SECRET!,
     });
   }
 
@@ -27,11 +27,9 @@ export class JwtStrategy extends PassportStrategy(Strategy) {
         createdAt: true,
       },
     });
-
     if (!user) {
       return null;
     }
-
     return user;
   }
 }

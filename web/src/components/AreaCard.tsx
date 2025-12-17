@@ -7,7 +7,7 @@ type Props = {
 };
 
 export function AreaCard({ area }: Props) {
-  const isActive = area.status === "active";
+  const isActive = area.active === true;
 
   return (
     <div
@@ -76,24 +76,9 @@ export function AreaCard({ area }: Props) {
           marginTop: "0.25rem",
         }}
       >
-        <strong>When</strong> {area.triggerService} / {area.triggerAction}
+        <strong>When</strong> {area.actionService} / {area.actionType}
         <br />
-        <strong>Then</strong> {area.reactionService} / {area.reactionAction}
-      </p>
-
-      <p
-        style={{
-          fontSize: "0.75rem",
-          color: "#64748b",
-          marginTop: "0.35rem",
-        }}
-      >
-        Created on{" "}
-        {new Date(area.createdAt).toLocaleDateString(undefined, {
-          year: "numeric",
-          month: "short",
-          day: "numeric",
-        })}
+        <strong>Then</strong> {area.reactionService} / {area.reactionType}
       </p>
     </div>
   );

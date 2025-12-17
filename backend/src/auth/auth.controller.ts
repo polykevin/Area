@@ -9,15 +9,18 @@ import {
 } from '@nestjs/common';
 import type { Response } from 'express';
 import { JwtAuthGuard } from './jwt-auth.guard';
+import { UnauthorizedException } from '@nestjs/common';
 import { AuthService } from './auth.service';
 import { AuthGuard } from '@nestjs/passport';
 import { RegisterDto } from './dto/register.dto';
 import { LoginDto } from './dto/login.dto';
 import type { Request } from 'express';
 import { GoogleIdTokenDto } from './dto/google-id-token.dto';
+import { Prisma } from '@prisma/client';
+import { PrismaService } from '../prisma/prisma.service';
 
 interface RequestUser {
-  id?: number;
+  id: number;
   email: string;
   provider?: string;
   providerId?: string;
@@ -40,7 +43,7 @@ interface AuthenticatedRequest extends Request {
 
 @Controller('auth')
 export class AuthController {
-  constructor(private readonly authService: AuthService) {}
+  constructor(private readonly authService: AuthService, private readonly prisma: PrismaService) {}
 
   @Get('health')
   getHealth() {
@@ -63,9 +66,25 @@ export class AuthController {
   @UseGuards(JwtAuthGuard)
   @Get('me')
   async getProfile(@Req() req: AuthenticatedRequest) {
-    const user = req.user;
-    const services = user?.id ? await this.authService.getConnectedServices(user.id) : [];
-    return { ...user, services };
+    if (!req.user) {
+      throw new UnauthorizedException();
+    }
+
+    const user = await this.prisma.user.findUnique({
+      where: { id: req.user.id },
+      include: {
+        serviceAuth: {
+          select: {
+            id: true,
+            service: true,
+            accessToken: true,
+            refreshToken: true,
+          },
+        },
+      },
+    });
+
+    return user;
   }
 
   @Get('google')
@@ -79,10 +98,16 @@ export class AuthController {
     @Res() res: Response,
   ) {
     if (!req.user) {
-        return res.redirect(`${process.env.FRONTEND_URL}/services?error=oauth_failed`);
+      return res.redirect(
+        `${process.env.FRONTEND_URL}/auth/google/callback?error=oauth_failed`,
+      );
     }
-    const token = await this.authService.oauthLogin(req.user);
-    return res.redirect(`${process.env.FRONTEND_URL}/services?token=${token}`);
+
+    const jwt = await this.authService.oauthLogin(req.user);
+
+    return res.redirect(
+      `${process.env.FRONTEND_URL}/auth/google/callback?access_token=${jwt}`,
+    );
   }
 
   @Post('google/mobile')

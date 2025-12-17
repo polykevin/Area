@@ -17,6 +17,7 @@ export class GoogleOAuthProvider {
         'email',
         'profile',
         'https://www.googleapis.com/auth/gmail.readonly',
+        'https://www.googleapis.com/auth/gmail.send',
       ],
       state,
     });
