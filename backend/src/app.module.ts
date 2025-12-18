@@ -1,31 +1,32 @@
 import { Module } from '@nestjs/common';
 import { ConfigModule } from '@nestjs/config';
-import { ScheduleModule } from '@nestjs/schedule';
-import { AuthModule } from './auth/auth.module';
-import { AreasModule } from './areas/area.module';
-import { IntegrationModule } from './services/integration.module';
 import { AutomationEngine } from './automation/engine.service';
 import { PrismaModule } from './prisma/prisma.module';
+import { AuthModule } from './auth/auth.module';
+import { GoogleStrategy } from './auth/google.strategy';
+import { JwtStrategy } from './auth/jwt.strategy';
 import { GoogleModule } from './services/google/google.module';
+import { AreasModule } from './areas/area.module';
+import { IntegrationModule } from './services/integration.module';
+import { ScheduleModule } from '@nestjs/schedule';
+import { AboutController } from './about.controller';
+import { AppController } from './app.controller';
+import { AppService } from './app.service';
 
 @Module({
   imports: [
     ConfigModule.forRoot({
       isGlobal: true,
     }),
+    ScheduleModule.forRoot(),
     PrismaModule,
     AuthModule,
-
-    AuthModule,
     AreasModule,
-    IntegrationModule,
-    ScheduleModule.forRoot(),
+    GoogleModule,
+    IntegrationModule
   ],
-  providers: [
-    AutomationEngine,
-  ],
-  exports: [
-    AutomationEngine,
-  ]
+  controllers: [AppController, AboutController],
+  providers: [AppService, GoogleStrategy,
+    JwtStrategy,],
 })
 export class AppModule {}

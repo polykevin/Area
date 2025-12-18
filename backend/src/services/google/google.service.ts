@@ -33,9 +33,7 @@ export class GoogleService {
       await this.authRepo.updateTokens(userId, 'google', {
         accessToken: tokens.access_token || undefined,
         refreshToken: (tokens.refresh_token ?? auth.refreshToken) || undefined,
-        expiresAt: tokens.expiry_date
-          ? new Date(tokens.expiry_date)
-          : null,
+        expiresAt: tokens.expiry_date ? new Date(tokens.expiry_date) : null,
       });
 
       client.setCredentials(tokens);
@@ -64,16 +62,16 @@ export class GoogleService {
     for (const msg of res.data.messages) {
       const full = await gmail.users.messages.get({
         userId: 'me',
-        id: msg.id ?? "",
+        id: msg.id ?? '',
       });
 
       const headers = full.data.payload?.headers ?? [];
 
       messages.push({
-        id: msg.id ?? "",
-        subject: this.getHeader(headers, 'Subject') ?? "",
-        from: this.getHeader(headers, 'From') ?? "",
-        snippet: full.data.snippet ?? "",
+        id: msg.id ?? '',
+        subject: this.getHeader(headers, 'Subject') ?? '',
+        from: this.getHeader(headers, 'From') ?? '',
+        snippet: full.data.snippet ?? '',
       });
     }
 
@@ -81,7 +79,7 @@ export class GoogleService {
   }
 
   private getHeader(headers: any[], name: string) {
-    const found = headers.find(h => h.name === name);
+    const found = headers.find((h) => h.name === name);
     return found ? found.value : null;
   }
 

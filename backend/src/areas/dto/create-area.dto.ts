@@ -2,6 +2,12 @@ import { IsString, IsObject } from "class-validator";
 
 export class CreateAreaDto {
   @IsString()
+  name: string;
+
+  @IsString()
+  description: string;
+
+  @IsString()
   actionService: string;
 
   @IsString()

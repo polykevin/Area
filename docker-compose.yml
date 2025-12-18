@@ -9,23 +9,17 @@ services:
       - db
     environment:
       DATABASE_URL: "postgresql://area:area@db:5432/area"
-      DB_HOST: "db"
-      DB_PORT: "5432"
-      JWT_SECRET: "supersecretjwtkey"
-      JWT_EXPIRES_IN: "1d"
-      GOOGLE_CLIENT_ID: 1008857371236-3d09ddvj4l7p3deubnufbih0susfpt5a.apps.googleusercontent.com
-      GOOGLE_CLIENT_SECRET: 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
-      GOOGLE_CALLBACK_URL: "http://localhost:8080/oauth/google/callback"
-      FRONTEND_URL: "http://localhost:8081"
+    env_file:
+      - ./backend/.env
     volumes:
       - shared-volume:/shared
-  client_mobile:
-    build:
-      context: ./mobile
-    container_name: area_client_mobile
-    volumes:
-      - shared-volume:/shared
-    command: ["/bin/sh", "-c", "cp /app/build/app/outputs/flutter-apk/app-release.apk /shared/client.apk"]
+  # client_mobile:
+  #   build:
+  #     context: ./mobile
+  #   container_name: area_client_mobile
+  #   volumes:
+  #     - shared-volume:/shared
+  #   command: ["/bin/sh", "-c", "cp /app/build/app/outputs/flutter-apk/app-release.apk /shared/client.apk"]
 
   client_web:
     build:
@@ -35,11 +29,13 @@ services:
       - "8081:8081"
     depends_on:
       - server
-      - client_mobile
+      # - client_mobile
     volumes:
       - shared-volume:/shared
     environment:
       APK_PATH: "/shared/client.apk"
+    env_file:
+      - ./web/.env
 
   db:
     image: postgres:15

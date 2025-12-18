@@ -50,7 +50,7 @@ export class OauthController {
       service: provider,
       provider_user_id: profile.id ?? '',
       access_token: tokens.access_token ?? '',
-      refresh_token: tokens.refresh_token ?? null,
+      refresh_token: tokens.refresh_token ?? undefined,
       metadata: profile,
     });
 

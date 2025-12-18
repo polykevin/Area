@@ -9,8 +9,8 @@ type Props = {
   onCreate(area: Area): void;
 };
 
-const ACTION_SERVICES = ["GitHub", "Scheduler", "Gmail"];
-const REACTION_SERVICES = ["Discord", "Gmail", "Slack"];
+const ACTION_SERVICES = ["Gmail"];
+const REACTION_SERVICES = ["Gmail"];
 
 export function AreaWizard({ onCreate }: Props) {
   const [step, setStep] = useState<WizardStep>(1);
@@ -18,26 +18,44 @@ export function AreaWizard({ onCreate }: Props) {
   const [name, setName] = useState("");
   const [description, setDescription] = useState("");
 
-  const [triggerService, setTriggerService] = useState("GitHub");
-  const [triggerAction, setTriggerAction] = useState("New issue in repository");
+  const [triggerService, setTriggerService] = useState("google");
+  const [triggerAction, setTriggerAction] = useState("new_email");
+  const [actionParams, setActionParams] = useState("{}");
 
-  const [reactionService, setReactionService] = useState("Discord");
-  const [reactionAction, setReactionAction] = useState("Send message to channel");
+  const [reactionService, setReactionService] = useState("google");
+  const [reactionAction, setReactionAction] = useState("send_email");
+  const [reactionParams, setReactionParams] = useState("{}");
 
   function handleNext(e: FormEvent) {
     e.preventDefault();
     if (step === 3) {
+      let parsedActionParams: any = {};
+      let parsedReactionParams: any = {};
+
+      try {
+        parsedActionParams = JSON.parse(actionParams);
+      } catch {
+        alert("Invalid JSON in action params");
+        return;
+      }
+
+      try {
+        parsedReactionParams = JSON.parse(reactionParams);
+      } catch {
+        alert("Invalid JSON in reaction params");
+        return;
+      }
+
       const newArea: Area = {
-        id: crypto.randomUUID(),
-        name: name || "Untitled AREA",
-        description,
-        status: "active",
-        triggerService,
-        triggerAction,
+        name: name,
+        description: description,
+        actionService: triggerService,
+        actionType: triggerAction,
+        actionParams: parsedActionParams,
         reactionService,
-        reactionAction,
-        createdAt: new Date().toISOString(),
-        triggerType: triggerService === "Scheduler" ? "polling" : "webhook",
+        reactionType: reactionAction,
+        reactionParams: parsedReactionParams,
+        active: true,
       };
       onCreate(newArea);
       return;
@@ -216,6 +234,26 @@ export function AreaWizard({ onCreate }: Props) {
               }}
             />
           </div>
+          <div style={{ marginBottom: "0.9rem" }}>
+            <label htmlFor="action-params">Action Params (JSON)</label>
+            <textarea
+              id="action-params"
+              value={actionParams}
+              onChange={(e) => setActionParams(e.target.value)}
+              placeholder='{"folder": "Inbox"}'
+              rows={3}
+              style={{
+                width: "100%",
+                padding: "0.45rem 0.6rem",
+                borderRadius: 8,
+                border: "1px solid rgba(148,163,184,0.6)",
+                background: "rgba(15,23,42,0.9)",
+                color: "#e5e7eb",
+                fontSize: "0.9rem",
+                resize: "vertical",
+              }}
+            />
+          </div>
         </>
       )}
 
@@ -288,6 +326,26 @@ export function AreaWizard({ onCreate }: Props) {
                 background: "rgba(15,23,42,0.9)",
                 color: "#e5e7eb",
                 fontSize: "0.9rem",
+              }}
+            />
+          </div>
+          <div style={{ marginBottom: "0.9rem" }}>
+            <label htmlFor="reaction-params">Reaction Params (JSON)</label>
+            <textarea
+              id="reaction-params"
+              value={reactionParams}
+              onChange={(e) => setReactionParams(e.target.value)}
+              placeholder='{"channel": "#general"}'
+              rows={3}
+              style={{
+                width: "100%",
+                padding: "0.45rem 0.6rem",
+                borderRadius: 8,
+                border: "1px solid rgba(148,163,184,0.6)",
+                background: "rgba(15,23,42,0.9)",
+                color: "#e5e7eb",
+                fontSize: "0.9rem",
+                resize: "vertical",
               }}
             />
           </div>
