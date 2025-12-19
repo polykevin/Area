@@ -152,49 +152,63 @@ export class AuthService {
   );
 
   async oauthLoginWithIdToken(idToken: string) {
-    const ticket = await this.googleClient.verifyIdToken({
-      idToken,
-      audience: '1008857371236-3d09ddvj4l7p3deubnufbih0susfpt5a.apps.googleusercontent.com',
-    });
+    try {
+      console.log(
+        'Mobile Google login – idToken first 40 chars:',
+        idToken.slice(0, 40),
+      );
 
-    const payload = ticket.getPayload();
+      const ticket = await this.googleClient.verifyIdToken({
+        idToken,
+        audience:
+          '1008857371236-3d09ddvj4l7p3deubnufbih0susfpt5a.apps.googleusercontent.com',
+      });
 
-    if (!payload || !payload.email || !payload.sub) {
-      throw new UnauthorizedException('Invalid Google token');
-    }
+      const payload = ticket.getPayload();
+      console.log('Google payload:', payload);
 
-    const email = payload.email;
-    const provider = 'google';
-    const providerId = payload.sub;
+      if (!payload || !payload.email || !payload.sub) {
+        throw new UnauthorizedException('Invalid Google token (payload missing)');
+      }
 
-    let user = await this.prisma.user.findUnique({
-      where: { email },
-    });
+      const email = payload.email;
+      const provider = 'google';
+      const providerId = payload.sub;
 
-    if (!user) {
-      user = await this.prisma.user.create({
-        data: {
-          email,
-          provider,
-          providerId,
-          oauthCredentials: {
-            create: {
-              provider,
-              accessToken: '',
-              refreshToken: '',
+      let user = await this.prisma.user.findUnique({
+        where: { email },
+      });
+
+      if (!user) {
+        user = await this.prisma.user.create({
+          data: {
+            email,
+            provider,
+            providerId,
+            oauthCredentials: {
+              create: {
+                provider,
+                accessToken: '',
+                refreshToken: '',
+              },
             },
           },
-        },
-      });
+        });
+      }
+
+      const tokenPayload = { sub: user.id, email: user.email };
+      const accessToken = await this.jwtService.signAsync(tokenPayload);
+
+      return {
+        message: 'Google mobile login successful',
+        access_token: accessToken,
+      };
+    } catch (err) {
+      console.error('Google mobile login failed:', err);
+      throw new UnauthorizedException('Invalid or expired Google token');
     }
-
-    const tokenPayload = { sub: user.id, email: user.email };
-
-    return {
-      message: "Google mobile login successful",
-      access_token: await this.jwtService.signAsync(tokenPayload),
-    };
   }
+
 
   async getConnectedServices(userId: number) {
     const records = await this.serviceAuthRepo.findAllByUser(userId);

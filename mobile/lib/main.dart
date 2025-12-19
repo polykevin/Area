@@ -4,6 +4,9 @@ import 'providers/areas_provider.dart';
 import 'providers/services_provider.dart';
 import 'providers/theme_provider.dart';
 import 'providers/auth_provider.dart';
+
+import 'api/areas_api.dart';
+
 import 'screens/auth/login_screen.dart';
 import 'screens/home/home_screen.dart';
 
@@ -21,7 +24,17 @@ void main() async {
           create: (_) => ServicesProvider(),
         ),
         ChangeNotifierProvider<AreasProvider>(
-          create: (_) => AreasProvider(),
+          create: (_) {
+            // TODO: adjust to your real backend URL
+            const baseUrl = 'http://10.0.2.2:8080';
+
+            // We use the token already loaded in authProvider.init()
+            final token = authProvider.accessToken ?? '';
+
+            return AreasProvider(
+              api: AreasApi(),
+            );
+          },
         ),
         ChangeNotifierProvider<ThemeProvider>(
           create: (_) => ThemeProvider(),
@@ -37,6 +50,8 @@ class AreaApp extends StatelessWidget {
 
   @override
   Widget build(BuildContext context) {
+    final auth = Provider.of<AuthProvider>(context);
+    print("JWT FROM AUTH PROVIDER: ${auth.accessToken}");
     final themeProvider = context.watch<ThemeProvider>();
 
     return MaterialApp(
@@ -59,7 +74,8 @@ class AreaApp extends StatelessWidget {
             borderRadius: BorderRadius.circular(12),
             borderSide: BorderSide.none,
           ),
-          contentPadding: const EdgeInsets.symmetric(horizontal: 16, vertical: 14),
+          contentPadding:
+          const EdgeInsets.symmetric(horizontal: 16, vertical: 14),
         ),
         appBarTheme: const AppBarTheme(
           backgroundColor: Colors.white,
@@ -98,10 +114,10 @@ class AreaApp extends StatelessWidget {
       themeMode: themeProvider.themeMode,
 
       debugShowCheckedModeBanner: false,
-      home: const HomeScreen(),
+      home: auth.isAuthenticated ? const HomeScreen() : const LoginScreen(),
       routes: {
         LoginScreen.routeName: (_) => const LoginScreen(),
-        HomeScreen.routeName: (_) => const HomeScreen(),
+        HomeScreen.routeName:   (_) => const HomeScreen(),
       },
     );
   }

@@ -12,6 +12,9 @@ export class AutomationEngine {
   ) {}
 
   async emitHookEvent(event) {
+    if (!event?.userId || Number.isNaN(Number(event.userId))) {
+        throw new Error(`emitHookEvent called with invalid userId: ${event?.userId}`);
+    }
     const areas = await this.areaRepo.findMatchingAreas(
       event.userId,
       event.actionService,

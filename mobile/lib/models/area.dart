@@ -1,46 +1,64 @@
 class Area {
-  final String id;
-  final String name;
+  final int id;
   final String actionService;
-  final String actionLabel;
+  final String actionType;
+  final Map<String, dynamic> actionParams;
   final String reactionService;
-  final String reactionLabel;
-  final bool isActive;
-  final DateTime? createdAt;
+  final String reactionType;
+  final Map<String, dynamic> reactionParams;
+  final bool active;
 
   Area({
     required this.id,
-    required this.name,
     required this.actionService,
-    required this.actionLabel,
+    required this.actionType,
+    required this.actionParams,
     required this.reactionService,
-    required this.reactionLabel,
-    required this.isActive,
-    this.createdAt,
+    required this.reactionType,
+    required this.reactionParams,
+    required this.active,
   });
 
   factory Area.fromJson(Map<String, dynamic> json) {
     return Area(
-      id: json['id'] as String,
-      name: (json['name'] ?? '') as String,
-      actionService: json['action_service'] as String? ??
-          json['actionService'] as String? ??
-          '',
-      actionLabel: json['action_label'] as String? ??
-          json['actionLabel'] as String? ??
-          '',
-      reactionService: json['reaction_service'] as String? ??
-          json['reactionService'] as String? ??
-          '',
-      reactionLabel: json['reaction_label'] as String? ??
-          json['reactionLabel'] as String? ??
-          '',
-      isActive: json['is_active'] as bool? ??
-          json['isActive'] as bool? ??
-          false,
-      createdAt: json['created_at'] != null
-          ? DateTime.tryParse(json['created_at'] as String)
-          : null,
+      id: json['id'] as int,
+      actionService: json['actionService'] as String,
+      actionType: json['actionType'] as String,
+      actionParams: (json['actionParams'] as Map?)?.cast<String, dynamic>() ?? {},
+      reactionService: json['reactionService'] as String,
+      reactionType: json['reactionType'] as String,
+      reactionParams: (json['reactionParams'] as Map?)?.cast<String, dynamic>() ?? {},
+      active: json['active'] as bool? ?? true,
+    );
+  }
+
+  Map<String, dynamic> toJson() {
+    return {
+      'id': id,
+      'actionService': actionService,
+      'actionType': actionType,
+      'actionParams': actionParams,
+      'reactionService': reactionService,
+      'reactionType': reactionType,
+      'reactionParams': reactionParams,
+      'active': active,
+    };
+  }
+
+  Area copyWith({
+    bool? active,
+    Map<String, dynamic>? actionParams,
+    Map<String, dynamic>? reactionParams,
+  }) {
+    return Area(
+      id: id,
+      actionService: actionService,
+      actionType: actionType,
+      actionParams: actionParams ?? this.actionParams,
+      reactionService: reactionService,
+      reactionType: reactionType,
+      reactionParams: reactionParams ?? this.reactionParams,
+      active: active ?? this.active,
     );
   }
 }

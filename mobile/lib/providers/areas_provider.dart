@@ -4,7 +4,9 @@ import '../models/area.dart';
 import '../api/areas_api.dart';
 
 class AreasProvider with ChangeNotifier {
-  final AreasApi _api = AreasApi();
+  final AreasApi _api;
+
+  AreasProvider({required AreasApi api}) : _api = api;
 
   final List<Area> _areas = [];
   bool loading = false;
@@ -18,7 +20,7 @@ class AreasProvider with ChangeNotifier {
     notifyListeners();
 
     try {
-      final fetched = await _api.getAreas();
+      final fetched = await _api.fetchAreas();
       _areas
         ..clear()
         ..addAll(fetched);
@@ -35,15 +37,25 @@ class AreasProvider with ChangeNotifier {
 
   Future<void> refreshAreas() => loadAreas();
 
-  Future<void> toggleArea(String id) async {
+  Future<void> toggleArea(int id) async {
+    final index = _areas.indexWhere((a) => a.id == id);
+    if (index == -1) return;
+
+    final current = _areas[index];
+    final newActive = !current.active;
+
+    _areas[index] = current.copyWith(active: newActive);
+    notifyListeners();
+
     try {
-      final updated = await _api.toggleArea(id);
-      final index = _areas.indexWhere((a) => a.id == id);
-      if (index != -1) {
-        _areas[index] = updated;
-        notifyListeners();
-      }
+      final updated = await _api.updateArea(
+        id: id,
+        active: newActive,
+      );
+      _areas[index] = updated;
+      notifyListeners();
     } catch (e) {
+      _areas[index] = current;
       error = 'Failed to toggle area';
       if (kDebugMode) {
         print('toggleArea error: $e');
@@ -52,7 +64,7 @@ class AreasProvider with ChangeNotifier {
     }
   }
 
-  Future<void> deleteArea(String id) async {
+  Future<void> deleteArea(int id) async {
     final index = _areas.indexWhere((a) => a.id == id);
     if (index == -1) return;
 
@@ -71,28 +83,30 @@ class AreasProvider with ChangeNotifier {
     }
   }
 
-  Future<void> createAreaLocal({
+  Future<void> createArea({
     required String name,
     required String actionService,
-    required String actionLabel,
+    required String actionType,
+    required Map<String, dynamic> actionParams,
     required String reactionService,
-    required String reactionLabel,
+    required String reactionType,
+    required Map<String, dynamic> reactionParams,
   }) async {
     try {
       final created = await _api.createArea(
-        name: name,
         actionService: actionService,
-        actionLabel: actionLabel,
+        actionType: actionType,
+        actionParams: actionParams,
         reactionService: reactionService,
-        reactionLabel: reactionLabel,
+        reactionType: reactionType,
+        reactionParams: reactionParams,
       );
-
       _areas.insert(0, created);
       notifyListeners();
     } catch (e) {
       error = 'Failed to create area';
       if (kDebugMode) {
-        print('createAreaLocal error: $e');
+        print('createArea error: $e');
       }
       notifyListeners();
       rethrow;

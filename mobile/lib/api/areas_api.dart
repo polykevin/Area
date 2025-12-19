@@ -1,46 +1,61 @@
 import 'package:dio/dio.dart';
-
 import 'api_client.dart';
 import '../models/area.dart';
 
 class AreasApi {
   final Dio _dio = ApiClient().dio;
 
-  Future<List<Area>> getAreas() async {
-    final response = await _dio.get('/areas');
-    final data = response.data as List<dynamic>;
+  Future<List<Area>> fetchAreas() async {
+    final res = await _dio.get('/areas');
+
+    // backend returns a list
+    final data = res.data as List<dynamic>;
     return data
         .map((e) => Area.fromJson(e as Map<String, dynamic>))
         .toList();
   }
 
   Future<Area> createArea({
-    required String name,
     required String actionService,
-    required String actionLabel,
+    required String actionType,
+    required Map<String, dynamic> actionParams,
     required String reactionService,
-    required String reactionLabel,
+    required String reactionType,
+    required Map<String, dynamic> reactionParams,
+    String? name, // optional if your DTO supports it
   }) async {
-    final response = await _dio.post(
-      '/areas',
-      data: {
-        'name': name,
-        'action_service': actionService,
-        'action_label': actionLabel,
-        'reaction_service': reactionService,
-        'reaction_label': reactionLabel,
-      },
-    );
+    final payload = <String, dynamic>{
+      if (name != null) 'name': name,
+      'actionService': actionService,
+      'actionType': actionType,
+      'actionParams': actionParams,
+      'reactionService': reactionService,
+      'reactionType': reactionType,
+      'reactionParams': reactionParams,
+    };
 
-    return Area.fromJson(response.data as Map<String, dynamic>);
+    final res = await _dio.post('/areas', data: payload);
+    return Area.fromJson(res.data as Map<String, dynamic>);
   }
 
-  Future<Area> toggleArea(String id) async {
-    final response = await _dio.patch('/areas/$id/toggle');
-    return Area.fromJson(response.data as Map<String, dynamic>);
+  Future<Area> updateArea({
+    required int id,
+    Map<String, dynamic>? actionParams,
+    Map<String, dynamic>? reactionParams,
+    bool? active,
+    String? name,
+  }) async {
+    final payload = <String, dynamic>{};
+    if (name != null) payload['name'] = name;
+    if (actionParams != null) payload['actionParams'] = actionParams;
+    if (reactionParams != null) payload['reactionParams'] = reactionParams;
+    if (active != null) payload['active'] = active;
+
+    final res = await _dio.put('/areas/$id', data: payload);
+    return Area.fromJson(res.data as Map<String, dynamic>);
   }
 
-  Future<void> deleteArea(String id) async {
+  Future<void> deleteArea(int id) async {
     await _dio.delete('/areas/$id');
   }
 }
