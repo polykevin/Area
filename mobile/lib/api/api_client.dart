@@ -5,8 +5,10 @@ class ApiClient {
   static final ApiClient _instance = ApiClient._internal();
   factory ApiClient() => _instance;
 
-  late Dio dio;
+  late final Dio dio;
   final _storage = const FlutterSecureStorage();
+
+  String? _token;
 
   ApiClient._internal() {
     dio = Dio(
@@ -22,13 +24,31 @@ class ApiClient {
     dio.interceptors.add(
       InterceptorsWrapper(
         onRequest: (options, handler) async {
-          final token = await _storage.read(key: 'jwt');
+          final token = _token ?? await _storage.read(key: 'jwt');
+
           if (token != null && token.isNotEmpty) {
             options.headers['Authorization'] = 'Bearer $token';
+          } else {
+            options.headers.remove('Authorization');
           }
+
           return handler.next(options);
         },
       ),
     );
+  }
+
+  Future<void> setToken(String? token) async {
+    _token = token;
+
+    if (token == null || token.isEmpty) {
+      await _storage.delete(key: 'jwt');
+    } else {
+      await _storage.write(key: 'jwt', value: token);
+    }
+  }
+
+  Future<void> loadTokenFromStorage() async {
+    _token = await _storage.read(key: 'jwt');
   }
 }

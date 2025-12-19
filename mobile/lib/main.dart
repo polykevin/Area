@@ -32,10 +32,7 @@ void main() async {
             final token = authProvider.accessToken ?? '';
 
             return AreasProvider(
-              api: AreasApi(
-                baseUrl: baseUrl,
-                token: token,
-              ),
+              api: AreasApi(),
             );
           },
         ),

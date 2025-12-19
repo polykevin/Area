@@ -4,6 +4,7 @@ import 'package:google_sign_in/google_sign_in.dart';
 import 'package:image_picker/image_picker.dart';
 
 import '../api/auth_api.dart';
+import '../api/api_client.dart';
 import '../models/auth_tokens.dart';
 import '../models/user.dart';
 
@@ -40,6 +41,7 @@ class AuthProvider extends ChangeNotifier {
   int get localAvatarIndex => _localAvatarIndex;
 
   Future<void> init() async {
+    await ApiClient().loadTokenFromStorage();
     final token = await _storage.read(key: 'jwt');
     _googleAccount = await _googleSignIn.signInSilently();
     if (token != null && token.isNotEmpty) {
@@ -72,7 +74,7 @@ class AuthProvider extends ChangeNotifier {
       final json = await _authApi.login(email, password);
       final tokens = AuthTokens.fromJson(json);
       _tokens = tokens;
-      await _storage.write(key: 'jwt', value: tokens.accessToken);
+      await ApiClient().setToken(tokens.accessToken);
 
       final meJson = await _authApi.getMe();
       _user = User.fromJson(meJson);
@@ -157,7 +159,7 @@ class AuthProvider extends ChangeNotifier {
 
       final tokens = AuthTokens.fromJson(json);
       _tokens = tokens;
-      await _storage.write(key: 'jwt', value: tokens.accessToken);
+      await ApiClient().setToken(tokens.accessToken);
 
       final meJson = await _authApi.getMe();
       meJson['displayName'] ??= account.displayName;
@@ -216,7 +218,7 @@ class AuthProvider extends ChangeNotifier {
     _localAvatarIndex = 0;
     _localAvatarPath = null;
     await _googleSignIn.signOut();
-    await _storage.delete(key: 'jwt');
+    await ApiClient().setToken(null);
     notifyListeners();
   }
 }

@@ -1,31 +1,18 @@
-import 'dart:convert';
-import 'package:http/http.dart' as http;
+import 'package:dio/dio.dart';
+import 'api_client.dart';
 import '../models/area.dart';
 
 class AreasApi {
-  final String baseUrl;
-  final String token;
-
-  AreasApi({
-    required this.baseUrl,
-    required this.token,
-  });
-
-  Map<String, String> get _headers => {
-    'Authorization': 'Bearer $token',
-    'Content-Type': 'application/json',
-  };
+  final Dio _dio = ApiClient().dio;
 
   Future<List<Area>> fetchAreas() async {
-    final uri = Uri.parse('$baseUrl/areas');
-    final res = await http.get(uri, headers: _headers);
+    final res = await _dio.get('/areas');
 
-    if (res.statusCode != 200) {
-      throw Exception('Failed to load areas: ${res.statusCode}');
-    }
-
-    final List<dynamic> data = json.decode(res.body);
-    return data.map((e) => Area.fromJson(e as Map<String, dynamic>)).toList();
+    // backend returns a list
+    final data = res.data as List<dynamic>;
+    return data
+        .map((e) => Area.fromJson(e as Map<String, dynamic>))
+        .toList();
   }
 
   Future<Area> createArea({
@@ -35,25 +22,20 @@ class AreasApi {
     required String reactionService,
     required String reactionType,
     required Map<String, dynamic> reactionParams,
+    String? name, // optional if your DTO supports it
   }) async {
-    final uri = Uri.parse('$baseUrl/areas');
-    final body = json.encode({
+    final payload = <String, dynamic>{
+      if (name != null) 'name': name,
       'actionService': actionService,
       'actionType': actionType,
       'actionParams': actionParams,
       'reactionService': reactionService,
       'reactionType': reactionType,
       'reactionParams': reactionParams,
-    });
+    };
 
-    final res = await http.post(uri, headers: _headers, body: body);
-
-    if (res.statusCode != 201 && res.statusCode != 200) {
-      throw Exception('Failed to create area: ${res.statusCode} ${res.body}');
-    }
-
-    final data = json.decode(res.body) as Map<String, dynamic>;
-    return Area.fromJson(data);
+    final res = await _dio.post('/areas', data: payload);
+    return Area.fromJson(res.data as Map<String, dynamic>);
   }
 
   Future<Area> updateArea({
@@ -61,34 +43,19 @@ class AreasApi {
     Map<String, dynamic>? actionParams,
     Map<String, dynamic>? reactionParams,
     bool? active,
+    String? name,
   }) async {
-    final uri = Uri.parse('$baseUrl/areas/$id');
     final payload = <String, dynamic>{};
-
+    if (name != null) payload['name'] = name;
     if (actionParams != null) payload['actionParams'] = actionParams;
     if (reactionParams != null) payload['reactionParams'] = reactionParams;
     if (active != null) payload['active'] = active;
 
-    final res = await http.put(
-      uri,
-      headers: _headers,
-      body: json.encode(payload),
-    );
-
-    if (res.statusCode != 200) {
-      throw Exception('Failed to update area: ${res.statusCode} ${res.body}');
-    }
-
-    final data = json.decode(res.body) as Map<String, dynamic>;
-    return Area.fromJson(data);
+    final res = await _dio.put('/areas/$id', data: payload);
+    return Area.fromJson(res.data as Map<String, dynamic>);
   }
 
   Future<void> deleteArea(int id) async {
-    final uri = Uri.parse('$baseUrl/areas/$id');
-    final res = await http.delete(uri, headers: _headers);
-
-    if (res.statusCode != 200 && res.statusCode != 204) {
-      throw Exception('Failed to delete area: ${res.statusCode} ${res.body}');
-    }
+    await _dio.delete('/areas/$id');
   }
 }
