@@ -1,6 +1,7 @@
 import 'dart:io';
 
 import 'package:flutter/material.dart';
+import 'package:flutter/rendering.dart';
 import 'package:provider/provider.dart';
 
 import '../../providers/auth_provider.dart';
@@ -10,6 +11,7 @@ import '../services/services_screen.dart';
 import '../auth/login_screen.dart';
 import '../auth/register_screen.dart';
 import '../profile/profile_screen.dart';
+import 'homepage_screen.dart';
 
 class HomeScreen extends StatefulWidget {
   static const routeName = '/home';
@@ -24,6 +26,7 @@ class _HomeScreenState extends State<HomeScreen> {
   int _index = 0;
 
   final _screens = const [
+    HomepageScreen(),
     ServicesScreen(),
     AreasScreen(),
   ];
@@ -104,10 +107,18 @@ class _HomeScreenState extends State<HomeScreen> {
               ),
             ),
             ListTile(
+              leading: const Icon(Icons.home),
+              title: const Text('Home'),
+              onTap: () {
+                setState(() => _index = 0);
+                Navigator.pop(context);
+              },
+            ),
+            ListTile(
               leading: const Icon(Icons.extension),
               title: const Text('Services'),
               onTap: () {
-                setState(() => _index = 0);
+                setState(() => _index = 1);
                 Navigator.pop(context);
               },
             ),
@@ -115,7 +126,7 @@ class _HomeScreenState extends State<HomeScreen> {
               leading: const Icon(Icons.account_tree),
               title: const Text('AREAs'),
               onTap: () {
-                setState(() => _index = 1);
+                setState(() => _index = 2);
                 Navigator.pop(context);
               },
             ),
