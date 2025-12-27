@@ -13,13 +13,13 @@ services:
       - ./backend/.env
     volumes:
       - shared-volume:/shared
-  # client_mobile:
-  #   build:
-  #     context: ./mobile
-  #   container_name: area_client_mobile
-  #   volumes:
-  #     - shared-volume:/shared
-  #   command: ["/bin/sh", "-c", "cp /app/build/app/outputs/flutter-apk/app-release.apk /shared/client.apk"]
+  client_mobile:
+    build:
+      context: ./mobile
+    container_name: area_client_mobile
+    volumes:
+      - shared-volume:/shared
+    command: ["/bin/sh", "-c", "cp /app/build/app/outputs/flutter-apk/app-release.apk /shared/client.apk"]
 
   client_web:
     build:

@@ -1,3 +1,4 @@
+import 'package:client_mobile/widgets/app_text_field.dart';
 import 'package:flutter/material.dart';
 import 'package:provider/provider.dart';
 
@@ -32,10 +33,8 @@ class _CreateAreaScreenState extends State<CreateAreaScreen> {
   final _areaNameController = TextEditingController();
   final _fromController = TextEditingController();
   final _toController = TextEditingController();
-  final _subjectController = TextEditingController(text: 'AREA test');
-  final _textController = TextEditingController(
-    text: 'You received a new email matching your AREA rule.',
-  );
+  final _subjectController = TextEditingController();
+  final _textController = TextEditingController();
 
   bool _submitting = false;
 
@@ -357,10 +356,12 @@ class _CreateAreaScreenState extends State<CreateAreaScreen> {
               ),
             ),
             const SizedBox(height: 24),
-            Text(
+            AppText(
               'IF',
-              style: theme.textTheme.titleMedium!
-                  .copyWith(fontWeight: FontWeight.bold),
+              style: theme.textTheme.titleMedium!.copyWith(
+                fontWeight: FontWeight.bold,
+                color: theme.colorScheme.onSurface,
+              ),
             ),
             const SizedBox(height: 8),
             Row(
@@ -381,10 +382,12 @@ class _CreateAreaScreenState extends State<CreateAreaScreen> {
               ),
             ),
             const SizedBox(height: 24),
-            Text(
+            AppText(
               'THEN',
-              style: theme.textTheme.titleMedium!
-                  .copyWith(fontWeight: FontWeight.bold),
+              style: theme.textTheme.titleMedium!.copyWith(
+                fontWeight: FontWeight.bold,
+                color: theme.colorScheme.onSurface,
+              ),
             ),
             const SizedBox(height: 8),
             Row(

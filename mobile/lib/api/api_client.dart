@@ -13,9 +13,7 @@ class ApiClient {
   ApiClient._internal() {
     dio = Dio(
       BaseOptions(
-        //baseUrl: 'http://10.68.251.81:8080', //local ip lan address, this is the epitech one
-        baseUrl: 'http://10.192.64.132:8080',
-        //baseUrl: 'http://10.68.240.88:8080',
+        baseUrl: 'http://192.168.1.35:8080', //local ip lan address
         connectTimeout: const Duration(seconds: 10),
         receiveTimeout: const Duration(seconds: 10),
       ),
