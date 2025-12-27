@@ -21,6 +21,7 @@ class _LoginScreenState extends State<LoginScreen> {
   final _passwordCtrl = TextEditingController();
   bool _loading = false;
   String? _error;
+  bool _showPassword = false;
 
   @override
   void dispose() {
@@ -95,7 +96,17 @@ class _LoginScreenState extends State<LoginScreen> {
               AppTextField(
                 controller: _passwordCtrl,
                 label: 'Password',
-                obscureText: true,
+                obscureText: !_showPassword,
+                suffixIcon: IconButton(
+                  icon: Icon(
+                    _showPassword ? Icons.visibility_off : Icons.visibility,
+                  ),
+                  onPressed: () {
+                    setState(() {
+                      _showPassword = !_showPassword;
+                      });
+                  },
+                ),
               ),
               const SizedBox(height: 16),
 

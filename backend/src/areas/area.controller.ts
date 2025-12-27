@@ -12,6 +12,7 @@ export class AreasController {
 
   @Get()
   getMyAreas(@Req() req) {
+    console.log('AUTH user in /areas:', req.user);
     return this.areas.findByUser(req.user.id);
   }
 

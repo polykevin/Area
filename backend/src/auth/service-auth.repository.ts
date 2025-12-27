@@ -56,8 +56,8 @@ export class ServiceAuthRepository {
 
   async findAllByUser(userId: number) {
     return this.prisma.serviceAuth.findMany({
-      where: {userId}
-    })
+      where: { userId },
+    });
   }
 
   async updateTokens(
@@ -74,10 +74,36 @@ export class ServiceAuthRepository {
       data: {
         accessToken: data.accessToken,
         refreshToken: data.refreshToken,
-        expiresAt: data.expiresAt !== undefined && data.expiresAt !== null
-          ? new Date(data.expiresAt)
-          : null,
+        expiresAt:
+          data.expiresAt !== undefined && data.expiresAt !== null
+            ? new Date(data.expiresAt)
+            : null,
       },
+    });
+  }
+
+  async updateMetadata(
+    userId: number,
+    service: string,
+    metadata: Record<string, any>,
+  ) {
+    const existing = await this.findByUserAndService(userId, service);
+
+    const existingMeta =
+      existing?.metadata &&
+      typeof existing.metadata === 'object' &&
+      !Array.isArray(existing.metadata)
+        ? (existing.metadata as Record<string, any>)
+        : {};
+
+    const newMeta = {
+      ...existingMeta,
+      ...metadata,
+    };
+
+    return this.prisma.serviceAuth.update({
+      where: { userId_service: { userId, service } },
+      data: { metadata: newMeta },
     });
   }
 }
