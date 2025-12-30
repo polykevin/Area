@@ -1,13 +1,17 @@
 import { Injectable, Logger } from '@nestjs/common';
 import { ServiceAuthRepository } from '../../auth/service-auth.repository';
 import { GmailMessage } from './google.interface';
+import { GoogleCalendarEventAction } from "./actions/google.calendar-event.action";
 import { google } from 'googleapis';
 
 @Injectable()
 export class GoogleService {
   private readonly logger = new Logger(GoogleService.name);
+  private actions: any[] = [];
 
-  constructor(private authRepo: ServiceAuthRepository) {}
+  constructor(private authRepo: ServiceAuthRepository) {
+    this.actions.push(new GoogleCalendarEventAction(this));
+  }
 
   private async getOAuthClient(userId: number) {
     const auth = await this.authRepo.findByUserAndService(userId, 'google');
@@ -40,6 +44,16 @@ export class GoogleService {
     }
     return client;
   }
+
+  public async getCalendarClient(userId: number) {
+  const auth = await this.getOAuthClient(userId);
+
+  return google.calendar({
+    version: 'v3',
+    auth,
+  });
+  }
+
 
   async getGmailClient(userId: number) {
     const client = await this.getOAuthClient(userId);
