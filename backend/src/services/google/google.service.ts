@@ -105,4 +105,14 @@ export class GoogleService {
       requestBody: { raw: rawMessage },
     });
   }
+  async getLastCalendarEventId(userId: number): Promise<string | null> {
+    const auth = await this.authRepo.findByUserAndService(userId, 'google');
+    return auth?.lastEventId ?? null;
+  }
+
+  async setLastCalendarEventId(userId: number, eventId: string) {
+    await this.authRepo.update(userId, 'google', {
+      lastEventId: eventId,
+    });
+  }
 }

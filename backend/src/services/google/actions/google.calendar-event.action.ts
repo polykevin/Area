@@ -15,6 +15,16 @@ export class GoogleCalendarEventAction {
       orderBy: 'updated',
     });
 
-    return !!res.data.items?.length;
+    const latestEvent = res.data.items?.[0];
+    if (!latestEvent)
+      return false;
+    const lastEventId = await this.googleService.getLastCalendarEventId(userId);
+    if (lastEventId === latestEvent.id) 
+      return false;
+    await this.googleService.setLastCalendarEventId(
+      userId,
+      latestEvent.id!
+    );
+    return true;
   }
 }
