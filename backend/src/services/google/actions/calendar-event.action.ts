@@ -1,4 +1,9 @@
 import { GoogleService } from '../google.service';
+export const calendarEventCreatedAction = {
+  id: 'calendar_event_created',
+  name: 'Calendar Event Created',
+  match: (payload, params) => true,
+};
 
 export class GoogleCalendarEventAction {
   name = 'google.calendar.event.created';

@@ -1,7 +1,7 @@
 import { Injectable, Logger } from '@nestjs/common';
 import { ServiceAuthRepository } from '../../auth/service-auth.repository';
 import { GmailMessage } from './google.interface';
-import { GoogleCalendarEventAction } from "./actions/google.calendar-event.action";
+import { GoogleCalendarEventAction } from "./actions/calendar-event.action";
 import { google } from 'googleapis';
 
 @Injectable()

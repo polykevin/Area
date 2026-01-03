@@ -10,6 +10,8 @@ import { ServiceAuthRepository } from '../auth/service-auth.repository';
 import { NewEmailHook } from './google/hooks/new-email.hook';
 import { googleIntegration } from './google/google.integration';
 import { discordIntegration } from '../services/discord/discord.integration';
+import { Cron } from '@nestjs/schedule';
+import { CalendarEventHook } from './google/hooks/calendar-event.hook';
 
 @Module({
   imports: [
@@ -24,6 +26,7 @@ import { discordIntegration } from '../services/discord/discord.integration';
     DiscordService,
     ServiceAuthRepository,
     NewEmailHook,
+    CalendarEventHook,
   ],
   exports: [
     ServiceRegistry,
@@ -38,9 +41,9 @@ export class IntegrationModule {
     private authRepo: ServiceAuthRepository,
     private engine: AutomationEngine,
     private newEmailHook: NewEmailHook,
+    private calendarEventHook: CalendarEventHook,
   ) {
     newEmailHook.setEngine(engine);
-
     this.registry.register(
       googleIntegration(googleService, authRepo, engine, newEmailHook),
     );
