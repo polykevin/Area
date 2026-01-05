@@ -123,7 +123,8 @@ class _AreaRow extends StatelessWidget {
 
     final isActive = area.active;
 
-    final displayName = '$actionServiceName → $reactionServiceName';
+    final actionBg = serviceColor(context, area.actionService);
+    final reactionBg = serviceColor(context, area.reactionService);
 
     return Container(
       padding: const EdgeInsets.symmetric(horizontal: 12, vertical: 14),
@@ -135,52 +136,81 @@ class _AreaRow extends StatelessWidget {
       child: Row(
         crossAxisAlignment: CrossAxisAlignment.center,
         children: [
-          Row(
-            mainAxisSize: MainAxisSize.min,
-            children: [
-              _ServiceTag(
-                text: actionServiceName,
-                color: theme.colorScheme.primary,
-                textColor: theme.colorScheme.onPrimary,
-              ),
-              const SizedBox(width: 8),
-              Icon(Icons.arrow_forward, size: 18, color: theme.iconTheme.color),
-              const SizedBox(width: 8),
-              _ServiceTag(
-                text: reactionServiceName,
-                color: Colors.green,
-                textColor: Colors.white,
-              ),
-            ],
-          ),
-          const SizedBox(width: 16),
           Expanded(
             child: Column(
               crossAxisAlignment: CrossAxisAlignment.start,
               children: [
-                Text(
-                  displayName,
-                  overflow: TextOverflow.ellipsis,
-                  style: TextStyle(
-                    fontSize: 14,
-                    fontWeight: FontWeight.w600,
-                    color: theme.colorScheme.onSurface,
-                  ),
+                Row(
+                  crossAxisAlignment: CrossAxisAlignment.center,
+                  children: [
+                    _ServiceTag(
+                      text: actionServiceName,
+                      color: actionBg,
+                      textColor: onServiceColor(actionBg),
+                      width: 140,
+                    ),
+                    const SizedBox(width: 12),
+                    Icon(
+                      Icons.arrow_forward,
+                      size: 18,
+                      color: theme.colorScheme.onSurface.withOpacity(0.7),
+                    ),
+                    const SizedBox(width: 12),
+                    _ServiceTag(
+                      text: reactionServiceName,
+                      color: reactionBg,
+                      textColor: onServiceColor(reactionBg),
+                      width: 140,
+                    ),
+                  ],
                 ),
-                const SizedBox(height: 4),
-                Text(
-                  '$actionLabel → $reactionLabel',
-                  maxLines: 2,
-                  overflow: TextOverflow.ellipsis,
-                  style: TextStyle(
-                    fontSize: 11,
-                    color: theme.colorScheme.onSurface.withOpacity(0.6),
-                  ),
+
+                const SizedBox(height: 10),
+
+                Row(
+                  children: [
+                    SizedBox(
+                      width: 140,
+                      child: Text(
+                        actionLabel,
+                        textAlign: TextAlign.center,
+                        maxLines: 1,
+                        overflow: TextOverflow.ellipsis,
+                        style: TextStyle(
+                          fontSize: 13,
+                          fontWeight: FontWeight.w500,
+                          color: theme.colorScheme.onSurface.withOpacity(0.75),
+                        ),
+                      ),
+                    ),
+                    const SizedBox(width: 12),
+                    SizedBox(
+                      width: 18,
+                      child: const SizedBox.shrink(),
+                    ),
+                    const SizedBox(width: 12),
+                    SizedBox(
+                      width: 140,
+                      child: Text(
+                        reactionLabel,
+                        textAlign: TextAlign.center,
+                        maxLines: 1,
+                        overflow: TextOverflow.ellipsis,
+                        style: TextStyle(
+                          fontSize: 13,
+                          fontWeight: FontWeight.w500,
+                          color: theme.colorScheme.onSurface.withOpacity(0.75),
+                        ),
+                      ),
+                    ),
+                  ],
                 ),
               ],
             ),
           ),
-          const SizedBox(width: 8),
+
+          const SizedBox(width: 12),
+
           Row(
             mainAxisSize: MainAxisSize.min,
             children: [
@@ -251,26 +281,36 @@ class _ServiceTag extends StatelessWidget {
   final String text;
   final Color color;
   final Color textColor;
+  final double width;
 
   const _ServiceTag({
     required this.text,
     required this.color,
     required this.textColor,
+    this.width = 140,
   });
 
   @override
   Widget build(BuildContext context) {
-    return Container(
-      padding: const EdgeInsets.symmetric(horizontal: 18, vertical: 8),
-      decoration: BoxDecoration(
-        color: color,
-        borderRadius: BorderRadius.circular(12),
-      ),
-      child: Text(
-        text,
-        style: TextStyle(
-          color: textColor,
-          fontSize: 13,
+    return SizedBox(
+      width: width,
+      child: Container(
+        padding: const EdgeInsets.symmetric(horizontal: 12, vertical: 10),
+        decoration: BoxDecoration(
+          color: color,
+          borderRadius: BorderRadius.circular(16),
+        ),
+        child: Center(
+          child: Text(
+            text,
+            maxLines: 1,
+            overflow: TextOverflow.ellipsis,
+            style: TextStyle(
+              color: textColor,
+              fontSize: 13,
+              fontWeight: FontWeight.w600,
+            ),
+          ),
         ),
       ),
     );
@@ -299,5 +339,41 @@ String prettyServiceName(String key) {
 }
 
 String prettyType(String key) {
-  return key.replaceAll('_', ' ');
+  final s = key.replaceAll('_', ' ').trim();
+  if (s.isEmpty) return s;
+
+  return s
+      .split(RegExp(r'\s+'))
+      .map((w) => w.isEmpty ? w : '${w[0].toUpperCase()}${w.substring(1).toLowerCase()}')
+      .join(' ');
+}
+
+Color serviceColor(BuildContext context, String key) {
+  final cs = Theme.of(context).colorScheme;
+
+  switch (key) {
+    case 'google':
+    case 'gmail':
+      return const Color(0xFFEA4335); // Gmail red
+    case 'instagram':
+      return const Color(0xFFE1306C); // Instagram pink
+    case 'github':
+      return const Color(0xFF24292E); // GitHub dark
+    case 'slack':
+      return const Color(0xFF4A154B); // Slack purple
+    case 'weather':
+      return const Color(0xFF1E88E5); // blue
+    case 'rss':
+      return const Color(0xFFFF9800); // orange
+    case 'timer':
+      return const Color(0xFF00BFA5); // teal
+    default:
+      return cs.primary;
+  }
+}
+
+Color onServiceColor(Color bg) {
+  return ThemeData.estimateBrightnessForColor(bg) == Brightness.dark
+      ? Colors.white
+      : Colors.black;
 }

@@ -16,14 +16,8 @@ class _ServicesScreenState extends State<ServicesScreen> {
   int _columns = 2; // default grid mode
 
   final List<Map<String, dynamic>> _allServices = [
-    {"name": "Spotify", "color": Colors.green},
-    {"name": "Youtube", "color": Colors.red},
-    {"name": "Github", "color": Colors.black},
-    {"name": "Outlook", "color": Colors.blue},
-    {"name": "Soundcloud", "color": Colors.orange},
-    {"name": "Twitch", "color": Colors.purple},
-    {"name": "Instagram", "color": Colors.pink},
-    {"name": "X", "color": Colors.black},
+    {"key": "google", "name": "Gmail", "color": Colors.red, "logoAsset": "assets/gmail.png"},
+    {"key": "instagram", "name": "Instagram", "color": Colors.pink, "logoAsset": "assets/instagram.png"},
   ];
 
   @override
@@ -145,9 +139,10 @@ class _ServicesScreenState extends State<ServicesScreen> {
                         Navigator.of(context).push(
                           MaterialPageRoute(
                             builder: (_) => ServiceScreen(
+                              serviceKey: s["key"] as String,
                               name: s["name"] as String,
                               bannerColor: s["color"] as Color,
-                              logoAsset: "",
+                              logoAsset: s["logoAsset"] as String,
                             ),
                           ),
                         );

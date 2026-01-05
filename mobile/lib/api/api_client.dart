@@ -14,8 +14,9 @@ class ApiClient {
     dio = Dio(
       BaseOptions(
         //baseUrl: 'http://10.68.251.81:8080', //local ip lan address, this is the epitech one
-        baseUrl: 'http://10.192.64.132:8080',
-        //baseUrl: 'http://10.68.240.88:8080',
+        baseUrl: 'http://10.192.64.132:8080', //this is my home in france
+        //baseUrl: 'http://10.68.240.88:8080', //this is another epitech one
+        //baseUrl: 'http://192.168.0.161:8080',
         connectTimeout: const Duration(seconds: 10),
         receiveTimeout: const Duration(seconds: 10),
       ),
@@ -37,6 +38,8 @@ class ApiClient {
       ),
     );
   }
+
+  String get baseUrl => dio.options.baseUrl;
 
   Future<void> setToken(String? token) async {
     _token = token;

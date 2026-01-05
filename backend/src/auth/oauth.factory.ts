@@ -1,5 +1,6 @@
 import { Injectable } from '@nestjs/common';
 import { GoogleOAuthProvider } from './providers/google.oauth';
+import { InstagramOAuthProvider } from './providers/instagram.oauth';
 
 export interface OAuthProvider {
   getAuthUrl(state?: string): string;
@@ -13,6 +14,8 @@ export class OauthFactoryService {
     switch (provider) {
       case 'google':
         return new GoogleOAuthProvider();
+      case 'instagram':
+        return new InstagramOAuthProvider();
       default:
         throw new Error(`Unknown OAuth provider: ${provider}`);
     }
