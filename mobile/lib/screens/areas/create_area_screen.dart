@@ -3,7 +3,6 @@ import 'package:provider/provider.dart';
 
 import '../../providers/areas_provider.dart';
 
-/// Services -> Actions
 const kActionOptions = {
   'google': [
     {'key': 'new_email', 'label': 'New email received'},
@@ -14,7 +13,6 @@ const kActionOptions = {
   ],
 };
 
-/// Services -> Reactions
 const kReactionOptions = {
   'google': [
     {'key': 'send_email', 'label': 'Send email'},
@@ -40,11 +38,7 @@ class _CreateAreaScreenState extends State<CreateAreaScreen> {
   String? _reactionKey;
 
   final _areaNameController = TextEditingController();
-
-  // Action params (example)
   final _fromController = TextEditingController();
-
-  // Reaction params (example for send_email)
   final _toController = TextEditingController();
   final _subjectController = TextEditingController(text: 'AREA test');
   final _textController = TextEditingController(
@@ -98,7 +92,6 @@ class _CreateAreaScreenState extends State<CreateAreaScreen> {
         ? '${prettyServiceName(actionService)} → ${prettyServiceName(reactionService)}'
         : _areaNameController.text.trim();
 
-    // Build action params based on selected action
     final actionParams = <String, dynamic>{};
     if (actionType == 'new_email' && _fromController.text.trim().isNotEmpty) {
       actionParams['from'] = _fromController.text.trim();
@@ -196,7 +189,7 @@ class _CreateAreaScreenState extends State<CreateAreaScreen> {
                     onChanged: (value) {
                       setStateDialog(() {
                         tempService = value;
-                        tempKey = null; // reset action when service changes
+                        tempKey = null;
                       });
                     },
                   ),

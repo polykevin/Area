@@ -19,6 +19,7 @@ class _RegisterScreenState extends State<RegisterScreen> {
   final _passwordCtrl = TextEditingController();
   bool _loading = false;
   String? _error;
+  bool _showPassword = false;
 
   @override
   void dispose() {
@@ -31,7 +32,7 @@ class _RegisterScreenState extends State<RegisterScreen> {
     setState(() {
       _loading = true;
       _error = null;
-    });
+    });bool _showPassword = false;
 
     final auth = context.read<AuthProvider>();
     final err = await auth.register(_emailCtrl.text.trim(), _passwordCtrl.text);
@@ -39,7 +40,7 @@ class _RegisterScreenState extends State<RegisterScreen> {
     if (err != null) {
       setState(() {
         _loading = false;
-        _error = err;
+        _error = err;bool _showPassword = false;
       });
     } else {
       if (!mounted) return;
@@ -90,7 +91,17 @@ class _RegisterScreenState extends State<RegisterScreen> {
               AppTextField(
                 controller: _passwordCtrl,
                 label: 'Password',
-                obscureText: true,
+                obscureText: !_showPassword,
+                suffixIcon: IconButton(
+                  icon: Icon(
+                    _showPassword ? Icons.visibility_off : Icons.visibility,
+                  ),
+                  onPressed: () {
+                    setState(() {
+                      _showPassword = !_showPassword;
+                      });
+                  },
+                ),
               ),
               const SizedBox(height: 16),
 

@@ -112,7 +112,6 @@ class AreaApp extends StatelessWidget {
 
       // Theme mode from provider
       themeMode: themeProvider.themeMode,
-
       debugShowCheckedModeBanner: false,
       home: auth.isAuthenticated ? const HomeScreen() : const LoginScreen(),
       routes: {
