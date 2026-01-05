@@ -24,4 +24,6 @@ flutter:
   assets:
     - assets/icons/google.png
     - assets/icons/login.png
+    - assets/icons/gmail.png
+    - assets/icons/instagram.png
 

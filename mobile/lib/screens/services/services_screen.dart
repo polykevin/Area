@@ -16,8 +16,8 @@ class _ServicesScreenState extends State<ServicesScreen> {
   int _columns = 2; // default grid mode
 
   final List<Map<String, dynamic>> _allServices = [
-    {"key": "google", "name": "Gmail", "color": Colors.red, "logoAsset": "assets/gmail.png"},
-    {"key": "instagram", "name": "Instagram", "color": Colors.pink, "logoAsset": "assets/instagram.png"},
+    {"key": "google", "name": "Gmail", "color": Colors.red, "logoAsset": "assets/icons/gmail.png"},
+    {"key": "instagram", "name": "Instagram", "color": Colors.pink, "logoAsset": "assets/icons/instagram.png"},
   ];
 
   @override

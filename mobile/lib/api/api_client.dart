@@ -39,6 +39,8 @@ class ApiClient {
     );
   }
 
+  String get baseUrl => dio.options.baseUrl;
+
   Future<void> setToken(String? token) async {
     _token = token;
 
