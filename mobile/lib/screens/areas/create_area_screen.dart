@@ -8,18 +8,13 @@ const kActionOptions = {
     {'key': 'new_email', 'label': 'New email received'},
   ],
   'instagram': [
-    {'key': 'new_post', 'label': 'New post published'},
-    {'key': 'new_follower', 'label': 'New follower'},
+    {'key': 'new_media', 'label': 'New post published'},
   ],
 };
 
 const kReactionOptions = {
   'google': [
     {'key': 'send_email', 'label': 'Send email'},
-  ],
-  'instagram': [
-    {'key': 'post_photo', 'label': 'Post a photo'},
-    {'key': 'post_story', 'label': 'Post a story'},
   ],
 };
 

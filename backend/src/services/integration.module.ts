@@ -24,11 +24,11 @@ import { instagramIntegration } from './instagram/instagram.integration';
   providers: [
     ServiceRegistry,
     AutomationEngine,
+
     GoogleService,
-    InstagramService,
     ServiceAuthRepository,
     NewEmailHook,
-    NewMediaHook,
+
   ],
   exports: [
     ServiceRegistry,

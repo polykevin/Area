@@ -1,53 +1,68 @@
 export class InstagramOAuthProvider {
   getAuthUrl(state?: string) {
+    const redirectUri = `${process.env.PUBLIC_BASE_URL}/oauth/instagram/callback`;
+
     const params = new URLSearchParams({
       client_id: process.env.INSTAGRAM_APP_ID!,
-      redirect_uri: process.env.INSTAGRAM_CALLBACK_URL!,
+      redirect_uri: redirectUri,
       response_type: 'code',
-      scope: process.env.INSTAGRAM_SCOPES ?? 'instagram_basic',
+      scope: process.env.INSTAGRAM_SCOPES ?? 'user_profile,user_media',
     });
 
     if (state) params.set('state', state);
-    return `https://www.facebook.com/v19.0/dialog/oauth?${params.toString()}`;
+
+    console.log('INSTAGRAM_APP_ID=', process.env.INSTAGRAM_APP_ID);
+    const authUrl = `https://api.instagram.com/oauth/authorize?${params.toString()}`;
+    console.log('AUTH URL=', authUrl);
+    return authUrl;
   }
 
   async exchangeCode(code: string) {
-    const params = new URLSearchParams({
+    const redirectUri = `${process.env.PUBLIC_BASE_URL}/oauth/instagram/callback`;
+
+    const body = new URLSearchParams({
       client_id: process.env.INSTAGRAM_APP_ID!,
       client_secret: process.env.INSTAGRAM_APP_SECRET!,
-      redirect_uri: process.env.INSTAGRAM_CALLBACK_URL!,
+      grant_type: 'authorization_code',
+      redirect_uri: redirectUri,
       code,
     });
 
-    const url = `https://graph.facebook.com/v19.0/oauth/access_token?${params.toString()}`;
-    const res = await fetch(url);
-    if (!res.ok) throw new Error(`Instagram token exchange failed (${res.status})`);
-    const data = await res.json();
+    const res = await fetch('https://api.instagram.com/oauth/access_token', {
+      method: 'POST',
+      headers: { 'Content-Type': 'application/x-www-form-urlencoded' },
+      body: body.toString(),
+    });
 
+    const txt = await res.text();
+    if (!res.ok) throw new Error(`Instagram token exchange failed (${res.status}): ${txt}`);
+
+    const data = JSON.parse(txt);
     return {
       access_token: data.access_token as string,
-      expires_in: data.expires_in as number,
-      token_type: data.token_type as string,
+      user_id: String(data.user_id),
     };
   }
 
   async exchangeForLongLivedToken(shortLivedToken: string) {
     const params = new URLSearchParams({
-      grant_type: 'fb_exchange_token',
-      client_id: process.env.INSTAGRAM_APP_ID!,
+      grant_type: 'ig_exchange_token',
       client_secret: process.env.INSTAGRAM_APP_SECRET!,
-      fb_exchange_token: shortLivedToken,
+      access_token: shortLivedToken,
     });
 
-    const url = `https://graph.facebook.com/v19.0/oauth/access_token?${params.toString()}`;
+    const url = `https://graph.instagram.com/access_token?${params.toString()}`;
     const res = await fetch(url);
-    if (!res.ok) throw new Error(`Instagram long-lived exchange failed (${res.status})`);
-    const data = await res.json();
+
+    const txt = await res.text();
+    if (!res.ok) throw new Error(`Instagram long-lived exchange failed (${res.status}): ${txt}`);
+
+    const data = JSON.parse(txt);
 
     return {
       access_token: data.access_token as string,
       expires_in: data.expires_in as number,
-      token_type: data.token_type as string,
+      token_type: 'bearer',
     };
   }
 
@@ -57,14 +72,17 @@ export class InstagramOAuthProvider {
       access_token: accessToken,
     });
 
-    const url = `https://graph.facebook.com/v19.0/me?${params.toString()}`;
+    const url = `https://graph.instagram.com/me?${params.toString()}`;
     const res = await fetch(url);
-    if (!res.ok) throw new Error(`Instagram profile fetch failed (${res.status})`);
-    const data = await res.json();
+
+    const txt = await res.text();
+    if (!res.ok) throw new Error(`Instagram profile fetch failed (${res.status}): ${txt}`);
+
+    const data = JSON.parse(txt);
 
     return {
-      id: data.id as string,
-      username: (data.username ?? '') as string,
+      id: String(data.id),
+      username: String(data.username ?? ''),
     };
   }
 }
