@@ -7,7 +7,6 @@ class ApiClient {
 
   late final Dio dio;
   final _storage = const FlutterSecureStorage();
-
   String? _token;
 
   ApiClient._internal() {

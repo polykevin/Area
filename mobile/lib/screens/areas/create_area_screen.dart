@@ -2,21 +2,7 @@ import 'package:flutter/material.dart';
 import 'package:provider/provider.dart';
 
 import '../../providers/areas_provider.dart';
-
-const kActionOptions = {
-  'google': [
-    {'key': 'new_email', 'label': 'New email received'},
-  ],
-  'instagram': [
-    {'key': 'new_media', 'label': 'New post published'},
-  ],
-};
-
-const kReactionOptions = {
-  'google': [
-    {'key': 'send_email', 'label': 'Send email'},
-  ],
-};
+import '../../providers/services_provider.dart';
 
 class CreateAreaScreen extends StatefulWidget {
   const CreateAreaScreen({super.key});
@@ -45,7 +31,10 @@ class _CreateAreaScreenState extends State<CreateAreaScreen> {
   @override
   void initState() {
     super.initState();
-    // Start null so action/reaction dropdown doesn't appear until service chosen
+    // Load services if not already loaded
+    Future.microtask(() {
+      context.read<ServicesProvider>().loadServices();
+    });
     _actionService = null;
     _reactionService = null;
   }
@@ -58,6 +47,27 @@ class _CreateAreaScreenState extends State<CreateAreaScreen> {
     _subjectController.dispose();
     _textController.dispose();
     super.dispose();
+  }
+
+  /// Get list of actions for a given service name
+  List<(String name, String description)> _getActionsForService(String serviceName) {
+    final servicesProvider = context.read<ServicesProvider>();
+    final service = servicesProvider.services.firstWhere(
+      (s) => s.name == serviceName,
+      orElse: () => throw Exception('Service not found: $serviceName'),
+    );
+    return service.actions.map((a) => (a.name, a.description)).toList();
+  }
+
+  /// Get list of reactions for a given service name
+  List<(String name, String description)> _getReactionsForService(
+      String serviceName) {
+    final servicesProvider = context.read<ServicesProvider>();
+    final service = servicesProvider.services.firstWhere(
+      (s) => s.name == serviceName,
+      orElse: () => throw Exception('Service not found: $serviceName'),
+    );
+    return service.reactions.map((r) => (r.name, r.description)).toList();
   }
 
   Future<void> _submit() async {
@@ -132,13 +142,16 @@ class _CreateAreaScreenState extends State<CreateAreaScreen> {
   }
 
   void _pickAction() {
+    final servicesProvider = context.read<ServicesProvider>();
+    final services = servicesProvider.services;
+
     showDialog(
       context: context,
       builder: (ctx) {
         String? tempService = _actionService; // start null
         String? tempKey = _actionKey;
 
-        final services = kActionOptions.keys.toList();
+        final serviceKeys = services.map((s) => s.name).toList();
 
         return StatefulBuilder(
           builder: (context, setStateDialog) {
@@ -150,9 +163,14 @@ class _CreateAreaScreenState extends State<CreateAreaScreen> {
               labelStyle: TextStyle(color: cs.onSurfaceVariant),
             );
 
-            final actionsForService = (tempService == null)
-                ? const <Map<String, Object?>>[]
-                : (kActionOptions[tempService] ?? const <Map<String, Object?>>[]);
+            List<(String name, String description)> actionsForService = [];
+            if (tempService != null) {
+              try {
+                actionsForService = _getActionsForService(tempService!);
+              } catch (e) {
+                // Service not found, leave empty
+              }
+            }
 
             return AlertDialog(
               backgroundColor: cs.surface,
@@ -173,7 +191,7 @@ class _CreateAreaScreenState extends State<CreateAreaScreen> {
                     dropdownColor: cs.surface,
                     style: TextStyle(color: cs.onSurface),
                     iconEnabledColor: cs.onSurfaceVariant,
-                    items: services
+                    items: serviceKeys
                         .map(
                           (s) => DropdownMenuItem(
                         value: s,
@@ -190,7 +208,7 @@ class _CreateAreaScreenState extends State<CreateAreaScreen> {
                   ),
 
                   // Only show after service chosen
-                  if (tempService != null) ...[
+                  if (tempService != null && actionsForService.isNotEmpty) ...[
                     const SizedBox(height: 12),
                     DropdownButtonFormField<String>(
                       value: tempKey,
@@ -200,9 +218,9 @@ class _CreateAreaScreenState extends State<CreateAreaScreen> {
                       iconEnabledColor: cs.onSurfaceVariant,
                       items: actionsForService
                           .map(
-                            (opt) => DropdownMenuItem(
-                          value: opt['key'] as String,
-                          child: Text(opt['label'] as String),
+                            (action) => DropdownMenuItem(
+                          value: action.$1,
+                          child: Text(action.$1),
                         ),
                       )
                           .toList(),
@@ -212,7 +230,14 @@ class _CreateAreaScreenState extends State<CreateAreaScreen> {
                         });
                       },
                     ),
-                  ],
+                  ] else if (tempService != null && actionsForService.isEmpty)
+                    Padding(
+                      padding: const EdgeInsets.only(top: 12),
+                      child: Text(
+                        'No actions available for this service',
+                        style: TextStyle(color: cs.onSurfaceVariant),
+                      ),
+                    ),
                 ],
               ),
               actions: [
@@ -246,13 +271,16 @@ class _CreateAreaScreenState extends State<CreateAreaScreen> {
   }
 
   void _pickReaction() {
+    final servicesProvider = context.read<ServicesProvider>();
+    final services = servicesProvider.services;
+
     showDialog(
       context: context,
       builder: (ctx) {
         String? tempService = _reactionService; // start null
         String? tempKey = _reactionKey;
 
-        final services = kReactionOptions.keys.toList();
+        final serviceKeys = services.map((s) => s.name).toList();
 
         return StatefulBuilder(
           builder: (context, setStateDialog) {
@@ -264,9 +292,14 @@ class _CreateAreaScreenState extends State<CreateAreaScreen> {
               labelStyle: TextStyle(color: cs.onSurfaceVariant),
             );
 
-            final reactionsForService = (tempService == null)
-                ? const <Map<String, Object?>>[]
-                : (kReactionOptions[tempService] ?? const <Map<String, Object?>>[]);
+            List<(String name, String description)> reactionsForService = [];
+            if (tempService != null) {
+              try {
+                reactionsForService = _getReactionsForService(tempService!);
+              } catch (e) {
+                // Service not found, leave empty
+              }
+            }
 
             return AlertDialog(
               backgroundColor: cs.surface,
@@ -287,7 +320,7 @@ class _CreateAreaScreenState extends State<CreateAreaScreen> {
                     dropdownColor: cs.surface,
                     style: TextStyle(color: cs.onSurface),
                     iconEnabledColor: cs.onSurfaceVariant,
-                    items: services
+                    items: serviceKeys
                         .map(
                           (s) => DropdownMenuItem(
                         value: s,
@@ -298,13 +331,13 @@ class _CreateAreaScreenState extends State<CreateAreaScreen> {
                     onChanged: (value) {
                       setStateDialog(() {
                         tempService = value;
-                        tempKey = null; // reset reaction when service changes
+                        tempKey = null;
                       });
                     },
                   ),
 
                   // Only show after service chosen
-                  if (tempService != null) ...[
+                  if (tempService != null && reactionsForService.isNotEmpty) ...[
                     const SizedBox(height: 12),
                     DropdownButtonFormField<String>(
                       value: tempKey,
@@ -314,9 +347,9 @@ class _CreateAreaScreenState extends State<CreateAreaScreen> {
                       iconEnabledColor: cs.onSurfaceVariant,
                       items: reactionsForService
                           .map(
-                            (opt) => DropdownMenuItem(
-                          value: opt['key'] as String,
-                          child: Text(opt['label'] as String),
+                            (reaction) => DropdownMenuItem(
+                          value: reaction.$1,
+                          child: Text(reaction.$1),
                         ),
                       )
                           .toList(),
@@ -326,7 +359,15 @@ class _CreateAreaScreenState extends State<CreateAreaScreen> {
                         });
                       },
                     ),
-                  ],
+                  ] else if (tempService != null &&
+                      reactionsForService.isEmpty)
+                    Padding(
+                      padding: const EdgeInsets.only(top: 12),
+                      child: Text(
+                        'No reactions available for this service',
+                        style: TextStyle(color: cs.onSurfaceVariant),
+                      ),
+                    ),
                 ],
               ),
               actions: [
@@ -353,7 +394,7 @@ class _CreateAreaScreenState extends State<CreateAreaScreen> {
                         }
                         if (_textController.text.trim().isEmpty) {
                           _textController.text =
-                          'You received a new email matching your AREA rule.';
+                              'You received a new email matching your AREA rule.';
                         }
                       }
                     });
@@ -374,30 +415,16 @@ class _CreateAreaScreenState extends State<CreateAreaScreen> {
     if (_actionService == null || _actionKey == null) {
       return 'Tap to choose action...';
     }
-    final label = _findActionLabel(_actionService!, _actionKey!);
-    return '${prettyServiceName(_actionService!)} • $label';
+    // Since action name is now directly stored in _actionKey, just return it with service
+    return '${prettyServiceName(_actionService!)} • $_actionKey';
   }
 
   String _describeSelectedReaction() {
     if (_reactionService == null || _reactionKey == null) {
       return 'Tap to choose reaction...';
     }
-    final label = _findReactionLabel(_reactionService!, _reactionKey!);
-    return '${prettyServiceName(_reactionService!)} • $label';
-  }
-
-  String _findActionLabel(String service, String key) {
-    final list = kActionOptions[service] ?? const [];
-    final found =
-    list.firstWhere((e) => e['key'] == key, orElse: () => {'label': key});
-    return found['label'] as String;
-  }
-
-  String _findReactionLabel(String service, String key) {
-    final list = kReactionOptions[service] ?? const [];
-    final found =
-    list.firstWhere((e) => e['key'] == key, orElse: () => {'label': key});
-    return found['label'] as String;
+    // Since reaction name is now directly stored in _reactionKey, just return it with service
+    return '${prettyServiceName(_reactionService!)} • $_reactionKey';
   }
 
   void _showError(String msg) {

@@ -14,10 +14,16 @@ import { InstagramService } from './instagram/instagram.service';
 import { NewMediaHook } from './instagram/hooks/new-media.hook';
 import { instagramIntegration } from './instagram/instagram.integration';
 
+import { WeatherModule } from './weather/weather.module';
+import { WeatherService } from './weather/weather.service';
+import { NewWeatherDataHook } from './weather/hooks/new-weather-data.hook';
+import { weatherIntegration } from './weather/weather.integration';
+
 @Module({
   imports: [
     GoogleModule,
     InstagramModule,
+    WeatherModule,
     AuthModule,
     AreasModule,
   ],
@@ -26,9 +32,11 @@ import { instagramIntegration } from './instagram/instagram.integration';
     AutomationEngine,
 
     GoogleService,
+    InstagramService,
+    WeatherService,
     ServiceAuthRepository,
     NewEmailHook,
-
+    NewMediaHook,
   ],
   exports: [
     ServiceRegistry,
@@ -45,11 +53,15 @@ export class IntegrationModule {
     private instagramService: InstagramService,
     private newMediaHook: NewMediaHook,
 
+    private weatherService: WeatherService,
+    private newWeatherDataHook: NewWeatherDataHook,
+
     private authRepo: ServiceAuthRepository,
     private engine: AutomationEngine,
   ) {
     newEmailHook.setEngine(engine);
     newMediaHook.setEngine(engine);
+    newWeatherDataHook.setEngine(engine);
 
     registry.register(
       googleIntegration(googleService, authRepo, engine, newEmailHook),
@@ -57,6 +69,10 @@ export class IntegrationModule {
 
     registry.register(
       instagramIntegration(instagramService, authRepo, engine, newMediaHook),
+    );
+
+    registry.register(
+      weatherIntegration(weatherService, authRepo, engine, newWeatherDataHook),
     );
   }
 }
