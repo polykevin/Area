@@ -7,9 +7,15 @@ class ServicesApi {
   final Dio _dio = ApiClient().dio;
 
   Future<List<Service>> getServices() async {
-    final response = await _dio.get('/services');
-    final data = response.data as List<dynamic>;
-    return data.map((e) => Service.fromJson(e as Map<String, dynamic>)).toList();
+    try {
+      final response = await _dio.get('/services');
+      final data = response.data as List<dynamic>;
+      final result = data.map((e) => Service.fromJson(e as Map<String, dynamic>)).toList();
+      return result;
+    } catch (e) {
+      print('[ERROR] ServicesApi.getServices - error: $e');
+      rethrow;
+    }
   }
 
   Future<Service> connectService(String serviceName) async {

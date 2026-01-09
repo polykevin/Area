@@ -3,17 +3,16 @@ import 'package:provider/provider.dart';
 import 'package:url_launcher/url_launcher.dart';
 import '../../api/api_client.dart';
 import '../../providers/auth_provider.dart';
+import '../../models/service.dart';
 
 class ServiceScreen extends StatefulWidget {
-  final String serviceKey; // e.g. "google", "instagram"
-  final String name;
+  final Service service;
   final Color bannerColor;
   final String logoAsset;
 
   const ServiceScreen({
     super.key,
-    required this.serviceKey,
-    required this.name,
+    required this.service,
     this.bannerColor = Colors.grey,
     required this.logoAsset,
   });
@@ -26,18 +25,18 @@ class _ServiceScreenState extends State<ServiceScreen> {
   final TextEditingController _searchController = TextEditingController();
   String _query = '';
 
-  late final List<String> _actions;
-  late final List<String> _reactions;
+  late final List<ServiceAction> _actions;
+  late final List<ServiceAction> _reactions;
 
   bool _connecting = false;
-  bool _connected = false; // you can later load this from API
+  bool _connected = false;
   String? _connectError;
 
   @override
   void initState() {
     super.initState();
-    _actions = _actionsFor(widget.serviceKey);
-    _reactions = _reactionsFor(widget.serviceKey);
+    _actions = widget.service.actions;
+    _reactions = widget.service.reactions;
   }
 
   @override
@@ -63,7 +62,7 @@ class _ServiceScreenState extends State<ServiceScreen> {
       final apiBaseUrl = ApiClient().baseUrl;
 
       final url =
-          '$apiBaseUrl/oauth/${widget.serviceKey}/url?userId=$userId';
+          '$apiBaseUrl/oauth/${widget.service.name}/url?userId=$userId';
 
       final uri = Uri.parse(url);
 
@@ -78,7 +77,7 @@ class _ServiceScreenState extends State<ServiceScreen> {
 
       if (!mounted) return;
       setState(() {
-        _connected = true; // optimistic; later refresh from backend
+        _connected = true;
       });
     } catch (e) {
       if (!mounted) return;
@@ -97,10 +96,10 @@ class _ServiceScreenState extends State<ServiceScreen> {
   // -----------------------------
   // UI HELPERS
   // -----------------------------
-  List<String> _filtered(List<String> items) {
+  List<ServiceAction> _filtered(List<ServiceAction> items) {
     final q = _query.trim().toLowerCase();
     if (q.isEmpty) return items;
-    return items.where((x) => x.toLowerCase().contains(q)).toList();
+    return items.where((x) => x.name.toLowerCase().contains(q)).toList();
   }
 
   @override
@@ -120,7 +119,7 @@ class _ServiceScreenState extends State<ServiceScreen> {
             onPressed: () => Navigator.of(context).pop(),
           ),
           title: Text(
-            widget.name,
+            widget.service.displayName,
             style: TextStyle(
               fontSize: 18,
               fontWeight: FontWeight.w600,
@@ -144,14 +143,14 @@ class _ServiceScreenState extends State<ServiceScreen> {
             _buildListTab(
               context,
               title: 'Actions',
-              subtitle: 'Choose what can trigger an AREA for ${widget.name}.',
+              subtitle: 'Choose what can trigger an AREA for ${widget.service.displayName}.',
               items: _filtered(_actions),
               emptyText: 'No actions available for this service.',
             ),
             _buildListTab(
               context,
               title: 'Reactions',
-              subtitle: 'Choose what ${widget.name} can do when an AREA runs.',
+              subtitle: 'Choose what ${widget.service.displayName} can do when an AREA runs.',
               items: _filtered(_reactions),
               emptyText: 'No reactions available for this service.',
             ),
@@ -168,7 +167,7 @@ class _ServiceScreenState extends State<ServiceScreen> {
     final theme = Theme.of(context);
     final cs = theme.colorScheme;
 
-    final description = serviceDescription(widget.serviceKey);
+    final description = serviceDescription(widget.service.name);
 
     return Padding(
       padding: const EdgeInsets.all(16),
@@ -185,11 +184,24 @@ class _ServiceScreenState extends State<ServiceScreen> {
               children: [
                 const SizedBox(width: 24),
                 if (widget.logoAsset.isNotEmpty)
-                  Image.asset(widget.logoAsset, width: 88, height: 88),
+                  Image.asset(
+                    widget.logoAsset,
+                    width: 88,
+                    height: 88,
+                    errorBuilder: (context, error, stackTrace) => Container(
+                      width: 88,
+                      height: 88,
+                      decoration: BoxDecoration(
+                        color: Colors.white24,
+                        borderRadius: BorderRadius.circular(8),
+                      ),
+                      child: const Icon(Icons.extension, size: 40, color: Colors.white),
+                    ),
+                  ),
                 if (widget.logoAsset.isNotEmpty) const SizedBox(width: 16),
                 Expanded(
                   child: Text(
-                    widget.name,
+                    widget.service.displayName,
                     overflow: TextOverflow.ellipsis,
                     style: const TextStyle(
                       fontFamily: 'Inter',
@@ -284,7 +296,7 @@ class _ServiceScreenState extends State<ServiceScreen> {
 
           // Optional: let user see which URL we open (useful while dev)
           Text(
-            'Opens: ${ApiClient().baseUrl}/oauth/${widget.serviceKey}/url',
+            'Opens: ${ApiClient().baseUrl}/oauth/${widget.service.name}/url',
             style: TextStyle(
               fontSize: 12,
               color: cs.onSurface.withOpacity(0.6),
@@ -302,7 +314,7 @@ class _ServiceScreenState extends State<ServiceScreen> {
       BuildContext context, {
         required String title,
         required String subtitle,
-        required List<String> items,
+        required List<ServiceAction> items,
         required String emptyText,
       }) {
     final theme = Theme.of(context);
@@ -362,11 +374,11 @@ class _ServiceScreenState extends State<ServiceScreen> {
               itemBuilder: (context, index) {
                 final item = items[index];
                 return _ActionCard(
-                  text: item,
+                  text: item.name,
                   color: widget.bannerColor,
                   onTap: () {
                     ScaffoldMessenger.of(context).showSnackBar(
-                      SnackBar(content: Text(item)),
+                      SnackBar(content: Text(item.name)),
                     );
                   },
                 );
@@ -378,41 +390,7 @@ class _ServiceScreenState extends State<ServiceScreen> {
     );
   }
 
-  // -----------------------------
-  // Demo stubs (replace with API)
-  // -----------------------------
-  static List<String> _actionsFor(String serviceKey) {
-    switch (serviceKey) {
-      case 'google':
-        return [
-          'New Email Received',
-          'New Email From Specific Sender',
-        ];
-      case 'instagram':
-        return [
-          'New Post Published',
-          'New Follower',
-        ];
-      default:
-        return ['No actions defined'];
-    }
-  }
-
-  static List<String> _reactionsFor(String serviceKey) {
-    switch (serviceKey) {
-      case 'google':
-        return [
-          'Send Email',
-        ];
-      case 'instagram':
-        return [
-          'Post Photo',
-          'Post Story',
-        ];
-      default:
-        return ['No reactions defined'];
-    }
-  }
+  // actions/reactions are provided by the API via the Service model
 }
 
 class _ActionCard extends StatelessWidget {

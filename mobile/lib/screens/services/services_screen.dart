@@ -1,8 +1,9 @@
 import 'package:flutter/material.dart';
 import 'package:provider/provider.dart';
-import '../../providers/auth_provider.dart';
-import '../../providers/theme_provider.dart';
+
+import '../../providers/services_provider.dart';
 import 'service_screen.dart';
+
 class ServicesScreen extends StatefulWidget {
   const ServicesScreen({super.key});
 
@@ -13,23 +14,26 @@ class ServicesScreen extends StatefulWidget {
 class _ServicesScreenState extends State<ServicesScreen> {
   final TextEditingController _searchController = TextEditingController();
   String _query = '';
-  int _columns = 2; // default grid mode
+  int _columns = 2;
 
-  final List<Map<String, dynamic>> _allServices = [
-    {"key": "google", "name": "Gmail", "color": Colors.red, "logoAsset": "assets/icons/gmail.png"},
-    {"key": "instagram", "name": "Instagram", "color": Colors.pink, "logoAsset": "assets/icons/instagram.png"},
-  ];
+  @override
+  void initState() {
+    super.initState();
+    Future.microtask(() {
+      context.read<ServicesProvider>().loadServices();
+    });
+  }
 
   @override
   Widget build(BuildContext context) {
-    final auth = context.watch<AuthProvider>();
+    final provider = context.watch<ServicesProvider>();
+    final services = provider.services;
+    final loading = provider.loading;
 
-    // Filter services based on query
-    final filtered = _allServices
-        .where((s) => s["name"]
-        .toString()
-        .toLowerCase()
-        .contains(_query.toLowerCase()))
+    // Filter by search query
+    final filtered = services
+        .where((s) =>
+            s.displayName.toLowerCase().contains(_query.toLowerCase()))
         .toList();
 
     return Scaffold(
@@ -41,11 +45,11 @@ class _ServicesScreenState extends State<ServicesScreen> {
           children: [
             const SizedBox(height: 16),
 
-            // header area
+            // Header
             Container(
               height: 120,
               decoration: BoxDecoration(
-                color: Theme.of(context).colorScheme.secondary.withOpacity((0.1)),
+                color: Theme.of(context).colorScheme.secondary.withOpacity(0.1),
                 borderRadius: BorderRadius.circular(16),
               ),
               child: Center(
@@ -62,7 +66,7 @@ class _ServicesScreenState extends State<ServicesScreen> {
 
             const SizedBox(height: 16),
 
-            // Search bar + toggle buttons row
+            // Search + layout toggle
             Row(
               children: [
                 Expanded(
@@ -72,11 +76,13 @@ class _ServicesScreenState extends State<ServicesScreen> {
                       controller: _searchController,
                       decoration: InputDecoration(
                         hintText: "Search...",
-                        prefixIcon: Icon(Icons.search,
-                            size: 20,
-                            color: Theme.of(context).iconTheme.color),
+                        prefixIcon: Icon(
+                          Icons.search,
+                          size: 20,
+                          color: Theme.of(context).iconTheme.color,
+                        ),
                         contentPadding:
-                        const EdgeInsets.symmetric(vertical: 8),
+                            const EdgeInsets.symmetric(vertical: 8),
                         border: OutlineInputBorder(
                           borderRadius: BorderRadius.circular(8),
                         ),
@@ -93,11 +99,7 @@ class _ServicesScreenState extends State<ServicesScreen> {
                     _columns == 3,
                   ],
                   onPressed: (index) {
-                    setState(() {
-                      if (index == 0) _columns = 1;
-                      if (index == 1) _columns = 2;
-                      if (index == 2) _columns = 3;
-                    });
+                    setState(() => _columns = index + 1);
                   },
                   borderRadius: BorderRadius.circular(8),
                   selectedColor: Theme.of(context).colorScheme.onSurface,
@@ -105,15 +107,15 @@ class _ServicesScreenState extends State<ServicesScreen> {
                   children: const [
                     Padding(
                       padding: EdgeInsets.symmetric(horizontal: 8),
-                      child: Icon(Icons.view_agenda), // list
+                      child: Icon(Icons.view_agenda),
                     ),
                     Padding(
                       padding: EdgeInsets.symmetric(horizontal: 8),
-                      child: Icon(Icons.grid_view), // 2-column
+                      child: Icon(Icons.grid_view),
                     ),
                     Padding(
                       padding: EdgeInsets.symmetric(horizontal: 8),
-                      child: Icon(Icons.apps), // 3-column
+                      child: Icon(Icons.apps),
                     ),
                   ],
                 ),
@@ -122,54 +124,62 @@ class _ServicesScreenState extends State<ServicesScreen> {
 
             const SizedBox(height: 16),
 
-            // Services grid
-            Expanded(
-              child: AnimatedSwitcher(
-                duration: const Duration(milliseconds: 300),
-                child: GridView.count(
-                  key: ValueKey("${filtered.length}-$_columns"),
-                  crossAxisCount: _columns,
-                  crossAxisSpacing: 16,
-                  mainAxisSpacing: 16,
-                  childAspectRatio:
-                  _columns == 1 ? 5 : (_columns == 2 ? 1.6 : 1),
-                  children: filtered.map((s) {
-                    return GestureDetector(
-                      onTap: () {
-                        Navigator.of(context).push(
-                          MaterialPageRoute(
-                            builder: (_) => ServiceScreen(
-                              serviceKey: s["key"] as String,
-                              name: s["name"] as String,
-                              bannerColor: s["color"] as Color,
-                              logoAsset: s["logoAsset"] as String,
+            // Loading indicator
+            if (loading)
+              const Expanded(
+                child: Center(
+                  child: CircularProgressIndicator(),
+                ),
+              )
+            else
+              // Services grid
+              Expanded(
+                child: AnimatedSwitcher(
+                  duration: const Duration(milliseconds: 300),
+                  child: GridView.count(
+                    key: ValueKey("${filtered.length}-$_columns"),
+                    crossAxisCount: _columns,
+                    crossAxisSpacing: 16,
+                    mainAxisSpacing: 16,
+                    childAspectRatio:
+                        _columns == 1 ? 5 : (_columns == 2 ? 1.6 : 1),
+                    children: filtered.map((s) {
+                      return GestureDetector(
+                        onTap: () {
+                          Navigator.of(context).push(
+                            MaterialPageRoute(
+                              builder: (_) => ServiceScreen(
+                                service: s,
+                                bannerColor: Colors.grey.shade300,
+                                logoAsset: "assets/icons/${s.name}.png",
+                              ),
+                            ),
+                          );
+                        },
+                        child: AnimatedContainer(
+                          duration: const Duration(milliseconds: 300),
+                          curve: Curves.easeInOut,
+                          decoration: BoxDecoration(
+                            color: Colors.grey.shade300,
+                            borderRadius: BorderRadius.circular(12),
+                          ),
+                          child: Center(
+                            child: Text(
+                              s.displayName,
+                              textAlign: TextAlign.center,
+                              style: const TextStyle(
+                                fontSize: 18,
+                                fontWeight: FontWeight.w600,
+                                color: Colors.black87,
+                              ),
                             ),
                           ),
-                        );
-                      },
-                      child: AnimatedContainer(
-                        duration: const Duration(milliseconds: 300),
-                        curve: Curves.easeInOut,
-                        decoration: BoxDecoration(
-                          color: s["color"] as Color,
-                          borderRadius: BorderRadius.circular(12),
                         ),
-                        child: Center(
-                          child: Text(
-                            s["name"] as String,
-                            style: TextStyle(
-                              fontSize: 18,
-                              fontWeight: FontWeight.w600,
-                              color: Colors.white,
-                            ),
-                          ),
-                        ),
-                      ),
-                    );
-                  }).toList(),
+                      );
+                    }).toList(),
+                  ),
                 ),
               ),
-            ),
           ],
         ),
       ),
