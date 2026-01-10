@@ -14,7 +14,7 @@ import 'screens/home/home_screen.dart';
 void main() async {
   WidgetsFlutterBinding.ensureInitialized();
 
-  await ApiClient().init();
+  //await ApiClient().init();
   final authProvider = AuthProvider();
   await authProvider.init();
 

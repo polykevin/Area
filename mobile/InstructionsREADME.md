@@ -30,3 +30,9 @@ Instructions:
 - make a post on the instagram account you connected
 - the polling runs every minute (Meta has restrictions on how often you can run it)
 - you should see the reaction
+
+## Twitter:
+
+Logging in from the mobile client doesn't work on my emulator, because Twitter flags it as "suspicious behavior".
+It should work from a normal phone, and it does work by going to:
+https://sickeningly-fabricative-elda.ngrok-free.dev/oauth/twitter/url?userId=<yourUserId> in a browser
