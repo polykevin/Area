@@ -14,6 +14,7 @@ import 'screens/home/home_screen.dart';
 void main() async {
   WidgetsFlutterBinding.ensureInitialized();
 
+  await ApiClient().setBackendUrl("http://192.168.1.228:8080");
   await ApiClient().init();
   final authProvider = AuthProvider();
   await authProvider.init();

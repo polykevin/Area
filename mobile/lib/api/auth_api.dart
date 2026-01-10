@@ -13,6 +13,7 @@ class AuthApi {
   }
 
   Future<Map<String, dynamic>> loginWithGoogleIdToken(String idToken) async {
+    print("BACKEND URL USED BY APP: ${_dio.options.baseUrl}");
     final response = await _dio.post(
       '/auth/google/mobile',
       data: {'idToken': idToken},

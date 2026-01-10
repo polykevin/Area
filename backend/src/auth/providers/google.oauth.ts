@@ -5,10 +5,10 @@ export class GoogleOAuthProvider {
   private oauth2 = new google.auth.OAuth2(
     process.env.GOOGLE_CLIENT_ID,
     process.env.GOOGLE_CLIENT_SECRET,
-    `${process.env.PUBLIC_BASE_URL}/oauth/google/callback`
+    `${process.env.PUBLIC_BASE_URL}/oauth/google/service-callback`
   );
 
-  getAuthUrl(state?: string) {
+  getAuthUrl(state?: string, extraParams?: Record<string, any>) {
     return this.oauth2.generateAuthUrl({
       access_type: 'offline',
       prompt: 'consent',
