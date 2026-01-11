@@ -8,11 +8,13 @@ class ApiClient {
   late final Dio dio;
   final _storage = const FlutterSecureStorage();
   String? _token;
+  bool _initialized = false;
 
   ApiClient._internal();
 
   Future<void> init() async {
-    if (_initialized) return;
+    if (_initialized)
+      return;
     final prefs = await SharedPreferences.getInstance();
     final stored = prefs.getString('backend_url');
 
