@@ -1,15 +1,13 @@
 import 'package:dio/dio.dart';
 import 'package:flutter_secure_storage/flutter_secure_storage.dart';
-import 'package:shared_preferences/shared_preferences.dart';
 
 class ApiClient {
   static final ApiClient _instance = ApiClient._internal();
   factory ApiClient() => _instance;
 
-  late Dio dio;
+  late final Dio dio;
   final _storage = const FlutterSecureStorage();
   String? _token;
-  bool _initialized = false;
 
   ApiClient._internal();
 
@@ -24,7 +22,11 @@ class ApiClient {
 
     dio = Dio(
       BaseOptions(
-        baseUrl: base,
+        //baseUrl: 'http://10.68.251.81:8080', //local ip lan address, this is the epitech one
+        baseUrl: 'http://10.192.64.132:8080', //this is my home in france
+        //baseUrl: 'http://10.68.240.88:8080', //this is another epitech one
+        //baseUrl: 'http://192.168.0.161:8080',
+        //baseUrl: 'http://10.68.246.170:8080', //this is another epitech one
         connectTimeout: const Duration(seconds: 10),
         receiveTimeout: const Duration(seconds: 10),
       ),
@@ -45,16 +47,9 @@ class ApiClient {
         },
       ),
     );
-
-    _initialized = true;
   }
 
-  String get baseUrl {
-    if (!_initialized) {
-      throw StateError('ApiClient not initialized. Call await ApiClient().init() first.');
-    }
-    return dio.options.baseUrl;
-  }
+  String get baseUrl => dio.options.baseUrl;
 
   Future<void> setToken(String? token) async {
     _token = token;
@@ -63,18 +58,6 @@ class ApiClient {
       await _storage.delete(key: 'jwt');
     } else {
       await _storage.write(key: 'jwt', value: token);
-    }
-  }
-  Future<void> setBackendUrl(String? url) async {
-    final prefs = await SharedPreferences.getInstance();
-    if (url == null || url.isEmpty) {
-      await prefs.remove('backend_url');
-    } else {
-      await prefs.setString('backend_url', url);
-    }
-    // update runtime baseUrl if initialized
-    if (_initialized) {
-      dio.options.baseUrl = url ?? dio.options.baseUrl;
     }
   }
 
