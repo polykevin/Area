@@ -18,7 +18,7 @@ class ApiClient {
     final prefs = await SharedPreferences.getInstance();
     final stored = prefs.getString('backend_url');
 
-    const hardcodedFallback = 'http://192.168.1.228:8080';
+    const hardcodedFallback = 'http://10.26.173.15:8080';
 
     final base = (stored != null && stored.isNotEmpty) ? stored : hardcodedFallback;
 
