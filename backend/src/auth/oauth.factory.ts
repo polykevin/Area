@@ -2,6 +2,7 @@ import { Injectable } from '@nestjs/common';
 import { GoogleOAuthProvider } from './providers/google.oauth';
 import { InstagramOAuthProvider } from './providers/instagram.oauth';
 import { TwitterOAuthProvider } from './providers/twitter.oauth';
+import { DropboxOAuthProvider } from './providers/dropbox.oauth';
 
 export interface OAuthProvider {
   getAuthUrl(state: string, codeChallenge?: string): string;
@@ -19,6 +20,8 @@ export class OauthFactoryService {
         return new InstagramOAuthProvider();
       case 'twitter':
         return new TwitterOAuthProvider();
+      case 'dropbox':
+        return new DropboxOAuthProvider();
       default:
         throw new Error(`Unknown OAuth provider: ${provider}`);
     }

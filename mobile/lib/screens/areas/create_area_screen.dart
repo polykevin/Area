@@ -25,6 +25,8 @@ class _CreateAreaScreenState extends State<CreateAreaScreen> {
   final _textController = TextEditingController(
     text: 'You received a new email matching your AREA rule.',
   );
+  final _dropboxPathController = TextEditingController();
+  final _dropboxContentController = TextEditingController();
 
   bool _submitting = false;
 
@@ -46,6 +48,8 @@ class _CreateAreaScreenState extends State<CreateAreaScreen> {
     _toController.dispose();
     _subjectController.dispose();
     _textController.dispose();
+    _dropboxPathController.dispose();
+    _dropboxContentController.dispose();
     super.dispose();
   }
 
@@ -86,6 +90,25 @@ class _CreateAreaScreenState extends State<CreateAreaScreen> {
       return;
     }
 
+    if (_reactionKey == 'upload_text_file') {
+      if (_dropboxPathController.text.trim().isEmpty) {
+        _showError('Please enter a Dropbox path (e.g. /area-test/test.txt).');
+        return;
+      }
+      if (_dropboxContentController.text.trim().isEmpty) {
+        _showError('Please enter the file content to upload.');
+        return;
+      }
+    }
+
+    if (_reactionKey == 'create_shared_link') {
+      if (_dropboxPathController.text.trim().isEmpty) {
+        _showError('Please enter a Dropbox path (e.g. /foo/bar.txt).');
+        return;
+      }
+    }
+
+
     final areasProvider = context.read<AreasProvider>();
 
     final actionService = _actionService!;
@@ -104,11 +127,22 @@ class _CreateAreaScreenState extends State<CreateAreaScreen> {
 
     // Build reaction params based on selected reaction
     final reactionParams = <String, dynamic>{};
+
     if (reactionType == 'send_email') {
       reactionParams['to'] = _toController.text.trim();
       reactionParams['subject'] = _subjectController.text.trim();
       reactionParams['text'] = _textController.text.trim();
     }
+
+    if (reactionType == 'upload_text_file') {
+      reactionParams['path'] = _dropboxPathController.text.trim();
+      reactionParams['content'] = _dropboxContentController.text.trim();
+    }
+
+    if (reactionType == 'create_shared_link') {
+      reactionParams['path'] = _dropboxPathController.text.trim();
+    }
+
 
     setState(() {
       _submitting = true;
@@ -382,20 +416,26 @@ class _CreateAreaScreenState extends State<CreateAreaScreen> {
                       _reactionService = tempService;
                       _reactionKey = tempKey;
 
-                      // Clear reaction params that no longer apply
                       if (_reactionKey != 'send_email') {
                         _toController.clear();
                         _subjectController.clear();
                         _textController.clear();
                       } else {
-                        // Restore defaults if empty
                         if (_subjectController.text.trim().isEmpty) {
                           _subjectController.text = 'AREA test';
                         }
                         if (_textController.text.trim().isEmpty) {
                           _textController.text =
-                              'You received a new email matching your AREA rule.';
+                          'You received a new email matching your AREA rule.';
                         }
+                      }
+
+                      if (_reactionKey != 'upload_text_file' &&
+                          _reactionKey != 'create_shared_link') {
+                        _dropboxPathController.clear();
+                        _dropboxContentController.clear();
+                      } else if (_reactionKey == 'create_shared_link') {
+                        _dropboxContentController.clear();
                       }
                     });
                     Navigator.of(ctx).pop();
@@ -551,6 +591,37 @@ class _CreateAreaScreenState extends State<CreateAreaScreen> {
               ),
             ],
 
+            if (_reactionKey == 'upload_text_file') ...[
+              const SizedBox(height: 8),
+              TextField(
+                controller: _dropboxPathController,
+                decoration: const InputDecoration(
+                  labelText: 'Dropbox path',
+                  hintText: '/area-test/test.txt',
+                ),
+              ),
+              const SizedBox(height: 8),
+              TextField(
+                controller: _dropboxContentController,
+                decoration: const InputDecoration(
+                  labelText: 'File content',
+                  hintText: 'Hello from AREA!',
+                ),
+                maxLines: 3,
+              ),
+            ],
+
+            if (_reactionKey == 'create_shared_link') ...[
+              const SizedBox(height: 8),
+              TextField(
+                controller: _dropboxPathController,
+                decoration: const InputDecoration(
+                  labelText: 'Dropbox path',
+                  hintText: '/foo/bar.txt',
+                ),
+              ),
+            ],
+
             const SizedBox(height: 32),
             SizedBox(
               height: 50,
@@ -637,8 +708,10 @@ String prettyServiceName(String key) {
       return 'Weather';
     case 'slack':
       return 'Slack';
-    case 'rss':
-      return 'RSS';
+    case 'twitter':
+      return 'Twitter';
+    case 'dropbox':
+      return 'Dropbox';
     default:
       return key;
   }

@@ -25,12 +25,19 @@ import { NewTweetHook } from './twitter/hooks/new-tweet.hook';
 import { NewMentionHook } from './twitter/hooks/new-mention.hook';
 import { twitterIntegration } from './twitter/twitter.integration';
 
+import { DropboxModule } from './dropbox/dropbox.module';
+import { DropboxService } from './dropbox/dropbox.service';
+import { NewFileHook } from './dropbox/hooks/new-file.hook';
+import { FileChangedHook } from './dropbox/hooks/file-changed.hook';
+import { dropboxIntegration } from './dropbox/dropbox.integration';
+
 @Module({
   imports: [
     GoogleModule,
     InstagramModule,
     WeatherModule,
     TwitterModule,
+    DropboxModule,
     AuthModule,
     AreasModule,
   ],
@@ -73,6 +80,10 @@ export class IntegrationModule {
     private newTweetHook: NewTweetHook,
     private newMentionHook: NewMentionHook,
 
+    private dropboxService: DropboxService,
+    private newFileHook: NewFileHook,
+    private fileChangedHook: FileChangedHook,
+
     private authRepo: ServiceAuthRepository,
     private engine: AutomationEngine,
   ) {
@@ -81,6 +92,8 @@ export class IntegrationModule {
     newWeatherDataHook.setEngine(engine);
     newTweetHook.setEngine(engine);
     newMentionHook.setEngine(engine);
+    newFileHook.setEngine(engine);
+    fileChangedHook.setEngine(engine);
 
     registry.register(
       googleIntegration(googleService, authRepo, engine, newEmailHook),
@@ -96,6 +109,10 @@ export class IntegrationModule {
 
     registry.register(
       twitterIntegration(twitterService, authRepo, engine, newTweetHook, newMentionHook),
+    );
+
+    registry.register(
+      dropboxIntegration(dropboxService, authRepo, engine, newFileHook, fileChangedHook),
     );
   }
 }
