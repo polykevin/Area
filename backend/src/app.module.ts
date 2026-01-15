@@ -23,7 +23,7 @@ import { AppService } from './app.service';
     AuthModule,
     AreasModule,
     GoogleModule,
-    IntegrationModule
+    IntegrationModule,
   ],
   controllers: [AppController, AboutController],
   providers: [AppService, GoogleStrategy,

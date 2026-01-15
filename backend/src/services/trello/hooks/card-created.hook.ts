@@ -7,56 +7,33 @@ import { AutomationEngine } from '../../../automation/engine.service';
 @Injectable()
 export class TrelloCardCreatedHook {
   constructor(
-    private readonly authRepo: ServiceAuthRepository,
-    private readonly engine: AutomationEngine,
-  ) {
-    console.log(' TrelloCardCreatedHook instantiated');
-  }
+    private authRepo: ServiceAuthRepository,
+    private engine: AutomationEngine,
+  ) {}
 
   @Cron('*/20 * * * * *')
-  async check() {
+  async poll() {
     const users = await this.authRepo.findUsersWithService('trello');
 
-    for (const record of users) {
-      const { accessToken, metadata } = record;
-
-      const boardId = metadata?.boardId;
-      if (!boardId) continue;
-
+    for (const user of users) {
       const res = await axios.get(
-        `https://api.trello.com/1/boards/${boardId}/cards`,
+        'https://api.trello.com/1/members/me/cards',
         {
           params: {
-            key: process.env.TRELLO_API_KEY,
-            token: accessToken,
+            key: user.accessToken,
+            token: user.refreshToken,
           },
         }
       );
 
-      const cards = res.data;
-      if (!cards.length) continue;
-
-      cards.sort(
-        (a, b) =>
-          new Date(b.dateLastActivity).getTime() -
-          new Date(a.dateLastActivity).getTime()
-      );
-
-      const latest = cards[0];
-
-      if (record.lastEventId === latest.id) continue;
-
-      console.log(' New Trello card detected:', latest.name);
+      const latest = res.data?.[0];
+      if (!latest) continue;
 
       await this.engine.emitHookEvent({
-        userId: record.userId,
+        userId: user.userId,
         actionService: 'trello',
-        actionType: 'card_created',
+        actionType: 'trello_card_created',
         payload: latest,
-      });
-
-      await this.authRepo.update(record.userId, 'trello', {
-        lastEventId: latest.id,
       });
     }
   }

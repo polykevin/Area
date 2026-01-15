@@ -8,6 +8,9 @@ import { GoogleService } from './google/google.service';
 import { ServiceAuthRepository } from '../auth/service-auth.repository';
 import { NewEmailHook } from './google/hooks/new-email.hook';
 import { googleIntegration } from './google/google.integration';
+import { TrelloService } from './trello/trello.service';
+import { TrelloCardCreatedHook } from './trello/hooks/card-created.hook';
+import { trelloIntegration } from './trello/trello.integration';
 
 @Module({
   imports: [
@@ -21,6 +24,7 @@ import { googleIntegration } from './google/google.integration';
     GoogleService,
     ServiceAuthRepository,
     NewEmailHook,
+    TrelloCardCreatedHook,
   ],
   exports: [
     ServiceRegistry,
@@ -34,11 +38,13 @@ export class IntegrationModule {
     private authRepo: ServiceAuthRepository,
     private engine: AutomationEngine,
     private newEmailHook: NewEmailHook,
+
   ) {
     newEmailHook.setEngine(engine);
 
     registry.register(
       googleIntegration(googleService, authRepo, engine, newEmailHook)
     );
+   registry.register(trelloIntegration());
   }
 }

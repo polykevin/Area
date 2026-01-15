@@ -1,5 +1,6 @@
 import { Injectable } from '@nestjs/common';
 import { GoogleOAuthProvider } from './providers/google.oauth';
+import { TrelloOAuthProvider } from './providers/trello.oauth';
 
 export interface OAuthProvider {
   getAuthUrl(state?: string): string;
@@ -13,6 +14,10 @@ export class OauthFactoryService {
     switch (provider) {
       case 'google':
         return new GoogleOAuthProvider();
+
+      case 'trello':
+        return new TrelloOAuthProvider();
+
       default:
         throw new Error(`Unknown OAuth provider: ${provider}`);
     }

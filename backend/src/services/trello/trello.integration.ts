@@ -1,23 +1,16 @@
-import { trelloCardCreatedAction } from './actions/card-created.action';
-import { TrelloCardCreatedHook } from './hooks/card-created.hook';
+import { trelloCardCreatedAction } from "./action/card-created.action"; 
 
-export function trelloIntegration(
-  authRepo,
-  engine,
-  trelloCardCreatedHook,
-) {
+export function trelloIntegration() {
   return {
     id: 'trello',
     displayName: 'Trello',
+
+    instance: {},
 
     actions: [
       trelloCardCreatedAction,
     ],
 
     reactions: [],
-
-    hooks: [
-      trelloCardCreatedHook,
-    ],
   };
 }

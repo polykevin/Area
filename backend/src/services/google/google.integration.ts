@@ -24,7 +24,7 @@ export function googleIntegration(googleService, authRepo, engine, newEmailHook)
     ],
 
     hooks: [
-      newEmailHook
+     newEmailHook
     ]
   };
 }
