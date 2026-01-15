@@ -8,12 +8,17 @@ import { GoogleService } from './google/google.service';
 import { ServiceAuthRepository } from '../auth/service-auth.repository';
 import { NewEmailHook } from './google/hooks/new-email.hook';
 import { googleIntegration } from './google/google.integration';
+import { NotionService } from './notion/notion.service';
+import { notionIntegration } from './notion/notion.integration';
+import { NotionModule } from './notion/notion.module';
+import { NotionCreatePageAction } from './notion/action/create-page.action';
 
 @Module({
   imports: [
     GoogleModule,
     AuthModule,
     AreasModule,
+    NotionModule,
   ],
   providers: [
     ServiceRegistry,
@@ -34,11 +39,15 @@ export class IntegrationModule {
     private authRepo: ServiceAuthRepository,
     private engine: AutomationEngine,
     private newEmailHook: NewEmailHook,
+    private notionService: NotionService,
   ) {
     newEmailHook.setEngine(engine);
 
     registry.register(
       googleIntegration(googleService, authRepo, engine, newEmailHook)
+    );
+    registry.register(
+      notionIntegration(notionService)
     );
   }
 }
