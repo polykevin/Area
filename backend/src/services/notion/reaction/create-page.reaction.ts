@@ -1,21 +1,18 @@
-import { ReactionDefinition } from '../../abstract/service.interface';
-
 export const NotionCreatePageReaction = {
   id: 'create_page',
-  name: 'Create page',
+  name: 'Create Notion page',
 
-  async execute(ctx) {
-    const { notionService, event, params, token } = ctx;
-    if (!notionService) {
-      throw new Error('Notion service instance missing');
-    }
+  async execute({ notionService, params }) {
+    const databaseId =
+      params?.databaseId ?? '2e99859422a18036963dc0cdfd378f5b';
 
-    const title = event?.subject || 'Sans titre';
-    const content = `Provenance: ${event?.from || 'Inconnu'}`;
-    const databaseId = params?.databaseId || '2e99859422a18036963dc0cdfd378f5b';
+    const { to, subject, text } = params;
 
-    console.log('[NOTION]New page created');
+    const title = subject ?? 'Email Sent';
+    const content = `Email sent to : ${to}\n\n${text ?? ''}`;
 
-    return await notionService.createPage(databaseId, title, content);
+    // console.log('[NOTION] Creating page for sent email');
+
+    return notionService.createPage(databaseId, title, content);
   },
 };
