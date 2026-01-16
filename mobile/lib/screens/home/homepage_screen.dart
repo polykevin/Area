@@ -84,14 +84,6 @@ class HomepageScreen extends StatelessWidget {
             ),
 
             const SizedBox(height: 12),
-
-            // Example placeholder — you can replace with your real list
-            _ExampleAreaRow(
-              from: "Gmail",
-              to: "Slack",
-              title: "Forward important emails",
-              time: "2 days ago",
-            ),
           ],
         ),
       ),
@@ -172,68 +164,6 @@ class _TutorialCard extends StatelessWidget {
           ],
         ),
       ),
-    );
-  }
-}
-
-class _ExampleAreaRow extends StatelessWidget {
-  final String from;
-  final String to;
-  final String title;
-  final String time;
-
-  const _ExampleAreaRow({
-    required this.from,
-    required this.to,
-    required this.title,
-    required this.time,
-  });
-
-  @override
-  Widget build(BuildContext context) {
-    final scheme = Theme.of(context).colorScheme;
-
-    return Row(
-      children: [
-        Container(
-          padding: const EdgeInsets.symmetric(horizontal: 16, vertical: 10),
-          decoration: BoxDecoration(
-            color: scheme.primary,
-            borderRadius: BorderRadius.circular(12),
-          ),
-          child: Text(from, style: TextStyle(color: scheme.onPrimary)),
-        ),
-        const SizedBox(width: 12),
-        Expanded(
-          child: Column(
-            crossAxisAlignment: CrossAxisAlignment.start,
-            children: [
-              Text(title,
-                  style: TextStyle(
-                      fontSize: 14, color: scheme.onSurface)),
-              const SizedBox(height: 4),
-              Icon(Icons.arrow_forward, size: 18, color: scheme.onSurface),
-            ],
-          ),
-        ),
-        const SizedBox(width: 12),
-        Container(
-          padding: const EdgeInsets.symmetric(horizontal: 16, vertical: 10),
-          decoration: BoxDecoration(
-            color: Colors.green,
-            borderRadius: BorderRadius.circular(12),
-          ),
-          child: const Text("→", style: TextStyle(color: Colors.white)),
-        ),
-        const SizedBox(width: 12),
-        Text(
-          time,
-          style: TextStyle(
-            fontSize: 12,
-            color: scheme.onSurface.withOpacity(0.6),
-          ),
-        ),
-      ],
     );
   }
 }
