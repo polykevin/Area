@@ -118,6 +118,9 @@ class _AreaRow extends StatelessWidget {
     final actionServiceName = prettyServiceName(area.actionService);
     final reactionServiceName = prettyServiceName(area.reactionService);
 
+    final actionLabel = prettyType(area.actionType);
+    final reactionLabel = prettyType(area.reactionType);
+
     final isActive = area.active;
 
     final actionBg = serviceColor(context, area.actionService);
@@ -133,30 +136,74 @@ class _AreaRow extends StatelessWidget {
       child: Row(
         crossAxisAlignment: CrossAxisAlignment.center,
         children: [
-          // LEFT SIDE — flexible
           Expanded(
-            child: Row(
+            child: Column(
+              crossAxisAlignment: CrossAxisAlignment.start,
               children: [
-                Flexible(
-                  child: _ServiceTag(
-                    text: actionServiceName,
-                    color: actionBg,
-                    textColor: onServiceColor(actionBg),
-                  ),
+                Row(
+                  crossAxisAlignment: CrossAxisAlignment.center,
+                  children: [
+                    _ServiceTag(
+                      text: actionServiceName,
+                      color: actionBg,
+                      textColor: onServiceColor(actionBg),
+                      width: 140,
+                    ),
+                    const SizedBox(width: 12),
+                    Icon(
+                      Icons.arrow_forward,
+                      size: 18,
+                      color: theme.colorScheme.onSurface.withOpacity(0.7),
+                    ),
+                    const SizedBox(width: 12),
+                    _ServiceTag(
+                      text: reactionServiceName,
+                      color: reactionBg,
+                      textColor: onServiceColor(reactionBg),
+                      width: 140,
+                    ),
+                  ],
                 ),
-                const SizedBox(width: 12),
-                Icon(
-                  Icons.arrow_forward,
-                  size: 18,
-                  color: theme.colorScheme.onSurface.withOpacity(0.7),
-                ),
-                const SizedBox(width: 12),
-                Flexible(
-                  child: _ServiceTag(
-                    text: reactionServiceName,
-                    color: reactionBg,
-                    textColor: onServiceColor(reactionBg),
-                  ),
+
+                const SizedBox(height: 10),
+
+                Row(
+                  children: [
+                    SizedBox(
+                      width: 140,
+                      child: Text(
+                        actionLabel,
+                        textAlign: TextAlign.center,
+                        maxLines: 1,
+                        overflow: TextOverflow.ellipsis,
+                        style: TextStyle(
+                          fontSize: 13,
+                          fontWeight: FontWeight.w500,
+                          color: theme.colorScheme.onSurface.withOpacity(0.75),
+                        ),
+                      ),
+                    ),
+                    const SizedBox(width: 12),
+                    SizedBox(
+                      width: 18,
+                      child: const SizedBox.shrink(),
+                    ),
+                    const SizedBox(width: 12),
+                    SizedBox(
+                      width: 140,
+                      child: Text(
+                        reactionLabel,
+                        textAlign: TextAlign.center,
+                        maxLines: 1,
+                        overflow: TextOverflow.ellipsis,
+                        style: TextStyle(
+                          fontSize: 13,
+                          fontWeight: FontWeight.w500,
+                          color: theme.colorScheme.onSurface.withOpacity(0.75),
+                        ),
+                      ),
+                    ),
+                  ],
                 ),
               ],
             ),
@@ -164,27 +211,25 @@ class _AreaRow extends StatelessWidget {
 
           const SizedBox(width: 12),
 
-          // RIGHT SIDE — Switch + Delete (never overflows)
-          IntrinsicWidth(
-            child: Row(
-              children: [
-                Switch(
-                  value: isActive,
-                  activeThumbColor: Colors.green,
-                  onChanged: (_) {
-                    context.read<AreasProvider>().toggleArea(area.id);
-                  },
+          Row(
+            mainAxisSize: MainAxisSize.min,
+            children: [
+              Switch(
+                value: isActive,
+                activeColor: Colors.green,
+                onChanged: (_) {
+                  context.read<AreasProvider>().toggleArea(area.id);
+                },
+              ),
+              IconButton(
+                icon: Icon(
+                  Icons.delete_outline,
+                  color: theme.colorScheme.error,
+                  size: 20,
                 ),
-                IconButton(
-                  icon: Icon(
-                    Icons.delete_outline,
-                    color: theme.colorScheme.error,
-                    size: 20,
-                  ),
-                  onPressed: () => _confirmDelete(context, area),
-                ),
-              ],
-            ),
+                onPressed: () => _confirmDelete(context, area),
+              ),
+            ],
           ),
         ],
       ),
@@ -236,30 +281,35 @@ class _ServiceTag extends StatelessWidget {
   final String text;
   final Color color;
   final Color textColor;
+  final double width;
 
   const _ServiceTag({
     required this.text,
     required this.color,
     required this.textColor,
+    this.width = 140,
   });
 
   @override
   Widget build(BuildContext context) {
-    return Container(
-      padding: const EdgeInsets.symmetric(horizontal: 12, vertical: 10),
-      decoration: BoxDecoration(
-        color: color,
-        borderRadius: BorderRadius.circular(16),
-      ),
-      child: Center(
-        child: Text(
-          text,
-          maxLines: 1,
-          overflow: TextOverflow.ellipsis,
-          style: TextStyle(
-            color: textColor,
-            fontSize: 13,
-            fontWeight: FontWeight.w600,
+    return SizedBox(
+      width: width,
+      child: Container(
+        padding: const EdgeInsets.symmetric(horizontal: 12, vertical: 10),
+        decoration: BoxDecoration(
+          color: color,
+          borderRadius: BorderRadius.circular(16),
+        ),
+        child: Center(
+          child: Text(
+            text,
+            maxLines: 1,
+            overflow: TextOverflow.ellipsis,
+            style: TextStyle(
+              color: textColor,
+              fontSize: 13,
+              fontWeight: FontWeight.w600,
+            ),
           ),
         ),
       ),
@@ -270,19 +320,25 @@ class _ServiceTag extends StatelessWidget {
 String prettyServiceName(String key) {
   switch (key) {
     case 'google':
-      return 'Google';
+      return 'Gmail';
     case 'gmail':
       return 'Gmail';
-    case 'timer':
-      return 'Timer';
+    case 'clock':
+      return 'Clock';
     case 'github':
       return 'GitHub';
     case 'weather':
       return 'Weather';
     case 'slack':
       return 'Slack';
-    case 'rss':
-      return 'RSS';
+    case 'dropbox':
+      return 'Dropbox';
+    case 'instagram':
+      return 'Instagram';
+    case 'twitter':
+      return 'Twitter';
+    case 'gitlab':
+      return 'GitLab';
     default:
       return key;
   }
@@ -304,23 +360,28 @@ Color serviceColor(BuildContext context, String key) {
   switch (key) {
     case 'google':
     case 'gmail':
-      return const Color(0xFFEA4335);
+      return const Color(0xFFEA4335); // Gmail red
     case 'instagram':
-      return const Color(0xFFE1306C);
+      return const Color(0xFFE1306C); // Instagram pink
     case 'github':
-      return const Color(0xFF24292E);
+      return const Color(0xFF24292E); // GitHub dark gray
+    case 'gitlab':
+      return const Color(0xFFFC6D26); // GitLab orange
+    case 'twitter':
+      return const Color(0xFF1DA1F2); // Twitter blue
     case 'slack':
-      return const Color(0xFF4A154B);
+      return const Color(0xFF4A154B); // Slack purple
+    case 'dropbox':
+      return const Color(0xFF0061FF); // Dropbox blue
     case 'weather':
-      return const Color(0xFF1E88E5);
-    case 'rss':
-      return const Color(0xFFFF9800);
-    case 'timer':
-      return const Color(0xFF00BFA5);
+      return const Color(0xFF1E88E5); // Weather blue
+    case 'clock':
+      return const Color(0xFF00BFA5); // Teal (time-related)
     default:
       return cs.primary;
   }
 }
+
 
 Color onServiceColor(Color bg) {
   return ThemeData.estimateBrightnessForColor(bg) == Brightness.dark
