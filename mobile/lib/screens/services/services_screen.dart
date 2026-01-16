@@ -25,6 +25,31 @@ class _ServicesScreenState extends State<ServicesScreen> {
   }
 
   @override
+  void dispose() {
+    _searchController.dispose();
+    super.dispose();
+  }
+
+  Color _colorFromHex(String? hex) {
+    if (hex == null || hex.trim().isEmpty) return Colors.grey;
+
+    final cleaned = hex.trim().replaceAll('#', '');
+    if (cleaned.length != 6) return Colors.grey;
+
+    try {
+      return Color(int.parse('FF$cleaned', radix: 16));
+    } catch (_) {
+      return Colors.grey;
+    }
+  }
+
+  Color _onServiceColor(Color bg) {
+    return ThemeData.estimateBrightnessForColor(bg) == Brightness.dark
+        ? Colors.white
+        : Colors.black;
+  }
+
+  @override
   Widget build(BuildContext context) {
     final provider = context.watch<ServicesProvider>();
     final services = provider.services;
@@ -32,12 +57,14 @@ class _ServicesScreenState extends State<ServicesScreen> {
 
     // Filter by search query
     final filtered = services
-        .where((s) =>
-            s.displayName.toLowerCase().contains(_query.toLowerCase()))
+        .where((s) => s.displayName.toLowerCase().contains(_query.toLowerCase()))
         .toList();
 
+    final theme = Theme.of(context);
+    final cs = theme.colorScheme;
+
     return Scaffold(
-      backgroundColor: Theme.of(context).colorScheme.surface,
+      backgroundColor: cs.surface,
       body: Padding(
         padding: const EdgeInsets.symmetric(horizontal: 16),
         child: Column(
@@ -49,7 +76,7 @@ class _ServicesScreenState extends State<ServicesScreen> {
             Container(
               height: 120,
               decoration: BoxDecoration(
-                color: Theme.of(context).colorScheme.secondary.withOpacity(0.1),
+                color: cs.secondary.withOpacity(0.1),
                 borderRadius: BorderRadius.circular(16),
               ),
               child: Center(
@@ -58,7 +85,7 @@ class _ServicesScreenState extends State<ServicesScreen> {
                   style: TextStyle(
                     fontSize: 28,
                     fontWeight: FontWeight.bold,
-                    color: Theme.of(context).colorScheme.onSurface,
+                    color: cs.onSurface,
                   ),
                 ),
               ),
@@ -79,10 +106,9 @@ class _ServicesScreenState extends State<ServicesScreen> {
                         prefixIcon: Icon(
                           Icons.search,
                           size: 20,
-                          color: Theme.of(context).iconTheme.color,
+                          color: theme.iconTheme.color,
                         ),
-                        contentPadding:
-                            const EdgeInsets.symmetric(vertical: 8),
+                        contentPadding: const EdgeInsets.symmetric(vertical: 8),
                         border: OutlineInputBorder(
                           borderRadius: BorderRadius.circular(8),
                         ),
@@ -102,8 +128,8 @@ class _ServicesScreenState extends State<ServicesScreen> {
                     setState(() => _columns = index + 1);
                   },
                   borderRadius: BorderRadius.circular(8),
-                  selectedColor: Theme.of(context).colorScheme.onSurface,
-                  color: Theme.of(context).colorScheme.onSurface,
+                  selectedColor: cs.onSurface,
+                  color: cs.onSurface,
                   children: const [
                     Padding(
                       padding: EdgeInsets.symmetric(horizontal: 8),
@@ -132,7 +158,7 @@ class _ServicesScreenState extends State<ServicesScreen> {
                 ),
               )
             else
-              // Services grid
+            // Services grid
               Expanded(
                 child: AnimatedSwitcher(
                   duration: const Duration(milliseconds: 300),
@@ -142,16 +168,22 @@ class _ServicesScreenState extends State<ServicesScreen> {
                     crossAxisSpacing: 16,
                     mainAxisSpacing: 16,
                     childAspectRatio:
-                        _columns == 1 ? 5 : (_columns == 2 ? 1.6 : 1),
+                    _columns == 1 ? 5 : (_columns == 2 ? 1.6 : 1),
                     children: filtered.map((s) {
+                      final serviceColor = _colorFromHex(s.color);
+
+                      // Match AreasScreen "tag" vibe: full solid color, rounded.
+                      // (No opacity, no light background.)
+                      final textColor = _onServiceColor(serviceColor);
+
                       return GestureDetector(
                         onTap: () {
                           Navigator.of(context).push(
                             MaterialPageRoute(
                               builder: (_) => ServiceScreen(
                                 service: s,
-                                bannerColor: Colors.grey.shade300,
-                                logoAsset: "assets/icons/${s.name}.png",
+                                bannerColor: serviceColor,
+                                logoAsset: "assets/icons/${s.id}.png",
                               ),
                             ),
                           );
@@ -160,17 +192,17 @@ class _ServicesScreenState extends State<ServicesScreen> {
                           duration: const Duration(milliseconds: 300),
                           curve: Curves.easeInOut,
                           decoration: BoxDecoration(
-                            color: Colors.grey.shade300,
+                            color: serviceColor,
                             borderRadius: BorderRadius.circular(12),
                           ),
                           child: Center(
                             child: Text(
                               s.displayName,
                               textAlign: TextAlign.center,
-                              style: const TextStyle(
+                              style: TextStyle(
                                 fontSize: 18,
                                 fontWeight: FontWeight.w600,
-                                color: Colors.black87,
+                                color: textColor,
                               ),
                             ),
                           ),

@@ -5,6 +5,8 @@ export function instagramIntegration(instagramService, authRepo, engine, newMedi
   return {
     id: 'instagram',
     displayName: 'Instagram',
+    color: '#E1306C',
+    iconKey: 'instagram',
 
     instance: {
       instagramService,

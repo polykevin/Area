@@ -32,6 +32,18 @@ import { NewTweetHook } from './twitter/hooks/new-tweet.hook';
 import { NewMentionHook } from './twitter/hooks/new-mention.hook';
 import { twitterIntegration } from './twitter/twitter.integration';
 
+import { DropboxModule } from './dropbox/dropbox.module';
+import { DropboxService } from './dropbox/dropbox.service';
+import { NewFileHook } from './dropbox/hooks/new-file.hook';
+import { FileChangedHook } from './dropbox/hooks/file-changed.hook';
+import { dropboxIntegration } from './dropbox/dropbox.integration';
+
+import { GitLabModule } from './gitlab/gitlab.module';
+import { GitLabService } from './gitlab/gitlab.service';
+import { NewIssueHook } from './gitlab/hooks/new-issue.hook';
+import { NewMergeRequestHook } from './gitlab/hooks/new-merge-request.hook';
+import { gitlabIntegration } from './gitlab/gitlab.integration';
+
 import { ClockModule } from './clock/clock.module';
 import { ClockService } from './clock/clock.service';
 import { EveryDayAtHook } from './clock/hooks/every-day-at.hook';
@@ -51,6 +63,8 @@ import { every } from 'rxjs';
     InstagramModule,
     WeatherModule,
     TwitterModule,
+    DropboxModule,
+    GitLabModule,
     ClockModule,
     SlackModule,
     AuthModule,
@@ -88,6 +102,14 @@ export class IntegrationModule {
     private newTweetHook: NewTweetHook,
     private newMentionHook: NewMentionHook,
 
+    private dropboxService: DropboxService,
+    private newFileHook: NewFileHook,
+    private fileChangedHook: FileChangedHook,
+
+    private gitlabService: GitLabService,
+    private newIssueHook: NewIssueHook,
+    private newMergeRequestHook: NewMergeRequestHook,
+
     private clockService: ClockService,
     private everyMinuteHook: EveryMinuteHook,
     private everyDayAtHook: EveryDayAtHook,
@@ -109,6 +131,10 @@ export class IntegrationModule {
     newWeatherDataHook.setEngine(engine);
     newTweetHook.setEngine(engine);
     newMentionHook.setEngine(engine);
+    newFileHook.setEngine(engine);
+    fileChangedHook.setEngine(engine);
+    newIssueHook.setEngine(engine);
+    newMergeRequestHook.setEngine(engine);
     everyMinuteHook.setEngine(engine);
     everyDayAtHook.setEngine(engine);
     slackNewMessageHook.setEngine(engine);
@@ -129,6 +155,14 @@ export class IntegrationModule {
 
     registry.register(
       twitterIntegration(twitterService, authRepo, engine, newTweetHook, newMentionHook),
+    );
+
+    registry.register(
+      dropboxIntegration(dropboxService, authRepo, engine, newFileHook, fileChangedHook),
+    );
+
+    registry.register(
+      gitlabIntegration(gitlabService, authRepo, engine, newIssueHook, newMergeRequestHook),
     );
 
     registry.register(

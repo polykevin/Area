@@ -6,6 +6,8 @@ export function slackIntegration(slackService, authRepo, engine, newMessageHook)
   return {
     id: 'slack',
     displayName: 'Slack',
+    color: '#4A154B',
+    iconKey: 'slack',
 
     instance: {
       slackService,

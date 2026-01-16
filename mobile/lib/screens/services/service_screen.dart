@@ -1,6 +1,7 @@
 import 'package:flutter/material.dart';
 import 'package:provider/provider.dart';
 import 'package:url_launcher/url_launcher.dart';
+
 import '../../api/api_client.dart';
 import '../../providers/auth_provider.dart';
 import '../../models/service.dart';
@@ -25,19 +26,9 @@ class _ServiceScreenState extends State<ServiceScreen> {
   final TextEditingController _searchController = TextEditingController();
   String _query = '';
 
-  late final List<ServiceAction> _actions;
-  late final List<ServiceAction> _reactions;
-
   bool _connecting = false;
   bool _connected = false;
   String? _connectError;
-
-  @override
-  void initState() {
-    super.initState();
-    _actions = widget.service.actions;
-    _reactions = widget.service.reactions;
-  }
 
   @override
   void dispose() {
@@ -53,27 +44,20 @@ class _ServiceScreenState extends State<ServiceScreen> {
 
     try {
       final auth = context.read<AuthProvider>();
-
       final userId = auth.user?.id;
       if (userId == null) {
         throw Exception('User not logged in (missing userId)');
       }
 
       final apiBaseUrl = ApiClient().baseUrl;
-
-      final url =
-          '$apiBaseUrl/oauth/${widget.service.name}/url?userId=$userId';
-
-      final uri = Uri.parse(url);
+      final url = '$apiBaseUrl/oauth/${widget.service.id}/url?userId=$userId';
 
       final ok = await launchUrl(
-        uri,
+        Uri.parse(url),
         mode: LaunchMode.externalApplication,
       );
 
-      if (!ok) {
-        throw Exception('Could not open browser for $url');
-      }
+      if (!ok) throw Exception('Could not open browser');
 
       if (!mounted) return;
       setState(() {
@@ -94,18 +78,20 @@ class _ServiceScreenState extends State<ServiceScreen> {
   }
 
   // -----------------------------
-  // UI HELPERS
+  // FILTER
   // -----------------------------
-  List<ServiceAction> _filtered(List<ServiceAction> items) {
+  List<T> _filtered<T>(List<T> items, String Function(T) keyOf) {
     final q = _query.trim().toLowerCase();
     if (q.isEmpty) return items;
-    return items.where((x) => x.name.toLowerCase().contains(q)).toList();
+    return items.where((x) => keyOf(x).toLowerCase().contains(q)).toList();
   }
 
   @override
   Widget build(BuildContext context) {
-    final theme = Theme.of(context);
-    final cs = theme.colorScheme;
+    final cs = Theme.of(context).colorScheme;
+
+    final actions = widget.service.actions;
+    final reactions = widget.service.reactions;
 
     return DefaultTabController(
       length: 3,
@@ -140,19 +126,25 @@ class _ServiceScreenState extends State<ServiceScreen> {
         body: TabBarView(
           children: [
             _buildConnectTab(context),
-            _buildListTab(
+            _buildListTab<ServiceAction>(
               context,
               title: 'Actions',
-              subtitle: 'Choose what can trigger an AREA for ${widget.service.displayName}.',
-              items: _filtered(_actions),
+              subtitle:
+              'Choose what can trigger an AREA for ${widget.service.displayName}.',
+              items: _filtered(actions, (a) => a.displayName),
               emptyText: 'No actions available for this service.',
+              itemTitle: (a) => a.displayName,
+              itemSubtitle: (a) => a.description,
             ),
-            _buildListTab(
+            _buildListTab<ServiceReaction>(
               context,
               title: 'Reactions',
-              subtitle: 'Choose what ${widget.service.displayName} can do when an AREA runs.',
-              items: _filtered(_reactions),
+              subtitle:
+              'Choose what ${widget.service.displayName} can do when an AREA runs.',
+              items: _filtered(reactions, (r) => r.displayName),
               emptyText: 'No reactions available for this service.',
+              itemTitle: (r) => r.displayName,
+              itemSubtitle: (r) => r.description,
             ),
           ],
         ),
@@ -164,16 +156,12 @@ class _ServiceScreenState extends State<ServiceScreen> {
   // CONNECT TAB
   // -----------------------------
   Widget _buildConnectTab(BuildContext context) {
-    final theme = Theme.of(context);
-    final cs = theme.colorScheme;
-
-    final description = serviceDescription(widget.service.name);
+    final cs = Theme.of(context).colorScheme;
 
     return Padding(
       padding: const EdgeInsets.all(16),
       child: Column(
         children: [
-          // Banner
           Container(
             height: 136,
             decoration: BoxDecoration(
@@ -188,50 +176,28 @@ class _ServiceScreenState extends State<ServiceScreen> {
                     widget.logoAsset,
                     width: 88,
                     height: 88,
-                    errorBuilder: (context, error, stackTrace) => Container(
-                      width: 88,
-                      height: 88,
-                      decoration: BoxDecoration(
-                        color: Colors.white24,
-                        borderRadius: BorderRadius.circular(8),
-                      ),
-                      child: const Icon(Icons.extension, size: 40, color: Colors.white),
+                    errorBuilder: (_, __, ___) => const Icon(
+                      Icons.extension,
+                      size: 40,
+                      color: Colors.white,
                     ),
                   ),
-                if (widget.logoAsset.isNotEmpty) const SizedBox(width: 16),
+                const SizedBox(width: 16),
                 Expanded(
                   child: Text(
                     widget.service.displayName,
-                    overflow: TextOverflow.ellipsis,
                     style: const TextStyle(
-                      fontFamily: 'Inter',
-                      fontWeight: FontWeight.w700,
                       fontSize: 36,
-                      letterSpacing: -0.02,
+                      fontWeight: FontWeight.w700,
                       color: Colors.white,
                     ),
                   ),
                 ),
-                const SizedBox(width: 16),
               ],
             ),
           ),
 
           const SizedBox(height: 18),
-
-          Align(
-            alignment: Alignment.centerLeft,
-            child: Text(
-              description,
-              style: TextStyle(
-                fontSize: 15,
-                color: cs.onSurface.withOpacity(0.8),
-                height: 1.35,
-              ),
-            ),
-          ),
-
-          const SizedBox(height: 16),
 
           Row(
             children: [
@@ -257,10 +223,7 @@ class _ServiceScreenState extends State<ServiceScreen> {
               alignment: Alignment.centerLeft,
               child: Text(
                 _connectError!,
-                style: TextStyle(
-                  color: cs.error,
-                  fontSize: 12,
-                ),
+                style: TextStyle(color: cs.error, fontSize: 12),
               ),
             ),
           ],
@@ -271,6 +234,7 @@ class _ServiceScreenState extends State<ServiceScreen> {
             width: double.infinity,
             height: 52,
             child: ElevatedButton(
+              onPressed: _connecting ? null : _connect,
               style: ElevatedButton.styleFrom(
                 backgroundColor: cs.primary,
                 foregroundColor: cs.onPrimary,
@@ -278,28 +242,9 @@ class _ServiceScreenState extends State<ServiceScreen> {
                   borderRadius: BorderRadius.circular(14),
                 ),
               ),
-              onPressed: _connecting ? null : _connect,
               child: _connecting
-                  ? SizedBox(
-                width: 22,
-                height: 22,
-                child: CircularProgressIndicator(
-                  strokeWidth: 2,
-                  valueColor: AlwaysStoppedAnimation<Color>(cs.onPrimary),
-                ),
-              )
+                  ? const CircularProgressIndicator(strokeWidth: 2)
                   : Text(_connected ? 'Reconnect' : 'Connect'),
-            ),
-          ),
-
-          const SizedBox(height: 10),
-
-          // Optional: let user see which URL we open (useful while dev)
-          Text(
-            'Opens: ${ApiClient().baseUrl}/oauth/${widget.service.name}/url',
-            style: TextStyle(
-              fontSize: 12,
-              color: cs.onSurface.withOpacity(0.6),
             ),
           ),
         ],
@@ -308,17 +253,18 @@ class _ServiceScreenState extends State<ServiceScreen> {
   }
 
   // -----------------------------
-  // ACTIONS / REACTIONS TABS
+  // LIST TAB
   // -----------------------------
-  Widget _buildListTab(
+  Widget _buildListTab<T>(
       BuildContext context, {
         required String title,
         required String subtitle,
-        required List<ServiceAction> items,
+        required List<T> items,
         required String emptyText,
+        required String Function(T) itemTitle,
+        required String Function(T) itemSubtitle,
       }) {
-    final theme = Theme.of(context);
-    final cs = theme.colorScheme;
+    final cs = Theme.of(context).colorScheme;
 
     return Padding(
       padding: const EdgeInsets.all(16),
@@ -336,51 +282,29 @@ class _ServiceScreenState extends State<ServiceScreen> {
           ),
           const SizedBox(height: 12),
 
-          SizedBox(
-            height: 44,
-            child: TextField(
-              controller: _searchController,
-              decoration: InputDecoration(
-                hintText: "Search $title...",
-                prefixIcon: Icon(Icons.search,
-                    size: 20, color: cs.onSurface.withOpacity(0.7)),
-                contentPadding: const EdgeInsets.symmetric(vertical: 10),
-                border: OutlineInputBorder(
-                  borderRadius: BorderRadius.circular(12),
-                ),
-              ),
-              onChanged: (val) => setState(() => _query = val),
+          TextField(
+            controller: _searchController,
+            decoration: InputDecoration(
+              hintText: 'Search $title...',
+              prefixIcon: const Icon(Icons.search),
             ),
+            onChanged: (v) => setState(() => _query = v),
           ),
 
           const SizedBox(height: 16),
 
           Expanded(
             child: items.isEmpty
-                ? Center(
-              child: Text(
-                emptyText,
-                textAlign: TextAlign.center,
-                style: TextStyle(
-                  fontSize: 15,
-                  fontStyle: FontStyle.italic,
-                  color: cs.onSurface.withOpacity(0.75),
-                ),
-              ),
-            )
+                ? Center(child: Text(emptyText))
                 : ListView.separated(
               itemCount: items.length,
               separatorBuilder: (_, __) => const SizedBox(height: 10),
-              itemBuilder: (context, index) {
-                final item = items[index];
+              itemBuilder: (_, i) {
+                final item = items[i];
                 return _ActionCard(
-                  text: item.name,
+                  title: itemTitle(item),
+                  subtitle: itemSubtitle(item),
                   color: widget.bannerColor,
-                  onTap: () {
-                    ScaffoldMessenger.of(context).showSnackBar(
-                      SnackBar(content: Text(item.name)),
-                    );
-                  },
                 );
               },
             ),
@@ -389,72 +313,63 @@ class _ServiceScreenState extends State<ServiceScreen> {
       ),
     );
   }
-
-  // actions/reactions are provided by the API via the Service model
 }
 
 class _ActionCard extends StatelessWidget {
-  final String text;
+  final String title;
+  final String subtitle;
   final Color color;
-  final VoidCallback onTap;
 
   const _ActionCard({
-    required this.text,
+    required this.title,
+    required this.subtitle,
     required this.color,
-    required this.onTap,
   });
 
   @override
   Widget build(BuildContext context) {
     final cs = Theme.of(context).colorScheme;
 
-    return InkWell(
-      borderRadius: BorderRadius.circular(14),
-      onTap: onTap,
-      child: Container(
-        padding: const EdgeInsets.symmetric(horizontal: 14, vertical: 14),
-        decoration: BoxDecoration(
-          color: cs.surfaceContainerHigh,
-          borderRadius: BorderRadius.circular(14),
-          border: Border.all(color: cs.outlineVariant),
-        ),
-        child: Row(
-          children: [
-            Container(
-              width: 10,
-              height: 10,
-              decoration: BoxDecoration(
-                color: color,
-                shape: BoxShape.circle,
+    return Container(
+      padding: const EdgeInsets.all(14),
+      decoration: BoxDecoration(
+        color: cs.surfaceContainerHigh,
+        borderRadius: BorderRadius.circular(14),
+        border: Border.all(color: cs.outlineVariant),
+      ),
+      child: Column(
+        crossAxisAlignment: CrossAxisAlignment.start,
+        children: [
+          Row(
+            children: [
+              Container(
+                width: 10,
+                height: 10,
+                decoration: BoxDecoration(color: color, shape: BoxShape.circle),
               ),
-            ),
-            const SizedBox(width: 10),
-            Expanded(
-              child: Text(
-                text,
+              const SizedBox(width: 8),
+              Text(
+                title,
                 style: TextStyle(
                   fontSize: 15,
-                  color: cs.onSurface,
                   fontWeight: FontWeight.w600,
+                  color: cs.onSurface,
                 ),
               ),
+            ],
+          ),
+          if (subtitle.isNotEmpty) ...[
+            const SizedBox(height: 6),
+            Text(
+              subtitle,
+              style: TextStyle(
+                fontSize: 13,
+                color: cs.onSurface.withOpacity(0.75),
+              ),
             ),
-            Icon(Icons.chevron_right, color: cs.onSurface.withOpacity(0.6)),
           ],
-        ),
+        ],
       ),
     );
-  }
-}
-
-String serviceDescription(String key) {
-  switch (key) {
-    case 'google':
-    case 'google':
-      return 'Connect Gmail to trigger automations when emails arrive and send messages automatically.';
-    case 'instagram':
-      return 'Connect Instagram to react to new followers/posts and publish content from your AREAs.';
-    default:
-      return 'Connect this service to use its actions and reactions.';
   }
 }
