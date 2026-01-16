@@ -85,6 +85,7 @@ class AreasProvider with ChangeNotifier {
 
   Future<void> createArea({
     required String name,
+    required String description,
     required String actionService,
     required String actionType,
     required Map<String, dynamic> actionParams,
@@ -94,6 +95,8 @@ class AreasProvider with ChangeNotifier {
   }) async {
     try {
       final created = await _api.createArea(
+        name: name,
+        description: description,
         actionService: actionService,
         actionType: actionType,
         actionParams: actionParams,

@@ -19,8 +19,8 @@ class _CreateAreaScreenState extends State<CreateAreaScreen> {
   String? _reactionKey;
 
   final _areaNameController = TextEditingController();
+  final _areaDescriptionController = TextEditingController();
 
-  // Gmail action/reaction params
   final _fromController = TextEditingController();
   final _toController = TextEditingController();
   final _subjectController = TextEditingController(text: 'AREA test');
@@ -28,17 +28,13 @@ class _CreateAreaScreenState extends State<CreateAreaScreen> {
     text: 'You received a new email matching your AREA rule.',
   );
 
-  // Dropbox reaction params
   final _dropboxPathController = TextEditingController();
   final _dropboxContentController = TextEditingController();
 
-  // ✅ GitLab params
-  // Action filters
   final _gitlabProjectIdController = TextEditingController();
   final _gitlabContainsController = TextEditingController();
   final _gitlabTargetBranchController = TextEditingController();
 
-  // Reaction params
   final _gitlabIssueProjectIdController = TextEditingController();
   final _gitlabIssueTitleController = TextEditingController();
   final _gitlabIssueDescriptionController = TextEditingController();
@@ -62,6 +58,8 @@ class _CreateAreaScreenState extends State<CreateAreaScreen> {
   @override
   void dispose() {
     _areaNameController.dispose();
+    _areaDescriptionController.dispose();
+
     _fromController.dispose();
     _toController.dispose();
     _subjectController.dispose();
@@ -84,7 +82,6 @@ class _CreateAreaScreenState extends State<CreateAreaScreen> {
     super.dispose();
   }
 
-  /// Get list of actions for a given service name
   List<(String name, String description)> _getActionsForService(
       String serviceName,
       ) {
@@ -96,7 +93,6 @@ class _CreateAreaScreenState extends State<CreateAreaScreen> {
     return service.actions.map((a) => (a.name, a.description)).toList();
   }
 
-  /// Get list of reactions for a given service name
   List<(String name, String description)> _getReactionsForService(
       String serviceName,
       ) {
@@ -109,18 +105,15 @@ class _CreateAreaScreenState extends State<CreateAreaScreen> {
   }
 
   void _clearActionParamsNotApplicable() {
-    // Gmail action params
     if (_actionKey != 'new_email') {
       _fromController.clear();
     }
 
-    // GitLab action params
     if (_actionKey != 'new_issue' && _actionKey != 'new_merge_request') {
       _gitlabProjectIdController.clear();
       _gitlabContainsController.clear();
       _gitlabTargetBranchController.clear();
     } else {
-      // targetBranch only applies to new_merge_request
       if (_actionKey != 'new_merge_request') {
         _gitlabTargetBranchController.clear();
       }
@@ -128,7 +121,6 @@ class _CreateAreaScreenState extends State<CreateAreaScreen> {
   }
 
   void _clearReactionParamsNotApplicable() {
-    // Gmail reaction params
     if (_reactionKey != 'send_email') {
       _toController.clear();
       _subjectController.clear();
@@ -143,7 +135,6 @@ class _CreateAreaScreenState extends State<CreateAreaScreen> {
       }
     }
 
-    // Dropbox reaction params
     if (_reactionKey != 'upload_text_file' && _reactionKey != 'create_shared_link') {
       _dropboxPathController.clear();
       _dropboxContentController.clear();
@@ -151,7 +142,6 @@ class _CreateAreaScreenState extends State<CreateAreaScreen> {
       _dropboxContentController.clear();
     }
 
-    // GitLab reaction params
     if (_reactionKey != 'create_issue') {
       _gitlabIssueProjectIdController.clear();
       _gitlabIssueTitleController.clear();
@@ -175,7 +165,6 @@ class _CreateAreaScreenState extends State<CreateAreaScreen> {
       return;
     }
 
-    // Validate only what is required for the selected reaction
     if (_reactionKey == 'send_email' && _toController.text.trim().isEmpty) {
       _showError('Please enter a recipient email for the reaction.');
       return;
@@ -199,7 +188,6 @@ class _CreateAreaScreenState extends State<CreateAreaScreen> {
       }
     }
 
-    // ✅ GitLab reactions validation
     if (_reactionKey == 'create_issue') {
       if (_gitlabIssueProjectIdController.text.trim().isEmpty) {
         _showError('Please enter a GitLab projectId for "create_issue".');
@@ -224,7 +212,6 @@ class _CreateAreaScreenState extends State<CreateAreaScreen> {
         _showError('Please enter a comment body for "comment_merge_request".');
         return;
       }
-      // basic numeric sanity (optional)
       if (int.tryParse(_gitlabMrIidController.text.trim()) == null) {
         _showError('mergeRequestIid must be a number.');
         return;
@@ -242,14 +229,16 @@ class _CreateAreaScreenState extends State<CreateAreaScreen> {
         ? '${prettyServiceName(actionService)} → ${prettyServiceName(reactionService)}'
         : _areaNameController.text.trim();
 
-    // Build action params based on selected action
+    final description = _areaDescriptionController.text.trim().isEmpty
+        ? 'Nice Area'
+        : _areaDescriptionController.text.trim();
+
     final actionParams = <String, dynamic>{};
 
     if (actionType == 'new_email' && _fromController.text.trim().isNotEmpty) {
       actionParams['from'] = _fromController.text.trim();
     }
 
-    // ✅ GitLab action params (filters)
     if ((actionType == 'new_issue' || actionType == 'new_merge_request')) {
       if (_gitlabProjectIdController.text.trim().isNotEmpty) {
         actionParams['projectId'] = _gitlabProjectIdController.text.trim();
@@ -263,7 +252,6 @@ class _CreateAreaScreenState extends State<CreateAreaScreen> {
       }
     }
 
-    // Build reaction params based on selected reaction
     final reactionParams = <String, dynamic>{};
 
     if (reactionType == 'send_email') {
@@ -281,7 +269,6 @@ class _CreateAreaScreenState extends State<CreateAreaScreen> {
       reactionParams['path'] = _dropboxPathController.text.trim();
     }
 
-    // ✅ GitLab reactions params
     if (reactionType == 'create_issue') {
       reactionParams['projectId'] = _gitlabIssueProjectIdController.text.trim();
       reactionParams['title'] = _gitlabIssueTitleController.text.trim();
@@ -303,6 +290,7 @@ class _CreateAreaScreenState extends State<CreateAreaScreen> {
     try {
       await areasProvider.createArea(
         name: name,
+        description: description,
         actionService: actionService,
         actionType: actionType,
         actionParams: actionParams,
@@ -334,7 +322,7 @@ class _CreateAreaScreenState extends State<CreateAreaScreen> {
     showDialog(
       context: context,
       builder: (ctx) {
-        String? tempService = _actionService; // start null
+        String? tempService = _actionService;
         String? tempKey = _actionKey;
 
         final serviceKeys = services.map((s) => s.name).toList();
@@ -354,7 +342,6 @@ class _CreateAreaScreenState extends State<CreateAreaScreen> {
               try {
                 actionsForService = _getActionsForService(tempService!);
               } catch (e) {
-                // Service not found, leave empty
               }
             }
 
@@ -393,7 +380,6 @@ class _CreateAreaScreenState extends State<CreateAreaScreen> {
                     },
                   ),
 
-                  // Only show after service chosen
                   if (tempService != null && actionsForService.isNotEmpty) ...[
                     const SizedBox(height: 12),
                     DropdownButtonFormField<String>(
@@ -459,7 +445,7 @@ class _CreateAreaScreenState extends State<CreateAreaScreen> {
     showDialog(
       context: context,
       builder: (ctx) {
-        String? tempService = _reactionService; // start null
+        String? tempService = _reactionService;
         String? tempKey = _reactionKey;
 
         final serviceKeys = services.map((s) => s.name).toList();
@@ -479,7 +465,6 @@ class _CreateAreaScreenState extends State<CreateAreaScreen> {
               try {
                 reactionsForService = _getReactionsForService(tempService!);
               } catch (e) {
-                // Service not found, leave empty
               }
             }
 
@@ -518,7 +503,6 @@ class _CreateAreaScreenState extends State<CreateAreaScreen> {
                     },
                   ),
 
-                  // Only show after service chosen
                   if (tempService != null && reactionsForService.isNotEmpty) ...[
                     const SizedBox(height: 12),
                     DropdownButtonFormField<String>(
@@ -635,6 +619,18 @@ class _CreateAreaScreenState extends State<CreateAreaScreen> {
               ),
             ),
 
+            const SizedBox(height: 12),
+
+            const Text('Description', style: TextStyle(fontSize: 16)),
+            const SizedBox(height: 4),
+            TextField(
+              controller: _areaDescriptionController,
+              decoration: const InputDecoration(
+                hintText: 'Short description (optional)',
+              ),
+              maxLines: 2,
+            ),
+
             const SizedBox(height: 24),
             Text(
               'IF',
@@ -656,7 +652,6 @@ class _CreateAreaScreenState extends State<CreateAreaScreen> {
               ],
             ),
 
-            // Action params only after selecting action
             if (_actionKey == 'new_email') ...[
               const SizedBox(height: 8),
               TextField(
@@ -668,7 +663,6 @@ class _CreateAreaScreenState extends State<CreateAreaScreen> {
               ),
             ],
 
-            // ✅ GitLab action params
             if (_actionKey == 'new_issue' || _actionKey == 'new_merge_request') ...[
               const SizedBox(height: 8),
               TextField(
@@ -719,7 +713,6 @@ class _CreateAreaScreenState extends State<CreateAreaScreen> {
               ],
             ),
 
-            // Reaction params only after selecting reaction
             if (_reactionKey == 'send_email') ...[
               const SizedBox(height: 8),
               TextField(
@@ -777,7 +770,6 @@ class _CreateAreaScreenState extends State<CreateAreaScreen> {
               ),
             ],
 
-            // ✅ GitLab reaction params
             if (_reactionKey == 'create_issue') ...[
               const SizedBox(height: 8),
               TextField(
@@ -915,8 +907,8 @@ String prettyServiceName(String key) {
       return 'Gmail';
     case 'instagram':
       return 'Instagram';
-    case 'timer':
-      return 'Timer';
+    case 'clock':
+      return 'Clock';
     case 'github':
       return 'GitHub';
     case 'gitlab':
