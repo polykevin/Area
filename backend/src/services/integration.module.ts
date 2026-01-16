@@ -90,8 +90,15 @@ export class IntegrationModule {
     private slackService: SlackService,
     private slackNewMessageHook: SlackNewMessageHook,
 
+    private discordService: DiscordService,
     private authRepo: ServiceAuthRepository,
     private engine: AutomationEngine,
+    private newEmailHook: NewEmailHook,
+    private calendarEventHook: CalendarEventHook,
+
+    private authRepo: ServiceAuthRepository,
+    private engine: AutomationEngine,
+    
   ) {
     newEmailHook.setEngine(engine);
     newMediaHook.setEngine(engine);
@@ -101,6 +108,8 @@ export class IntegrationModule {
     everyMinuteHook.setEngine(engine);
     everyDayAtHook.setEngine(engine);
     slackNewMessageHook.setEngine(engine);
+    newEmailHook.setEngine(engine);
+    calendarEventHook.setEngine(engine);
 
     registry.register(
       googleIntegration(googleService, authRepo, engine, newEmailHook),
@@ -121,16 +130,7 @@ export class IntegrationModule {
     registry.register(
       clockIntegration(clockService, authRepo, engine, everyMinuteHook, everyDayAtHook),
     );
-
-    private discordService: DiscordService,
-    private authRepo: ServiceAuthRepository,
-    private engine: AutomationEngine,
-    private newEmailHook: NewEmailHook,
-    private calendarEventHook: CalendarEventHook,
-  ) {
-    newEmailHook.setEngine(engine);
-    calendarEventHook.setEngine(engine);
-  
+    
     registry.register(
       slackIntegration(slackService, authRepo, engine, slackNewMessageHook)
     );
