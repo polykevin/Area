@@ -3,8 +3,7 @@ export const sendTimeReaction = {
   name: 'clock.send_time',
   displayName: 'Send current time',
   description: 'Returns the current time from the clock service.',
-
-  input: {},
+  input: [],
 
   async execute({ services }) {
     const { clockService } = services;

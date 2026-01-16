@@ -1,6 +1,13 @@
+import { Injectable } from '@nestjs/common';
+import { ServiceRegistry } from './services/service.registry';
+
 @Injectable()
 export class AppService {
   constructor(private registry: ServiceRegistry) {}
+
+  getHello() {
+      return { message: "Hello World!" };
+  }
 
   getServices() {
     return this.registry.getAll().map((service) => ({

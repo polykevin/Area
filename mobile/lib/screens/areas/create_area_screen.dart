@@ -12,36 +12,18 @@ class CreateAreaScreen extends StatefulWidget {
 }
 
 class _CreateAreaScreenState extends State<CreateAreaScreen> {
-  String? _actionService;
-  String? _actionKey;
+  String? _actionServiceId;
+  String? _actionId;
 
-  String? _reactionService;
-  String? _reactionKey;
+  String? _reactionServiceId;
+  String? _reactionId;
 
   final _areaNameController = TextEditingController();
   final _areaDescriptionController = TextEditingController();
 
-  final _fromController = TextEditingController();
-  final _toController = TextEditingController();
-  final _subjectController = TextEditingController(text: 'AREA test');
-  final _textController = TextEditingController(
-    text: 'You received a new email matching your AREA rule.',
-  );
-
-  final _dropboxPathController = TextEditingController();
-  final _dropboxContentController = TextEditingController();
-
-  final _gitlabProjectIdController = TextEditingController();
-  final _gitlabContainsController = TextEditingController();
-  final _gitlabTargetBranchController = TextEditingController();
-
-  final _gitlabIssueProjectIdController = TextEditingController();
-  final _gitlabIssueTitleController = TextEditingController();
-  final _gitlabIssueDescriptionController = TextEditingController();
-
-  final _gitlabMrProjectIdController = TextEditingController();
-  final _gitlabMrIidController = TextEditingController();
-  final _gitlabMrCommentController = TextEditingController();
+  // dynamic params (built from backend schema)
+  final Map<String, TextEditingController> _actionParamCtrls = {};
+  final Map<String, TextEditingController> _reactionParamCtrls = {};
 
   bool _submitting = false;
 
@@ -51,243 +33,469 @@ class _CreateAreaScreenState extends State<CreateAreaScreen> {
     Future.microtask(() {
       context.read<ServicesProvider>().loadServices();
     });
-    _actionService = null;
-    _reactionService = null;
   }
 
   @override
   void dispose() {
     _areaNameController.dispose();
     _areaDescriptionController.dispose();
-
-    _fromController.dispose();
-    _toController.dispose();
-    _subjectController.dispose();
-    _textController.dispose();
-    _dropboxPathController.dispose();
-    _dropboxContentController.dispose();
-
-    _gitlabProjectIdController.dispose();
-    _gitlabContainsController.dispose();
-    _gitlabTargetBranchController.dispose();
-
-    _gitlabIssueProjectIdController.dispose();
-    _gitlabIssueTitleController.dispose();
-    _gitlabIssueDescriptionController.dispose();
-
-    _gitlabMrProjectIdController.dispose();
-    _gitlabMrIidController.dispose();
-    _gitlabMrCommentController.dispose();
-
+    for (final c in _actionParamCtrls.values) {
+      c.dispose();
+    }
+    for (final c in _reactionParamCtrls.values) {
+      c.dispose();
+    }
     super.dispose();
   }
 
-  List<(String name, String description)> _getActionsForService(
-      String serviceName,
-      ) {
-    final servicesProvider = context.read<ServicesProvider>();
-    final service = servicesProvider.services.firstWhere(
-          (s) => s.name == serviceName,
-      orElse: () => throw Exception('Service not found: $serviceName'),
+  // ------------------------
+  // Helpers to access backend service definitions
+  // ------------------------
+
+  dynamic _findService(String serviceId) {
+    final sp = context.read<ServicesProvider>();
+    return sp.services.firstWhere(
+          (s) => s.id == serviceId,
+      orElse: () => throw Exception('Service not found: $serviceId'),
     );
-    return service.actions.map((a) => (a.name, a.description)).toList();
   }
 
-  List<(String name, String description)> _getReactionsForService(
-      String serviceName,
-      ) {
-    final servicesProvider = context.read<ServicesProvider>();
-    final service = servicesProvider.services.firstWhere(
-          (s) => s.name == serviceName,
-      orElse: () => throw Exception('Service not found: $serviceName'),
+  dynamic _findAction(String serviceId, String actionId) {
+    final svc = _findService(serviceId);
+    final actions = (svc.actions as List);
+    return actions.firstWhere(
+          (a) => (a.id ?? a.name) == actionId,
+      orElse: () => throw Exception('Action not found: $serviceId/$actionId'),
     );
-    return service.reactions.map((r) => (r.name, r.description)).toList();
   }
 
-  void _clearActionParamsNotApplicable() {
-    if (_actionKey != 'new_email') {
-      _fromController.clear();
-    }
+  dynamic _findReaction(String serviceId, String reactionId) {
+    final svc = _findService(serviceId);
+    final reactions = (svc.reactions as List);
+    return reactions.firstWhere(
+          (r) => (r.id ?? r.name) == reactionId,
+      orElse: () => throw Exception('Reaction not found: $serviceId/$reactionId'),
+    );
+  }
 
-    if (_actionKey != 'new_issue' && _actionKey != 'new_merge_request') {
-      _gitlabProjectIdController.clear();
-      _gitlabContainsController.clear();
-      _gitlabTargetBranchController.clear();
-    } else {
-      if (_actionKey != 'new_merge_request') {
-        _gitlabTargetBranchController.clear();
-      }
+  String _svcLabel(dynamic svc) => (svc.displayName ?? svc.name ?? svc.id ?? '').toString();
+  String _defLabel(dynamic def) => (def.displayName ?? def.name ?? def.id ?? '').toString();
+
+  List<dynamic> _inputSchema(dynamic def) {
+    final input = def.input;
+    if (input is List) return input;
+    // if backend returns null/empty
+    return const [];
+  }
+
+  // create controllers for new schema; keep existing values if possible
+  void _rebuildActionParamCtrls() {
+    for (final c in _actionParamCtrls.values) {
+      c.dispose();
+    }
+    _actionParamCtrls.clear();
+
+    if (_actionServiceId == null || _actionId == null) return;
+
+    final action = _findAction(_actionServiceId!, _actionId!);
+    for (final f in _inputSchema(action)) {
+      final key = (f['key'] ?? f.key).toString();
+      final placeholder = (f['placeholder'] ?? '').toString();
+      _actionParamCtrls[key] = TextEditingController(text: placeholder.isNotEmpty ? '' : '');
     }
   }
 
-  void _clearReactionParamsNotApplicable() {
-    if (_reactionKey != 'send_email') {
-      _toController.clear();
-      _subjectController.clear();
-      _textController.clear();
-    } else {
-      if (_subjectController.text.trim().isEmpty) {
-        _subjectController.text = 'AREA test';
+  void _rebuildReactionParamCtrls() {
+    for (final c in _reactionParamCtrls.values) {
+      c.dispose();
+    }
+    _reactionParamCtrls.clear();
+
+    if (_reactionServiceId == null || _reactionId == null) return;
+
+    final reaction = _findReaction(_reactionServiceId!, _reactionId!);
+    for (final f in _inputSchema(reaction)) {
+      final key = (f['key'] ?? f.key).toString();
+      final placeholder = (f['placeholder'] ?? '').toString();
+      _reactionParamCtrls[key] = TextEditingController(text: placeholder.isNotEmpty ? '' : '');
+    }
+  }
+
+  // read controllers -> params map, with basic type casting based on schema
+  Map<String, dynamic> _buildParamsFromSchema(
+      List<dynamic> schema,
+      Map<String, TextEditingController> ctrls,
+      ) {
+    final out = <String, dynamic>{};
+
+    for (final f in schema) {
+      final key = (f['key'] ?? f.key).toString();
+      final requiredField = (f['required'] ?? f.required) == true;
+
+      final raw = (ctrls[key]?.text ?? '').trim();
+      if (raw.isEmpty) {
+        if (requiredField) {
+          throw Exception('Missing required field: $key');
+        }
+        continue;
       }
-      if (_textController.text.trim().isEmpty) {
-        _textController.text =
-        'You received a new email matching your AREA rule.';
+
+      final type = (f['type'] ?? f.type ?? 'string').toString();
+
+      if (type == 'number') {
+        final n = num.tryParse(raw);
+        if (n == null) throw Exception('Field "$key" must be a number.');
+        out[key] = n;
+      } else if (type == 'boolean') {
+        final v = raw.toLowerCase();
+        out[key] = (v == 'true' || v == '1' || v == 'yes' || v == 'y');
+      } else {
+        out[key] = raw;
       }
     }
 
-    if (_reactionKey != 'upload_text_file' && _reactionKey != 'create_shared_link') {
-      _dropboxPathController.clear();
-      _dropboxContentController.clear();
-    } else if (_reactionKey == 'create_shared_link') {
-      _dropboxContentController.clear();
-    }
+    return out;
+  }
 
-    if (_reactionKey != 'create_issue') {
-      _gitlabIssueProjectIdController.clear();
-      _gitlabIssueTitleController.clear();
-      _gitlabIssueDescriptionController.clear();
-    }
+  // ------------------------
+  // UI interactions
+  // ------------------------
 
-    if (_reactionKey != 'comment_merge_request') {
-      _gitlabMrProjectIdController.clear();
-      _gitlabMrIidController.clear();
-      _gitlabMrCommentController.clear();
-    }
+  void _pickAction() {
+    final sp = context.read<ServicesProvider>();
+    final services = sp.services;
+
+    showDialog(
+      context: context,
+      builder: (ctx) {
+        String? tempServiceId = _actionServiceId;
+        String? tempActionId = _actionId;
+
+        final serviceIds = services.map((s) => s.id as String).toList();
+
+        return StatefulBuilder(
+          builder: (context, setStateDialog) {
+            final theme = Theme.of(context);
+            final cs = theme.colorScheme;
+
+            InputDecoration deco(String label) => InputDecoration(
+              labelText: label,
+              labelStyle: TextStyle(color: cs.onSurfaceVariant),
+            );
+
+            List<dynamic> actions = const [];
+            if (tempServiceId != null) {
+              try {
+                final svc = _findService(tempServiceId!);
+                actions = (svc.actions as List);
+              } catch (_) {}
+            }
+
+            return AlertDialog(
+              backgroundColor: cs.surface,
+              titleTextStyle: theme.textTheme.titleLarge?.copyWith(
+                color: cs.onSurface,
+                fontWeight: FontWeight.w600,
+              ),
+              contentTextStyle: theme.textTheme.bodyMedium?.copyWith(
+                color: cs.onSurface,
+              ),
+              title: const Text('Choose action'),
+              content: Column(
+                mainAxisSize: MainAxisSize.min,
+                children: [
+                  DropdownButtonFormField<String>(
+                    initialValue: tempServiceId,
+                    decoration: deco('Service'),
+                    dropdownColor: cs.surface,
+                    style: TextStyle(color: cs.onSurface),
+                    iconEnabledColor: cs.onSurfaceVariant,
+                    items: serviceIds
+                        .map((id) {
+                      final svc = services.firstWhere((s) => s.id == id);
+                      return DropdownMenuItem(
+                        value: id,
+                        child: Text(_svcLabel(svc)),
+                      );
+                    })
+                        .toList(),
+                    onChanged: (value) {
+                      setStateDialog(() {
+                        tempServiceId = value;
+                        tempActionId = null;
+                      });
+                    },
+                  ),
+                  if (tempServiceId != null && actions.isNotEmpty) ...[
+                    const SizedBox(height: 12),
+                    DropdownButtonFormField<String>(
+                      initialValue: tempActionId,
+                      decoration: deco('Action'),
+                      dropdownColor: cs.surface,
+                      style: TextStyle(color: cs.onSurface),
+                      iconEnabledColor: cs.onSurfaceVariant,
+                      items: actions
+                          .map((a) => DropdownMenuItem(
+                        value: (a.id ?? a.name) as String,
+                        child: Text(_defLabel(a)),
+                      ))
+                          .toList(),
+                      onChanged: (value) {
+                        setStateDialog(() {
+                          tempActionId = value;
+                        });
+                      },
+                    ),
+                  ] else if (tempServiceId != null && actions.isEmpty)
+                    Padding(
+                      padding: const EdgeInsets.only(top: 12),
+                      child: Text(
+                        'No actions available for this service',
+                        style: TextStyle(color: cs.onSurfaceVariant),
+                      ),
+                    ),
+                ],
+              ),
+              actions: [
+                TextButton(
+                  onPressed: () => Navigator.of(ctx).pop(),
+                  child: Text('Cancel', style: TextStyle(color: cs.primary)),
+                ),
+                ElevatedButton(
+                  onPressed: (tempServiceId != null && tempActionId != null)
+                      ? () {
+                    setState(() {
+                      _actionServiceId = tempServiceId;
+                      _actionId = tempActionId;
+                      _rebuildActionParamCtrls();
+                    });
+                    Navigator.of(ctx).pop();
+                  }
+                      : null,
+                  child: const Text('Use'),
+                ),
+              ],
+            );
+          },
+        );
+      },
+    );
+  }
+
+  void _pickReaction() {
+    final sp = context.read<ServicesProvider>();
+    final services = sp.services;
+
+    showDialog(
+      context: context,
+      builder: (ctx) {
+        String? tempServiceId = _reactionServiceId;
+        String? tempReactionId = _reactionId;
+
+        final serviceIds = services.map((s) => s.id as String).toList();
+
+        return StatefulBuilder(
+          builder: (context, setStateDialog) {
+            final theme = Theme.of(context);
+            final cs = theme.colorScheme;
+
+            InputDecoration deco(String label) => InputDecoration(
+              labelText: label,
+              labelStyle: TextStyle(color: cs.onSurfaceVariant),
+            );
+
+            List<dynamic> reactions = const [];
+            if (tempServiceId != null) {
+              try {
+                final svc = _findService(tempServiceId!);
+                reactions = (svc.reactions as List);
+              } catch (_) {}
+            }
+
+            return AlertDialog(
+              backgroundColor: cs.surface,
+              titleTextStyle: theme.textTheme.titleLarge?.copyWith(
+                color: cs.onSurface,
+                fontWeight: FontWeight.w600,
+              ),
+              contentTextStyle: theme.textTheme.bodyMedium?.copyWith(
+                color: cs.onSurface,
+              ),
+              title: const Text('Choose reaction'),
+              content: Column(
+                mainAxisSize: MainAxisSize.min,
+                children: [
+                  DropdownButtonFormField<String>(
+                    initialValue: tempServiceId,
+                    decoration: deco('Service'),
+                    dropdownColor: cs.surface,
+                    style: TextStyle(color: cs.onSurface),
+                    iconEnabledColor: cs.onSurfaceVariant,
+                    items: serviceIds
+                        .map((id) {
+                      final svc = services.firstWhere((s) => s.id == id);
+                      return DropdownMenuItem(
+                        value: id,
+                        child: Text(_svcLabel(svc)),
+                      );
+                    })
+                        .toList(),
+                    onChanged: (value) {
+                      setStateDialog(() {
+                        tempServiceId = value;
+                        tempReactionId = null;
+                      });
+                    },
+                  ),
+                  if (tempServiceId != null && reactions.isNotEmpty) ...[
+                    const SizedBox(height: 12),
+                    DropdownButtonFormField<String>(
+                      initialValue: tempReactionId,
+                      decoration: deco('Reaction'),
+                      dropdownColor: cs.surface,
+                      style: TextStyle(color: cs.onSurface),
+                      iconEnabledColor: cs.onSurfaceVariant,
+                      items: reactions
+                          .map((r) => DropdownMenuItem(
+                        value: (r.id ?? r.name) as String,
+                        child: Text(_defLabel(r)),
+                      ))
+                          .toList(),
+                      onChanged: (value) {
+                        setStateDialog(() {
+                          tempReactionId = value;
+                        });
+                      },
+                    ),
+                  ] else if (tempServiceId != null && reactions.isEmpty)
+                    Padding(
+                      padding: const EdgeInsets.only(top: 12),
+                      child: Text(
+                        'No reactions available for this service',
+                        style: TextStyle(color: cs.onSurfaceVariant),
+                      ),
+                    ),
+                ],
+              ),
+              actions: [
+                TextButton(
+                  onPressed: () => Navigator.of(ctx).pop(),
+                  child: Text('Cancel', style: TextStyle(color: cs.primary)),
+                ),
+                ElevatedButton(
+                  onPressed: (tempServiceId != null && tempReactionId != null)
+                      ? () {
+                    setState(() {
+                      _reactionServiceId = tempServiceId;
+                      _reactionId = tempReactionId;
+                      _rebuildReactionParamCtrls();
+                    });
+                    Navigator.of(ctx).pop();
+                  }
+                      : null,
+                  child: const Text('Use'),
+                ),
+              ],
+            );
+          },
+        );
+      },
+    );
+  }
+
+  String _describeSelectedAction() {
+    if (_actionServiceId == null || _actionId == null) return 'Tap to choose action...';
+    final svc = _findService(_actionServiceId!);
+    final a = _findAction(_actionServiceId!, _actionId!);
+    return '${_svcLabel(svc)} • ${_defLabel(a)}';
+  }
+
+  String _describeSelectedReaction() {
+    if (_reactionServiceId == null || _reactionId == null) return 'Tap to choose reaction...';
+    final svc = _findService(_reactionServiceId!);
+    final r = _findReaction(_reactionServiceId!, _reactionId!);
+    return '${_svcLabel(svc)} • ${_defLabel(r)}';
+  }
+
+  List<Widget> _buildParamFields({
+    required BuildContext context,
+    required List<dynamic> schema,
+    required Map<String, TextEditingController> ctrls,
+  }) {
+    if (schema.isEmpty) return const [];
+
+    return [
+      const SizedBox(height: 8),
+      ...schema.map((f) {
+        final cs = Theme.of(context).colorScheme;
+
+        final key = (f['key'] ?? f.key).toString();
+        final label = (f['label'] ?? f.label ?? key).toString();
+        final placeholder = (f['placeholder'] ?? f.placeholder ?? '').toString();
+        final helpText = (f['helpText'] ?? f.helpText ?? '').toString();
+        final requiredField = (f['required'] ?? f.required) == true;
+        final type = (f['type'] ?? f.type ?? 'string').toString();
+
+        final ctrl = ctrls.putIfAbsent(key, () => TextEditingController());
+
+        TextInputType keyboard = TextInputType.text;
+        if (type == 'number') keyboard = TextInputType.number;
+
+        return Padding(
+          padding: const EdgeInsets.only(bottom: 8),
+          child: TextField(
+            controller: ctrl,
+            keyboardType: keyboard,
+            decoration: InputDecoration(
+              labelText: requiredField ? label : '$label (optional)',
+              hintText: placeholder.isEmpty ? null : placeholder,
+              helperText: helpText.isEmpty ? null : helpText,
+              helperStyle: TextStyle(color: cs.onSurfaceVariant),
+            ),
+          ),
+        );
+      }),
+    ];
   }
 
   Future<void> _submit() async {
-    if (_actionService == null || _actionKey == null) {
+    if (_actionServiceId == null || _actionId == null) {
       _showError('Please choose an action.');
       return;
     }
-    if (_reactionService == null || _reactionKey == null) {
+    if (_reactionServiceId == null || _reactionId == null) {
       _showError('Please choose a reaction.');
       return;
     }
 
-    if (_reactionKey == 'send_email' && _toController.text.trim().isEmpty) {
-      _showError('Please enter a recipient email for the reaction.');
-      return;
-    }
-
-    if (_reactionKey == 'upload_text_file') {
-      if (_dropboxPathController.text.trim().isEmpty) {
-        _showError('Please enter a Dropbox path (e.g. /area-test/test.txt).');
-        return;
-      }
-      if (_dropboxContentController.text.trim().isEmpty) {
-        _showError('Please enter the file content to upload.');
-        return;
-      }
-    }
-
-    if (_reactionKey == 'create_shared_link') {
-      if (_dropboxPathController.text.trim().isEmpty) {
-        _showError('Please enter a Dropbox path (e.g. /foo/bar.txt).');
-        return;
-      }
-    }
-
-    if (_reactionKey == 'create_issue') {
-      if (_gitlabIssueProjectIdController.text.trim().isEmpty) {
-        _showError('Please enter a GitLab projectId for "create_issue".');
-        return;
-      }
-      if (_gitlabIssueTitleController.text.trim().isEmpty) {
-        _showError('Please enter an issue title for "create_issue".');
-        return;
-      }
-    }
-
-    if (_reactionKey == 'comment_merge_request') {
-      if (_gitlabMrProjectIdController.text.trim().isEmpty) {
-        _showError('Please enter a GitLab projectId for "comment_merge_request".');
-        return;
-      }
-      if (_gitlabMrIidController.text.trim().isEmpty) {
-        _showError('Please enter a mergeRequestIid for "comment_merge_request".');
-        return;
-      }
-      if (_gitlabMrCommentController.text.trim().isEmpty) {
-        _showError('Please enter a comment body for "comment_merge_request".');
-        return;
-      }
-      if (int.tryParse(_gitlabMrIidController.text.trim()) == null) {
-        _showError('mergeRequestIid must be a number.');
-        return;
-      }
-    }
-
     final areasProvider = context.read<AreasProvider>();
 
-    final actionService = _actionService!;
-    final reactionService = _reactionService!;
-    final actionType = _actionKey!;
-    final reactionType = _reactionKey!;
+    final actionService = _actionServiceId!;
+    final actionType = _actionId!;
+    final reactionService = _reactionServiceId!;
+    final reactionType = _reactionId!;
 
+    final fallbackName = '${_svcLabel(_findService(actionService))} → ${_svcLabel(_findService(reactionService))}';
     final name = _areaNameController.text.trim().isEmpty
-        ? '${prettyServiceName(actionService)} → ${prettyServiceName(reactionService)}'
+        ? fallbackName
         : _areaNameController.text.trim();
 
     final description = _areaDescriptionController.text.trim().isEmpty
         ? 'Nice Area'
         : _areaDescriptionController.text.trim();
 
-    final actionParams = <String, dynamic>{};
-
-    if (actionType == 'new_email' && _fromController.text.trim().isNotEmpty) {
-      actionParams['from'] = _fromController.text.trim();
-    }
-
-    if ((actionType == 'new_issue' || actionType == 'new_merge_request')) {
-      if (_gitlabProjectIdController.text.trim().isNotEmpty) {
-        actionParams['projectId'] = _gitlabProjectIdController.text.trim();
-      }
-      if (_gitlabContainsController.text.trim().isNotEmpty) {
-        actionParams['contains'] = _gitlabContainsController.text.trim();
-      }
-      if (actionType == 'new_merge_request' &&
-          _gitlabTargetBranchController.text.trim().isNotEmpty) {
-        actionParams['targetBranch'] = _gitlabTargetBranchController.text.trim();
-      }
-    }
-
-    final reactionParams = <String, dynamic>{};
-
-    if (reactionType == 'send_email') {
-      reactionParams['to'] = _toController.text.trim();
-      reactionParams['subject'] = _subjectController.text.trim();
-      reactionParams['text'] = _textController.text.trim();
-    }
-
-    if (reactionType == 'upload_text_file') {
-      reactionParams['path'] = _dropboxPathController.text.trim();
-      reactionParams['content'] = _dropboxContentController.text.trim();
-    }
-
-    if (reactionType == 'create_shared_link') {
-      reactionParams['path'] = _dropboxPathController.text.trim();
-    }
-
-    if (reactionType == 'create_issue') {
-      reactionParams['projectId'] = _gitlabIssueProjectIdController.text.trim();
-      reactionParams['title'] = _gitlabIssueTitleController.text.trim();
-      if (_gitlabIssueDescriptionController.text.trim().isNotEmpty) {
-        reactionParams['description'] = _gitlabIssueDescriptionController.text.trim();
-      }
-    }
-
-    if (reactionType == 'comment_merge_request') {
-      reactionParams['projectId'] = _gitlabMrProjectIdController.text.trim();
-      reactionParams['mergeRequestIid'] = int.parse(_gitlabMrIidController.text.trim());
-      reactionParams['body'] = _gitlabMrCommentController.text.trim();
-    }
-
-    setState(() {
-      _submitting = true;
-    });
-
     try {
+      final actionDef = _findAction(actionService, actionType);
+      final reactionDef = _findReaction(reactionService, reactionType);
+
+      final actionSchema = _inputSchema(actionDef);
+      final reactionSchema = _inputSchema(reactionDef);
+
+      final actionParams = _buildParamsFromSchema(actionSchema, _actionParamCtrls);
+      final reactionParams = _buildParamsFromSchema(reactionSchema, _reactionParamCtrls);
+
+      setState(() => _submitting = true);
+
       await areasProvider.createArea(
         name: name,
         description: description,
@@ -307,272 +515,8 @@ class _CreateAreaScreenState extends State<CreateAreaScreen> {
     } catch (e) {
       _showError(e.toString());
     } finally {
-      if (mounted) {
-        setState(() {
-          _submitting = false;
-        });
-      }
+      if (mounted) setState(() => _submitting = false);
     }
-  }
-
-  void _pickAction() {
-    final servicesProvider = context.read<ServicesProvider>();
-    final services = servicesProvider.services;
-
-    showDialog(
-      context: context,
-      builder: (ctx) {
-        String? tempService = _actionService;
-        String? tempKey = _actionKey;
-
-        final serviceKeys = services.map((s) => s.name).toList();
-
-        return StatefulBuilder(
-          builder: (context, setStateDialog) {
-            final theme = Theme.of(context);
-            final cs = theme.colorScheme;
-
-            InputDecoration deco(String label) => InputDecoration(
-              labelText: label,
-              labelStyle: TextStyle(color: cs.onSurfaceVariant),
-            );
-
-            List<(String name, String description)> actionsForService = [];
-            if (tempService != null) {
-              try {
-                actionsForService = _getActionsForService(tempService!);
-              } catch (e) {
-              }
-            }
-
-            return AlertDialog(
-              backgroundColor: cs.surface,
-              titleTextStyle: theme.textTheme.titleLarge?.copyWith(
-                color: cs.onSurface,
-                fontWeight: FontWeight.w600,
-              ),
-              contentTextStyle: theme.textTheme.bodyMedium?.copyWith(
-                color: cs.onSurface,
-              ),
-              title: const Text('Choose action'),
-              content: Column(
-                mainAxisSize: MainAxisSize.min,
-                children: [
-                  DropdownButtonFormField<String>(
-                    initialValue: tempService,
-                    decoration: deco('Service'),
-                    dropdownColor: cs.surface,
-                    style: TextStyle(color: cs.onSurface),
-                    iconEnabledColor: cs.onSurfaceVariant,
-                    items: serviceKeys
-                        .map(
-                          (s) => DropdownMenuItem(
-                        value: s,
-                        child: Text(prettyServiceName(s)),
-                      ),
-                    )
-                        .toList(),
-                    onChanged: (value) {
-                      setStateDialog(() {
-                        tempService = value;
-                        tempKey = null;
-                      });
-                    },
-                  ),
-
-                  if (tempService != null && actionsForService.isNotEmpty) ...[
-                    const SizedBox(height: 12),
-                    DropdownButtonFormField<String>(
-                      initialValue: tempKey,
-                      decoration: deco('Action'),
-                      dropdownColor: cs.surface,
-                      style: TextStyle(color: cs.onSurface),
-                      iconEnabledColor: cs.onSurfaceVariant,
-                      items: actionsForService
-                          .map(
-                            (action) => DropdownMenuItem(
-                          value: action.$1,
-                          child: Text(action.$1),
-                        ),
-                      )
-                          .toList(),
-                      onChanged: (value) {
-                        setStateDialog(() {
-                          tempKey = value;
-                        });
-                      },
-                    ),
-                  ] else if (tempService != null && actionsForService.isEmpty)
-                    Padding(
-                      padding: const EdgeInsets.only(top: 12),
-                      child: Text(
-                        'No actions available for this service',
-                        style: TextStyle(color: cs.onSurfaceVariant),
-                      ),
-                    ),
-                ],
-              ),
-              actions: [
-                TextButton(
-                  onPressed: () => Navigator.of(ctx).pop(),
-                  child: Text('Cancel', style: TextStyle(color: cs.primary)),
-                ),
-                ElevatedButton(
-                  onPressed: (tempService != null && tempKey != null)
-                      ? () {
-                    setState(() {
-                      _actionService = tempService;
-                      _actionKey = tempKey;
-                      _clearActionParamsNotApplicable();
-                    });
-                    Navigator.of(ctx).pop();
-                  }
-                      : null,
-                  child: const Text('Use'),
-                ),
-              ],
-            );
-          },
-        );
-      },
-    );
-  }
-
-  void _pickReaction() {
-    final servicesProvider = context.read<ServicesProvider>();
-    final services = servicesProvider.services;
-
-    showDialog(
-      context: context,
-      builder: (ctx) {
-        String? tempService = _reactionService;
-        String? tempKey = _reactionKey;
-
-        final serviceKeys = services.map((s) => s.name).toList();
-
-        return StatefulBuilder(
-          builder: (context, setStateDialog) {
-            final theme = Theme.of(context);
-            final cs = theme.colorScheme;
-
-            InputDecoration deco(String label) => InputDecoration(
-              labelText: label,
-              labelStyle: TextStyle(color: cs.onSurfaceVariant),
-            );
-
-            List<(String name, String description)> reactionsForService = [];
-            if (tempService != null) {
-              try {
-                reactionsForService = _getReactionsForService(tempService!);
-              } catch (e) {
-              }
-            }
-
-            return AlertDialog(
-              backgroundColor: cs.surface,
-              titleTextStyle: theme.textTheme.titleLarge?.copyWith(
-                color: cs.onSurface,
-                fontWeight: FontWeight.w600,
-              ),
-              contentTextStyle: theme.textTheme.bodyMedium?.copyWith(
-                color: cs.onSurface,
-              ),
-              title: const Text('Choose reaction'),
-              content: Column(
-                mainAxisSize: MainAxisSize.min,
-                children: [
-                  DropdownButtonFormField<String>(
-                    initialValue: tempService,
-                    decoration: deco('Service'),
-                    dropdownColor: cs.surface,
-                    style: TextStyle(color: cs.onSurface),
-                    iconEnabledColor: cs.onSurfaceVariant,
-                    items: serviceKeys
-                        .map(
-                          (s) => DropdownMenuItem(
-                        value: s,
-                        child: Text(prettyServiceName(s)),
-                      ),
-                    )
-                        .toList(),
-                    onChanged: (value) {
-                      setStateDialog(() {
-                        tempService = value;
-                        tempKey = null;
-                      });
-                    },
-                  ),
-
-                  if (tempService != null && reactionsForService.isNotEmpty) ...[
-                    const SizedBox(height: 12),
-                    DropdownButtonFormField<String>(
-                      initialValue: tempKey,
-                      decoration: deco('Reaction'),
-                      dropdownColor: cs.surface,
-                      style: TextStyle(color: cs.onSurface),
-                      iconEnabledColor: cs.onSurfaceVariant,
-                      items: reactionsForService
-                          .map(
-                            (reaction) => DropdownMenuItem(
-                          value: reaction.$1,
-                          child: Text(reaction.$1),
-                        ),
-                      )
-                          .toList(),
-                      onChanged: (value) {
-                        setStateDialog(() {
-                          tempKey = value;
-                        });
-                      },
-                    ),
-                  ] else if (tempService != null && reactionsForService.isEmpty)
-                    Padding(
-                      padding: const EdgeInsets.only(top: 12),
-                      child: Text(
-                        'No reactions available for this service',
-                        style: TextStyle(color: cs.onSurfaceVariant),
-                      ),
-                    ),
-                ],
-              ),
-              actions: [
-                TextButton(
-                  onPressed: () => Navigator.of(ctx).pop(),
-                  child: Text('Cancel', style: TextStyle(color: cs.primary)),
-                ),
-                ElevatedButton(
-                  onPressed: (tempService != null && tempKey != null)
-                      ? () {
-                    setState(() {
-                      _reactionService = tempService;
-                      _reactionKey = tempKey;
-                      _clearReactionParamsNotApplicable();
-                    });
-                    Navigator.of(ctx).pop();
-                  }
-                      : null,
-                  child: const Text('Use'),
-                ),
-              ],
-            );
-          },
-        );
-      },
-    );
-  }
-
-  String _describeSelectedAction() {
-    if (_actionService == null || _actionKey == null) {
-      return 'Tap to choose action...';
-    }
-    return '${prettyServiceName(_actionService!)} • $_actionKey';
-  }
-
-  String _describeSelectedReaction() {
-    if (_reactionService == null || _reactionKey == null) {
-      return 'Tap to choose reaction...';
-    }
-    return '${prettyServiceName(_reactionService!)} • $_reactionKey';
   }
 
   void _showError(String msg) {
@@ -585,6 +529,15 @@ class _CreateAreaScreenState extends State<CreateAreaScreen> {
   Widget build(BuildContext context) {
     final theme = Theme.of(context);
     final cs = theme.colorScheme;
+
+    // build schemas (or empty) for current selection
+    final actionSchema = (_actionServiceId != null && _actionId != null)
+        ? _inputSchema(_findAction(_actionServiceId!, _actionId!))
+        : const <dynamic>[];
+
+    final reactionSchema = (_reactionServiceId != null && _reactionId != null)
+        ? _inputSchema(_findReaction(_reactionServiceId!, _reactionId!))
+        : const <dynamic>[];
 
     return Scaffold(
       appBar: AppBar(
@@ -637,7 +590,7 @@ class _CreateAreaScreenState extends State<CreateAreaScreen> {
               textAlign: TextAlign.center,
               style: theme.textTheme.titleMedium?.copyWith(
                 fontWeight: FontWeight.bold,
-                color: Theme.of(context).colorScheme.onSurface,
+                color: cs.onSurface,
               ),
             ),
 
@@ -652,46 +605,11 @@ class _CreateAreaScreenState extends State<CreateAreaScreen> {
               ],
             ),
 
-            if (_actionKey == 'new_email') ...[
-              const SizedBox(height: 8),
-              TextField(
-                controller: _fromController,
-                decoration: const InputDecoration(
-                  labelText: 'Only when email is from (optional)',
-                  hintText: 'someone@example.com',
-                ),
-              ),
-            ],
-
-            if (_actionKey == 'new_issue' || _actionKey == 'new_merge_request') ...[
-              const SizedBox(height: 8),
-              TextField(
-                controller: _gitlabProjectIdController,
-                decoration: const InputDecoration(
-                  labelText: 'GitLab projectId (optional filter)',
-                  hintText: 'e.g. 12345678',
-                ),
-                keyboardType: TextInputType.number,
-              ),
-              const SizedBox(height: 8),
-              TextField(
-                controller: _gitlabContainsController,
-                decoration: const InputDecoration(
-                  labelText: 'Title contains (optional)',
-                  hintText: 'e.g. WIP',
-                ),
-              ),
-              if (_actionKey == 'new_merge_request') ...[
-                const SizedBox(height: 8),
-                TextField(
-                  controller: _gitlabTargetBranchController,
-                  decoration: const InputDecoration(
-                    labelText: 'Target branch (optional)',
-                    hintText: 'main',
-                  ),
-                ),
-              ],
-            ],
+            ..._buildParamFields(
+              context: context,
+              schema: actionSchema,
+              ctrls: _actionParamCtrls,
+            ),
 
             const SizedBox(height: 24),
             Text(
@@ -699,9 +617,10 @@ class _CreateAreaScreenState extends State<CreateAreaScreen> {
               textAlign: TextAlign.center,
               style: theme.textTheme.titleMedium?.copyWith(
                 fontWeight: FontWeight.bold,
-                color: Theme.of(context).colorScheme.onSurface,
+                color: cs.onSurface,
               ),
             ),
+
             const SizedBox(height: 8),
             Row(
               mainAxisAlignment: MainAxisAlignment.center,
@@ -713,121 +632,11 @@ class _CreateAreaScreenState extends State<CreateAreaScreen> {
               ],
             ),
 
-            if (_reactionKey == 'send_email') ...[
-              const SizedBox(height: 8),
-              TextField(
-                controller: _toController,
-                decoration: const InputDecoration(
-                  labelText: 'Send email to',
-                  hintText: 'you@example.com',
-                ),
-              ),
-              const SizedBox(height: 8),
-              TextField(
-                controller: _subjectController,
-                decoration: const InputDecoration(
-                  labelText: 'Subject',
-                ),
-              ),
-              const SizedBox(height: 8),
-              TextField(
-                controller: _textController,
-                decoration: const InputDecoration(
-                  labelText: 'Message body',
-                ),
-                maxLines: 3,
-              ),
-            ],
-
-            if (_reactionKey == 'upload_text_file') ...[
-              const SizedBox(height: 8),
-              TextField(
-                controller: _dropboxPathController,
-                decoration: const InputDecoration(
-                  labelText: 'Dropbox path',
-                  hintText: '/area-test/test.txt',
-                ),
-              ),
-              const SizedBox(height: 8),
-              TextField(
-                controller: _dropboxContentController,
-                decoration: const InputDecoration(
-                  labelText: 'File content',
-                  hintText: 'Hello from AREA!',
-                ),
-                maxLines: 3,
-              ),
-            ],
-
-            if (_reactionKey == 'create_shared_link') ...[
-              const SizedBox(height: 8),
-              TextField(
-                controller: _dropboxPathController,
-                decoration: const InputDecoration(
-                  labelText: 'Dropbox path',
-                  hintText: '/foo/bar.txt',
-                ),
-              ),
-            ],
-
-            if (_reactionKey == 'create_issue') ...[
-              const SizedBox(height: 8),
-              TextField(
-                controller: _gitlabIssueProjectIdController,
-                decoration: const InputDecoration(
-                  labelText: 'GitLab projectId',
-                  hintText: 'e.g. 12345678',
-                ),
-                keyboardType: TextInputType.number,
-              ),
-              const SizedBox(height: 8),
-              TextField(
-                controller: _gitlabIssueTitleController,
-                decoration: const InputDecoration(
-                  labelText: 'Issue title',
-                  hintText: 'e.g. Review MR !42',
-                ),
-              ),
-              const SizedBox(height: 8),
-              TextField(
-                controller: _gitlabIssueDescriptionController,
-                decoration: const InputDecoration(
-                  labelText: 'Issue description (optional)',
-                  hintText: 'Details...',
-                ),
-                maxLines: 3,
-              ),
-            ],
-
-            if (_reactionKey == 'comment_merge_request') ...[
-              const SizedBox(height: 8),
-              TextField(
-                controller: _gitlabMrProjectIdController,
-                decoration: const InputDecoration(
-                  labelText: 'GitLab projectId',
-                  hintText: 'e.g. 12345678',
-                ),
-                keyboardType: TextInputType.number,
-              ),
-              const SizedBox(height: 8),
-              TextField(
-                controller: _gitlabMrIidController,
-                decoration: const InputDecoration(
-                  labelText: 'Merge Request IID',
-                  hintText: 'e.g. 42',
-                ),
-                keyboardType: TextInputType.number,
-              ),
-              const SizedBox(height: 8),
-              TextField(
-                controller: _gitlabMrCommentController,
-                decoration: const InputDecoration(
-                  labelText: 'Comment body',
-                  hintText: 'e.g. Please address review comments.',
-                ),
-                maxLines: 3,
-              ),
-            ],
+            ..._buildParamFields(
+              context: context,
+              schema: reactionSchema,
+              ctrls: _reactionParamCtrls,
+            ),
 
             const SizedBox(height: 32),
             SizedBox(
@@ -896,32 +705,5 @@ class _ServiceBox extends StatelessWidget {
         ),
       ),
     );
-  }
-}
-
-String prettyServiceName(String key) {
-  switch (key) {
-    case 'google':
-      return 'Gmail';
-    case 'gmail':
-      return 'Gmail';
-    case 'instagram':
-      return 'Instagram';
-    case 'clock':
-      return 'Clock';
-    case 'github':
-      return 'GitHub';
-    case 'gitlab':
-      return 'GitLab';
-    case 'weather':
-      return 'Weather';
-    case 'slack':
-      return 'Slack';
-    case 'twitter':
-      return 'Twitter';
-    case 'dropbox':
-      return 'Dropbox';
-    default:
-      return key;
   }
 }

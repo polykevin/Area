@@ -2,8 +2,25 @@ export const sendMessageReaction = {
   id: "send_slack_message",
   name: "Send a Slack Message",
   displayName: 'Send Message',
-  description: 'Sends a message to the selected conversation or recipient.'
-
+  description: 'Sends a message to the selected conversation or recipient.',
+  input: [
+    {
+      key: 'channel',
+      label: 'Channel / conversation',
+      type: 'string',
+      required: true,
+      placeholder: 'general',
+      helpText: 'Where to send the message.',
+    },
+    {
+      key: 'text',
+      label: 'Message',
+      type: 'string',
+      required: true,
+      placeholder: 'Hello!',
+      helpText: 'Message content to send.',
+    },
+  ],
 
   execute: async ({ token, params, slackService }) => {
     if (!token) {

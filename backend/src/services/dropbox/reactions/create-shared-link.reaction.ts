@@ -6,7 +6,17 @@ export const createSharedLinkReaction = {
   id: 'create_shared_link',
   name: 'Create a Shared Link',
   displayName: 'Create Shared Link',
-  description: 'Creates a shareable link for the selected file.'
+  description: 'Creates a shareable link for the selected file.',
+  input: [
+    {
+      key: 'path',
+      label: 'File path',
+      type: 'string',
+      required: true,
+      placeholder: '/my-folder/file.txt',
+      helpText: 'Path of the file to share.',
+    },
+  ],
 
   execute: async ({ token, params, dropboxService }) => {
     if (!token) {

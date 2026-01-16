@@ -2,7 +2,25 @@ export const uploadTextFileReaction = {
   id: 'upload_text_file',
   name: 'Upload a Text File',
   displayName: 'Upload Text File',
-  description: 'Uploads a new text file with the provided content.'
+  description: 'Uploads a new text file with the provided content.',
+  input: [
+    {
+      key: 'path',
+      label: 'Destination path',
+      type: 'string',
+      required: true,
+      placeholder: '/notes/todo.txt',
+      helpText: 'Full destination path including filename.',
+    },
+    {
+      key: 'content',
+      label: 'File content',
+      type: 'string',
+      required: true,
+      placeholder: 'Hello world',
+      helpText: 'Text content to write into the file.',
+    },
+  ],
 
   execute: async ({ token, params, dropboxService }) => {
     if (!token) {

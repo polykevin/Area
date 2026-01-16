@@ -151,7 +151,7 @@ class _ServicesScreenState extends State<ServicesScreen> {
                               builder: (_) => ServiceScreen(
                                 service: s,
                                 bannerColor: Colors.grey.shade300,
-                                logoAsset: "assets/icons/${s.name}.png",
+                                logoAsset: "assets/icons/${s.id}.png",
                               ),
                             ),
                           );
