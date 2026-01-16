@@ -5,9 +5,12 @@ import { AreasModule } from '../areas/area.module';
 import { ServiceRegistry } from './service.registry';
 import { AutomationEngine } from '../automation/engine.service';
 import { GoogleService } from './google/google.service';
+import { DiscordService } from '../services/discord/discord.service';
 import { ServiceAuthRepository } from '../auth/service-auth.repository';
 import { NewEmailHook } from './google/hooks/new-email.hook';
 import { googleIntegration } from './google/google.integration';
+import { discordIntegration } from '../services/discord/discord.integration';
+import { CalendarEventHook } from './google/hooks/calendar-event.hook';
 
 import { InstagramModule } from './instagram/instagram.module';
 import { InstagramService } from './instagram/instagram.service';
@@ -52,19 +55,11 @@ import { every } from 'rxjs';
   providers: [
     ServiceRegistry,
     AutomationEngine,
-
-//     GoogleService,
-//     InstagramService,
-//     WeatherService,
-//     TwitterService,
-//
-//     ServiceAuthRepository,
-//
-//     NewEmailHook,
-//     NewMediaHook,
-//     NewWeatherDataHook,
-//     NewTweetHook,
-//     NewMentionHook,
+    GoogleService,
+    DiscordService,
+    ServiceAuthRepository,
+    NewEmailHook,
+    CalendarEventHook,
   ],
   exports: [
     ServiceRegistry,
@@ -127,8 +122,20 @@ export class IntegrationModule {
       clockIntegration(clockService, authRepo, engine, everyMinuteHook, everyDayAtHook),
     );
 
+    private discordService: DiscordService,
+    private authRepo: ServiceAuthRepository,
+    private engine: AutomationEngine,
+    private newEmailHook: NewEmailHook,
+    private calendarEventHook: CalendarEventHook,
+  ) {
+    newEmailHook.setEngine(engine);
+    calendarEventHook.setEngine(engine);
+  
     registry.register(
       slackIntegration(slackService, authRepo, engine, slackNewMessageHook)
+    );
+    registry.register(
+      discordIntegration(discordService)
     );
   }
 }

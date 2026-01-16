@@ -12,6 +12,7 @@ import { ScheduleModule } from '@nestjs/schedule';
 import { AboutController } from './about.controller';
 import { AppController } from './app.controller';
 import { AppService } from './app.service';
+import { ServicesModule } from "./services/services.module";
 
 @Module({
   imports: [
@@ -23,6 +24,7 @@ import { AppService } from './app.service';
     AuthModule,
     AreasModule,
     GoogleModule,
+    ServicesModule,
     IntegrationModule
   ],
   controllers: [AppController, AboutController],

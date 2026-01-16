@@ -1,9 +1,12 @@
 import { Injectable } from '@nestjs/common';
 import { PrismaService } from '../prisma/prisma.service';
+import { ServiceAuth } from '@prisma/client';
+import { Prisma } from '@prisma/client';
+
 
 @Injectable()
 export class ServiceAuthRepository {
-  constructor(private prisma: PrismaService) {}
+  constructor(private prisma: PrismaService) { }
 
   async saveOrUpdate(data: {
     userId: number;
@@ -45,6 +48,18 @@ export class ServiceAuthRepository {
       where: {
         userId_service: { userId, service },
       },
+    });
+  }
+
+  async update(userId: number, service: string, data: Prisma.ServiceAuthUpdateInput) {
+    return this.prisma.serviceAuth.update({
+      where: {
+        userId_service: {
+          userId,
+          service,
+        },
+      },
+      data,
     });
   }
 
@@ -91,8 +106,8 @@ export class ServiceAuthRepository {
 
     const existingMeta =
       existing?.metadata &&
-      typeof existing.metadata === 'object' &&
-      !Array.isArray(existing.metadata)
+        typeof existing.metadata === 'object' &&
+        !Array.isArray(existing.metadata)
         ? (existing.metadata as Record<string, any>)
         : {};
 

@@ -1,11 +1,13 @@
-import { IsString, IsObject } from "class-validator";
+import { IsString, IsObject, IsOptional, IsBoolean } from "class-validator";
+import { Prisma } from "@prisma/client";
 
 export class CreateAreaDto {
   @IsString()
   name: string;
 
+  @IsOptional()
   @IsString()
-  description: string;
+  description?: string;
 
   @IsString()
   actionService: string;
@@ -14,7 +16,7 @@ export class CreateAreaDto {
   actionType: string;
 
   @IsObject()
-  actionParams: any;
+  actionParams: Prisma.InputJsonValue;
 
   @IsString()
   reactionService: string;
@@ -23,5 +25,9 @@ export class CreateAreaDto {
   reactionType: string;
 
   @IsObject()
-  reactionParams: any;
+  reactionParams: Prisma.InputJsonValue;
+
+  @IsOptional()
+  @IsBoolean()
+  active?: boolean;
 }
