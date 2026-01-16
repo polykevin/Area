@@ -1,6 +1,8 @@
 export const createIssueReaction = {
   id: 'create_issue',
   name: 'Create an Issue',
+  displayName: 'Create Issue',
+  description: 'Creates a new issue in the selected repository.'
 
   execute: async ({ token, params, gitlabService }) => {
     if (!token) {

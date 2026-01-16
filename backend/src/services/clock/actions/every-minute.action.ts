@@ -2,6 +2,7 @@ export const everyMinuteAction = {
   id: 'clock.every_minute',
   name: 'clock.every_minute',
   displayName: 'Every minute',
+  description: 'Triggers every minute.'
   input: {},
   match(event: { actionService: string; actionType: string }) {
     return (

@@ -3,6 +3,8 @@ import { buildRawEmail } from '../utils/build-raw-email';
 export const sendEmailReaction = {
   id: "send_email",
   name: "Send an Email via Gmail",
+  displayName: 'Send Email',
+  description: 'Sends an email to the specified recipient.'
 
   execute: async ({ token, params, event, googleService }) => {
     if (!token) {

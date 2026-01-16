@@ -5,6 +5,8 @@ const logger = new Logger('CreateSharedLinkReaction');
 export const createSharedLinkReaction = {
   id: 'create_shared_link',
   name: 'Create a Shared Link',
+  displayName: 'Create Shared Link',
+  description: 'Creates a shareable link for the selected file.'
 
   execute: async ({ token, params, dropboxService }) => {
     if (!token) {

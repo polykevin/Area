@@ -1,6 +1,8 @@
 export const postTweetReaction = {
   id: 'post_tweet',
   name: 'Post a Tweet',
+  displayName: 'Post Tweet',
+  description: 'Publishes a new tweet to your account.'
 
   execute: async ({ token, params, twitterService }) => {
     if (!token) {

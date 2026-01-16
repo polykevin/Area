@@ -1,6 +1,8 @@
 export const newMergeRequestAction = {
   id: 'new_merge_request',
   name: 'New Merge Request Created',
+  displayName: 'New Merge Request',
+  description: 'Triggers when a new merge request is opened.'
 
   match: (payload, params) => {
     if (!params) return true;

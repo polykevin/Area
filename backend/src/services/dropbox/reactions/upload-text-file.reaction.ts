@@ -1,6 +1,8 @@
 export const uploadTextFileReaction = {
   id: 'upload_text_file',
   name: 'Upload a Text File',
+  displayName: 'Upload Text File',
+  description: 'Uploads a new text file with the provided content.'
 
   execute: async ({ token, params, dropboxService }) => {
     if (!token) {

@@ -1,6 +1,8 @@
 export const newIssueAction = {
   id: 'new_issue',
   name: 'New Issue Created',
+  displayName: 'New Issue Created',
+  description: 'Triggers when a new issue is created in the repository.'
 
   match: (payload, params) => {
     if (!params) return true;

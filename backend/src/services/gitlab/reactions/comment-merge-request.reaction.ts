@@ -1,6 +1,8 @@
 export const commentMergeRequestReaction = {
   id: 'comment_merge_request',
   name: 'Comment on a Merge Request',
+  displayName: 'Comment on Merge Request',
+  description: 'Adds a comment to an existing merge request.'
 
   execute: async ({ token, params, gitlabService }) => {
     if (!token) {

@@ -3,6 +3,8 @@ import { WeatherData } from '../weather.interface';
 export const logWeatherReaction = {
   id: 'log_weather',
   name: 'Log Weather Event',
+  displayName: 'Log Weather Data',
+  description: 'Logs the current weather data for later use or tracking.'
 
   execute: async ({ params, event, meta }: { params?: any; event?: WeatherData; meta?: any }) => {
     if (!event) {

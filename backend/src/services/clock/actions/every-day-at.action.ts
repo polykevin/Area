@@ -2,6 +2,7 @@ export const everyDayAtAction = {
   id: 'clock.every_day_at',
   name: 'clock.every_day_at',
   displayName: 'Every day at…',
+  description: 'Triggers every day at a specific hour and minute.',
 
   input: {
     hour: { type: 'number', required: true },

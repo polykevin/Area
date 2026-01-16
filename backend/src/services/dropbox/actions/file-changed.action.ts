@@ -1,6 +1,8 @@
 export const fileChangedAction = {
   id: 'file_changed',
   name: 'File Changed',
+  displayName: 'File Changed',
+  description: 'Triggers when an existing file is modified.'
 
   match: (payload, params) => {
     if (!params) return true;

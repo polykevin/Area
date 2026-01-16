@@ -1,6 +1,8 @@
 export const newMessageAction = {
   id: 'new_message',
   name: 'New Slack Message',
+  displayName: 'New Message',
+  description: 'Triggers when a new message is received.'
   match: (payload, params) => {
     if (!params) return true;
 

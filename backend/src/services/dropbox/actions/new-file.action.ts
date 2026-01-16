@@ -1,6 +1,8 @@
 export const newFileAction = {
   id: 'new_file',
   name: 'New File Added',
+  displayName: 'New File Added',
+  description: 'Triggers when a new file is added.'
 
   match: (payload, params) => {
     if (!params) return true;

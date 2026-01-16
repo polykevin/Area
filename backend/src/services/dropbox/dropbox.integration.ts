@@ -9,6 +9,8 @@ export function dropboxIntegration(dropboxService, authRepo, engine, newFileHook
   return {
     id: 'dropbox',
     displayName: 'Dropbox',
+    color: '#0061FF',
+    iconKey: 'dropbox',
 
     instance: {
       dropboxService,

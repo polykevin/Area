@@ -15,6 +15,8 @@ export function gitlabIntegration(
   return {
     id: 'gitlab',
     displayName: 'GitLab',
+    color: '#FC6D26',
+    iconKey: 'gitlab',
 
     instance: {
       gitlabService,
