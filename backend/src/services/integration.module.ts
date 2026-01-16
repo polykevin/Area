@@ -9,6 +9,10 @@ import { DiscordService } from '../services/discord/discord.service';
 import { ServiceAuthRepository } from '../auth/service-auth.repository';
 import { NewEmailHook } from './google/hooks/new-email.hook';
 import { googleIntegration } from './google/google.integration';
+import { NotionService } from './notion/notion.service';
+import { notionIntegration } from './notion/notion.integration';
+import { NotionModule } from './notion/notion.module';
+import { NotionCreatePageAction } from './notion/action/create-page.action';
 import { discordIntegration } from '../services/discord/discord.integration';
 import { CalendarEventHook } from './google/hooks/calendar-event.hook';
 
@@ -51,6 +55,7 @@ import { every } from 'rxjs';
     SlackModule,
     AuthModule,
     AreasModule,
+    NotionModule,
   ],
   providers: [
     ServiceRegistry,
@@ -95,7 +100,9 @@ export class IntegrationModule {
 
     private authRepo: ServiceAuthRepository,
     private engine: AutomationEngine,
-    
+     
+    private notionService: NotionService,
+     
   ) {
     newEmailHook.setEngine(engine);
     newMediaHook.setEngine(engine);
@@ -133,6 +140,9 @@ export class IntegrationModule {
     );
     registry.register(
       discordIntegration(discordService)
+    );
+     registry.register(
+      notionIntegration(notionService)
     );
   }
 }
