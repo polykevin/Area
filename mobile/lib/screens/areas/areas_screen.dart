@@ -170,7 +170,7 @@ class _AreaRow extends StatelessWidget {
               children: [
                 Switch(
                   value: isActive,
-                  activeColor: Colors.green,
+                  activeThumbColor: Colors.green,
                   onChanged: (_) {
                     context.read<AreasProvider>().toggleArea(area.id);
                   },

@@ -8,7 +8,7 @@ export class GoogleOAuthProvider {
     `${process.env.PUBLIC_BASE_URL}/oauth/google/service-callback`
   );
 
-  getAuthUrl(state?: string, extraParams?: Record<string, any>) {
+  getAuthUrl(state?: string) {
     return this.oauth2.generateAuthUrl({
       access_type: 'offline',
       prompt: 'consent',

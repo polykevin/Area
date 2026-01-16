@@ -36,6 +36,7 @@ export class NewMediaHook {
       const lastMediaId = rawMeta.lastMediaId ?? null;
       //console.log('[NewMediaHook] user', userId, 'lastMediaId=', lastMediaId);
 
+
       const media = await this.instagram.listLatestMedia(userId, 5);
       //console.log('[NewMediaHook] user', userId, 'mediaCount=', media.length);
 

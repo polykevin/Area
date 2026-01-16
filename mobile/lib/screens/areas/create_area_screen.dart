@@ -186,7 +186,7 @@ class _CreateAreaScreenState extends State<CreateAreaScreen> {
                 mainAxisSize: MainAxisSize.min,
                 children: [
                   DropdownButtonFormField<String>(
-                    value: tempService,
+                    initialValue: tempService,
                     decoration: deco('Service'),
                     dropdownColor: cs.surface,
                     style: TextStyle(color: cs.onSurface),
@@ -211,7 +211,7 @@ class _CreateAreaScreenState extends State<CreateAreaScreen> {
                   if (tempService != null && actionsForService.isNotEmpty) ...[
                     const SizedBox(height: 12),
                     DropdownButtonFormField<String>(
-                      value: tempKey,
+                      initialValue: tempKey,
                       decoration: deco('Action'),
                       dropdownColor: cs.surface,
                       style: TextStyle(color: cs.onSurface),
@@ -315,7 +315,7 @@ class _CreateAreaScreenState extends State<CreateAreaScreen> {
                 mainAxisSize: MainAxisSize.min,
                 children: [
                   DropdownButtonFormField<String>(
-                    value: tempService,
+                    initialValue: tempService,
                     decoration: deco('Service'),
                     dropdownColor: cs.surface,
                     style: TextStyle(color: cs.onSurface),
@@ -340,7 +340,7 @@ class _CreateAreaScreenState extends State<CreateAreaScreen> {
                   if (tempService != null && reactionsForService.isNotEmpty) ...[
                     const SizedBox(height: 12),
                     DropdownButtonFormField<String>(
-                      value: tempKey,
+                      initialValue: tempKey,
                       decoration: deco('Reaction'),
                       dropdownColor: cs.surface,
                       style: TextStyle(color: cs.onSurface),
