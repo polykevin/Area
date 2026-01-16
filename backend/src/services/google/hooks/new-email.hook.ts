@@ -19,7 +19,7 @@ export class NewEmailHook {
   }
 
   @Cron('*/20 * * * * *')
-  async poll() {
+  async check() {
     if (!this.engine) return;
 
     const subscribed = await this.authRepo.findUsersWithService('google');

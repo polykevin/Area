@@ -1,6 +1,7 @@
 import { newEmailAction } from './actions/new-email.action';
 import { NewEmailHook } from './hooks/new-email.hook';
 import { sendEmailReaction } from './reactions/send-email.reaction';
+import { calendarEventCreatedAction } from './actions/calendar-event.action';
 
 export function googleIntegration(googleService, authRepo, engine, newEmailHook) {
   return {
@@ -15,6 +16,7 @@ export function googleIntegration(googleService, authRepo, engine, newEmailHook)
 
     actions: [
       newEmailAction,
+      calendarEventCreatedAction,
     ],
 
     reactions: [

@@ -1,21 +1,52 @@
 "use client";
 
 import Link from "next/link";
-import { useState } from "react";
+import { useEffect, useId, useRef, useState } from "react";
 import { useAuth } from "@/components/AuthProvider";
 
 export function Navbar() {
   const { user, isReady } = useAuth();
   const [isMenuOpen, setIsMenuOpen] = useState(false);
-
-  if (!isReady) return null;
+  const menuId = useId();
+  const menuRef = useRef<HTMLDivElement | null>(null);
 
   const displayName =
     user?.name || (user?.email ? user.email.split("@")[0] : "");
   const initial = displayName ? displayName.charAt(0).toUpperCase() : "?";
 
+  // Close on outside click (only when menu is open)
+  useEffect(() => {
+    function onDocMouseDown(e: MouseEvent) {
+      const target = e.target as Node | null;
+      if (menuRef.current && target && !menuRef.current.contains(target)) {
+        setIsMenuOpen(false);
+      }
+    }
+
+    if (isMenuOpen) {
+      document.addEventListener("mousedown", onDocMouseDown);
+    }
+
+    return () => {
+      document.removeEventListener("mousedown", onDocMouseDown);
+    };
+  }, [isMenuOpen]);
+
+  // Close on Escape
+  useEffect(() => {
+    function onKeyDown(e: KeyboardEvent) {
+      if (e.key === "Escape") setIsMenuOpen(false);
+    }
+    document.addEventListener("keydown", onKeyDown);
+    return () => document.removeEventListener("keydown", onKeyDown);
+  }, []);
+
+  // ✅ Only AFTER hooks: conditional render
+  if (!isReady) return null;
+
   return (
     <nav
+      aria-label="Primary"
       style={{
         width: "100%",
         padding: "1rem 3rem",
@@ -38,18 +69,11 @@ export function Navbar() {
           textDecoration: "none",
         }}
       >
-        ⚡ AREA
+        <span aria-hidden="true">⚡</span> AREA
       </Link>
 
       {user ? (
-        <div
-          style={{
-            display: "flex",
-            gap: "1.5rem",
-            alignItems: "center",
-          }}
-        >
-          {/* 🔵 Animations UNIQUEMENT ICI */}
+        <div style={{ display: "flex", gap: "1.5rem", alignItems: "center" }}>
           <Link href="/services" className="nav-link-main">
             Services
           </Link>
@@ -58,11 +82,13 @@ export function Navbar() {
             My AREA
           </Link>
 
-          {/* Menu profil */}
-          <div style={{ position: "relative" }}>
+          <div style={{ position: "relative" }} ref={menuRef}>
             <button
               type="button"
               onClick={() => setIsMenuOpen((v) => !v)}
+              aria-haspopup="menu"
+              aria-expanded={isMenuOpen}
+              aria-controls={menuId}
               style={{
                 display: "flex",
                 alignItems: "center",
@@ -75,6 +101,7 @@ export function Navbar() {
               }}
             >
               <div
+                aria-hidden="true"
                 style={{
                   width: 28,
                   height: 28,
@@ -103,11 +130,15 @@ export function Navbar() {
               >
                 {displayName}
               </span>
+
+              <span className="sr-only">Open profile menu</span>
             </button>
 
-            {/* Dropdown */}
             {isMenuOpen && (
               <div
+                id={menuId}
+                role="menu"
+                aria-label="Profile menu"
                 style={{
                   position: "absolute",
                   right: 0,
@@ -131,12 +162,7 @@ export function Navbar() {
                     gap: "0.15rem",
                   }}
                 >
-                  <span
-                    style={{
-                      fontSize: "0.85rem",
-                      color: "#9ca3af",
-                    }}
-                  >
+                  <span style={{ fontSize: "0.85rem", color: "#cbd5e1" }}>
                     Signed in as
                   </span>
                   <span
@@ -152,6 +178,7 @@ export function Navbar() {
 
                 <Link
                   href="/profile"
+                  role="menuitem"
                   style={{
                     display: "block",
                     padding: "0.45rem 0.25rem",
@@ -181,18 +208,7 @@ export function Navbar() {
           </Link>
 
           <Link href="/register">
-            <button
-              style={{
-                padding: "0.45rem 0.95rem",
-                borderRadius: 999,
-                border: "none",
-                background: "#2563eb",
-                color: "#fff",
-                fontWeight: 500,
-                cursor: "pointer",
-                fontSize: "0.85rem",
-              }}
-            >
+            <button type="button" className="btn-nav-primary">
               Get Started
             </button>
           </Link>
