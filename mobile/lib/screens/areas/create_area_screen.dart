@@ -1,20 +1,8 @@
-import 'package:client_mobile/widgets/app_text_field.dart';
 import 'package:flutter/material.dart';
 import 'package:provider/provider.dart';
 
 import '../../providers/areas_provider.dart';
-
-const kActionOptions = {
-  'google': [
-    {'key': 'new_email', 'label': 'New email received'},
-  ],
-};
-
-const kReactionOptions = {
-  'google': [
-    {'key': 'send_email', 'label': 'Send email'},
-  ],
-};
+import '../../providers/services_provider.dart';
 
 class CreateAreaScreen extends StatefulWidget {
   const CreateAreaScreen({super.key});
@@ -33,16 +21,22 @@ class _CreateAreaScreenState extends State<CreateAreaScreen> {
   final _areaNameController = TextEditingController();
   final _fromController = TextEditingController();
   final _toController = TextEditingController();
-  final _subjectController = TextEditingController();
-  final _textController = TextEditingController();
+  final _subjectController = TextEditingController(text: 'AREA test');
+  final _textController = TextEditingController(
+    text: 'You received a new email matching your AREA rule.',
+  );
 
   bool _submitting = false;
 
   @override
   void initState() {
     super.initState();
-    _actionService = 'google';
-    _reactionService = 'google';
+    // Load services if not already loaded
+    Future.microtask(() {
+      context.read<ServicesProvider>().loadServices();
+    });
+    _actionService = null;
+    _reactionService = null;
   }
 
   @override
@@ -55,6 +49,27 @@ class _CreateAreaScreenState extends State<CreateAreaScreen> {
     super.dispose();
   }
 
+  /// Get list of actions for a given service name
+  List<(String name, String description)> _getActionsForService(String serviceName) {
+    final servicesProvider = context.read<ServicesProvider>();
+    final service = servicesProvider.services.firstWhere(
+      (s) => s.name == serviceName,
+      orElse: () => throw Exception('Service not found: $serviceName'),
+    );
+    return service.actions.map((a) => (a.name, a.description)).toList();
+  }
+
+  /// Get list of reactions for a given service name
+  List<(String name, String description)> _getReactionsForService(
+      String serviceName) {
+    final servicesProvider = context.read<ServicesProvider>();
+    final service = servicesProvider.services.firstWhere(
+      (s) => s.name == serviceName,
+      orElse: () => throw Exception('Service not found: $serviceName'),
+    );
+    return service.reactions.map((r) => (r.name, r.description)).toList();
+  }
+
   Future<void> _submit() async {
     if (_actionService == null || _actionKey == null) {
       _showError('Please choose an action.');
@@ -64,7 +79,9 @@ class _CreateAreaScreenState extends State<CreateAreaScreen> {
       _showError('Please choose a reaction.');
       return;
     }
-    if (_toController.text.trim().isEmpty) {
+
+    // Validate only what is required for the selected reaction
+    if (_reactionKey == 'send_email' && _toController.text.trim().isEmpty) {
       _showError('Please enter a recipient email for the reaction.');
       return;
     }
@@ -81,15 +98,17 @@ class _CreateAreaScreenState extends State<CreateAreaScreen> {
         : _areaNameController.text.trim();
 
     final actionParams = <String, dynamic>{};
-    if (_fromController.text.trim().isNotEmpty) {
+    if (actionType == 'new_email' && _fromController.text.trim().isNotEmpty) {
       actionParams['from'] = _fromController.text.trim();
     }
 
-    final reactionParams = <String, dynamic>{
-      'to': _toController.text.trim(),
-      'subject': _subjectController.text.trim(),
-      'text': _textController.text.trim(),
-    };
+    // Build reaction params based on selected reaction
+    final reactionParams = <String, dynamic>{};
+    if (reactionType == 'send_email') {
+      reactionParams['to'] = _toController.text.trim();
+      reactionParams['subject'] = _subjectController.text.trim();
+      reactionParams['text'] = _textController.text.trim();
+    }
 
     setState(() {
       _submitting = true;
@@ -123,28 +142,56 @@ class _CreateAreaScreenState extends State<CreateAreaScreen> {
   }
 
   void _pickAction() {
+    final servicesProvider = context.read<ServicesProvider>();
+    final services = servicesProvider.services;
+
     showDialog(
       context: context,
       builder: (ctx) {
-        String? tempService = _actionService ?? 'google';
+        String? tempService = _actionService; // start null
         String? tempKey = _actionKey;
 
-        final services = kActionOptions.keys.toList();
+        final serviceKeys = services.map((s) => s.name).toList();
 
         return StatefulBuilder(
           builder: (context, setStateDialog) {
-            final actionsForService =
-                kActionOptions[tempService] ?? <Map<String, String>>[];
+            final theme = Theme.of(context);
+            final cs = theme.colorScheme;
+
+            InputDecoration deco(String label) => InputDecoration(
+              labelText: label,
+              labelStyle: TextStyle(color: cs.onSurfaceVariant),
+            );
+
+            List<(String name, String description)> actionsForService = [];
+            if (tempService != null) {
+              try {
+                actionsForService = _getActionsForService(tempService!);
+              } catch (e) {
+                // Service not found, leave empty
+              }
+            }
 
             return AlertDialog(
+              backgroundColor: cs.surface,
+              titleTextStyle: theme.textTheme.titleLarge?.copyWith(
+                color: cs.onSurface,
+                fontWeight: FontWeight.w600,
+              ),
+              contentTextStyle: theme.textTheme.bodyMedium?.copyWith(
+                color: cs.onSurface,
+              ),
               title: const Text('Choose action'),
               content: Column(
                 mainAxisSize: MainAxisSize.min,
                 children: [
                   DropdownButtonFormField<String>(
-                    value: tempService,
-                    decoration: const InputDecoration(labelText: 'Service'),
-                    items: services
+                    initialValue: tempService,
+                    decoration: deco('Service'),
+                    dropdownColor: cs.surface,
+                    style: TextStyle(color: cs.onSurface),
+                    iconEnabledColor: cs.onSurfaceVariant,
+                    items: serviceKeys
                         .map(
                           (s) => DropdownMenuItem(
                         value: s,
@@ -159,30 +206,44 @@ class _CreateAreaScreenState extends State<CreateAreaScreen> {
                       });
                     },
                   ),
-                  const SizedBox(height: 12),
-                  DropdownButtonFormField<String>(
-                    value: tempKey,
-                    decoration: const InputDecoration(labelText: 'Action'),
-                    items: actionsForService
-                        .map(
-                          (opt) => DropdownMenuItem(
-                        value: opt['key'] as String,
-                        child: Text(opt['label'] as String),
+
+                  // Only show after service chosen
+                  if (tempService != null && actionsForService.isNotEmpty) ...[
+                    const SizedBox(height: 12),
+                    DropdownButtonFormField<String>(
+                      initialValue: tempKey,
+                      decoration: deco('Action'),
+                      dropdownColor: cs.surface,
+                      style: TextStyle(color: cs.onSurface),
+                      iconEnabledColor: cs.onSurfaceVariant,
+                      items: actionsForService
+                          .map(
+                            (action) => DropdownMenuItem(
+                          value: action.$1,
+                          child: Text(action.$1),
+                        ),
+                      )
+                          .toList(),
+                      onChanged: (value) {
+                        setStateDialog(() {
+                          tempKey = value;
+                        });
+                      },
+                    ),
+                  ] else if (tempService != null && actionsForService.isEmpty)
+                    Padding(
+                      padding: const EdgeInsets.only(top: 12),
+                      child: Text(
+                        'No actions available for this service',
+                        style: TextStyle(color: cs.onSurfaceVariant),
                       ),
-                    )
-                        .toList(),
-                    onChanged: (value) {
-                      setStateDialog(() {
-                        tempKey = value;
-                      });
-                    },
-                  ),
+                    ),
                 ],
               ),
               actions: [
                 TextButton(
                   onPressed: () => Navigator.of(ctx).pop(),
-                  child: const Text('Cancel'),
+                  child: Text('Cancel', style: TextStyle(color: cs.primary)),
                 ),
                 ElevatedButton(
                   onPressed: (tempService != null && tempKey != null)
@@ -190,6 +251,11 @@ class _CreateAreaScreenState extends State<CreateAreaScreen> {
                     setState(() {
                       _actionService = tempService;
                       _actionKey = tempKey;
+
+                      // Clear action params that no longer apply
+                      if (_actionKey != 'new_email') {
+                        _fromController.clear();
+                      }
                     });
                     Navigator.of(ctx).pop();
                   }
@@ -205,28 +271,56 @@ class _CreateAreaScreenState extends State<CreateAreaScreen> {
   }
 
   void _pickReaction() {
+    final servicesProvider = context.read<ServicesProvider>();
+    final services = servicesProvider.services;
+
     showDialog(
       context: context,
       builder: (ctx) {
-        String? tempService = _reactionService ?? 'google';
+        String? tempService = _reactionService; // start null
         String? tempKey = _reactionKey;
 
-        final services = kReactionOptions.keys.toList();
+        final serviceKeys = services.map((s) => s.name).toList();
 
         return StatefulBuilder(
           builder: (context, setStateDialog) {
-            final reactionsForService =
-                kReactionOptions[tempService] ?? <Map<String, String>>[];
+            final theme = Theme.of(context);
+            final cs = theme.colorScheme;
+
+            InputDecoration deco(String label) => InputDecoration(
+              labelText: label,
+              labelStyle: TextStyle(color: cs.onSurfaceVariant),
+            );
+
+            List<(String name, String description)> reactionsForService = [];
+            if (tempService != null) {
+              try {
+                reactionsForService = _getReactionsForService(tempService!);
+              } catch (e) {
+                // Service not found, leave empty
+              }
+            }
 
             return AlertDialog(
+              backgroundColor: cs.surface,
+              titleTextStyle: theme.textTheme.titleLarge?.copyWith(
+                color: cs.onSurface,
+                fontWeight: FontWeight.w600,
+              ),
+              contentTextStyle: theme.textTheme.bodyMedium?.copyWith(
+                color: cs.onSurface,
+              ),
               title: const Text('Choose reaction'),
               content: Column(
                 mainAxisSize: MainAxisSize.min,
                 children: [
                   DropdownButtonFormField<String>(
-                    value: tempService,
-                    decoration: const InputDecoration(labelText: 'Service'),
-                    items: services
+                    initialValue: tempService,
+                    decoration: deco('Service'),
+                    dropdownColor: cs.surface,
+                    style: TextStyle(color: cs.onSurface),
+                    iconEnabledColor: cs.onSurfaceVariant,
+                    items: serviceKeys
                         .map(
                           (s) => DropdownMenuItem(
                         value: s,
@@ -241,30 +335,45 @@ class _CreateAreaScreenState extends State<CreateAreaScreen> {
                       });
                     },
                   ),
-                  const SizedBox(height: 12),
-                  DropdownButtonFormField<String>(
-                    value: tempKey,
-                    decoration: const InputDecoration(labelText: 'Reaction'),
-                    items: reactionsForService
-                        .map(
-                          (opt) => DropdownMenuItem(
-                        value: opt['key'] as String,
-                        child: Text(opt['label'] as String),
+
+                  // Only show after service chosen
+                  if (tempService != null && reactionsForService.isNotEmpty) ...[
+                    const SizedBox(height: 12),
+                    DropdownButtonFormField<String>(
+                      initialValue: tempKey,
+                      decoration: deco('Reaction'),
+                      dropdownColor: cs.surface,
+                      style: TextStyle(color: cs.onSurface),
+                      iconEnabledColor: cs.onSurfaceVariant,
+                      items: reactionsForService
+                          .map(
+                            (reaction) => DropdownMenuItem(
+                          value: reaction.$1,
+                          child: Text(reaction.$1),
+                        ),
+                      )
+                          .toList(),
+                      onChanged: (value) {
+                        setStateDialog(() {
+                          tempKey = value;
+                        });
+                      },
+                    ),
+                  ] else if (tempService != null &&
+                      reactionsForService.isEmpty)
+                    Padding(
+                      padding: const EdgeInsets.only(top: 12),
+                      child: Text(
+                        'No reactions available for this service',
+                        style: TextStyle(color: cs.onSurfaceVariant),
                       ),
-                    )
-                        .toList(),
-                    onChanged: (value) {
-                      setStateDialog(() {
-                        tempKey = value;
-                      });
-                    },
-                  ),
+                    ),
                 ],
               ),
               actions: [
                 TextButton(
                   onPressed: () => Navigator.of(ctx).pop(),
-                  child: const Text('Cancel'),
+                  child: Text('Cancel', style: TextStyle(color: cs.primary)),
                 ),
                 ElevatedButton(
                   onPressed: (tempService != null && tempKey != null)
@@ -272,6 +381,22 @@ class _CreateAreaScreenState extends State<CreateAreaScreen> {
                     setState(() {
                       _reactionService = tempService;
                       _reactionKey = tempKey;
+
+                      // Clear reaction params that no longer apply
+                      if (_reactionKey != 'send_email') {
+                        _toController.clear();
+                        _subjectController.clear();
+                        _textController.clear();
+                      } else {
+                        // Restore defaults if empty
+                        if (_subjectController.text.trim().isEmpty) {
+                          _subjectController.text = 'AREA test';
+                        }
+                        if (_textController.text.trim().isEmpty) {
+                          _textController.text =
+                              'You received a new email matching your AREA rule.';
+                        }
+                      }
                     });
                     Navigator.of(ctx).pop();
                   }
@@ -288,32 +413,18 @@ class _CreateAreaScreenState extends State<CreateAreaScreen> {
 
   String _describeSelectedAction() {
     if (_actionService == null || _actionKey == null) {
-      return 'Tap to choose...';
+      return 'Tap to choose action...';
     }
-    final label = _findActionLabel(_actionService!, _actionKey!);
-    return '${prettyServiceName(_actionService!)} • $label';
+    // Since action name is now directly stored in _actionKey, just return it with service
+    return '${prettyServiceName(_actionService!)} • $_actionKey';
   }
 
   String _describeSelectedReaction() {
     if (_reactionService == null || _reactionKey == null) {
-      return 'Tap to choose...';
+      return 'Tap to choose reaction...';
     }
-    final label = _findReactionLabel(_reactionService!, _reactionKey!);
-    return '${prettyServiceName(_reactionService!)} • $label';
-  }
-
-  String _findActionLabel(String service, String key) {
-    final list = kActionOptions[service] ?? [];
-    final found =
-    list.firstWhere((e) => e['key'] == key, orElse: () => {'label': key});
-    return found['label'] as String;
-  }
-
-  String _findReactionLabel(String service, String key) {
-    final list = kReactionOptions[service] ?? [];
-    final found =
-    list.firstWhere((e) => e['key'] == key, orElse: () => {'label': key});
-    return found['label'] as String;
+    // Since reaction name is now directly stored in _reactionKey, just return it with service
+    return '${prettyServiceName(_reactionService!)} • $_reactionKey';
   }
 
   void _showError(String msg) {
@@ -325,22 +436,26 @@ class _CreateAreaScreenState extends State<CreateAreaScreen> {
   @override
   Widget build(BuildContext context) {
     final theme = Theme.of(context);
+    final cs = theme.colorScheme;
 
     return Scaffold(
       appBar: AppBar(
         elevation: 0,
-        backgroundColor: Theme.of(context).colorScheme.surface,
+        backgroundColor: cs.surface,
         leading: IconButton(
-          icon: Icon(Icons.arrow_back, color: Colors.black),
+          icon: Icon(Icons.arrow_back, color: cs.onSurface),
           onPressed: () => Navigator.of(context).pop(),
         ),
         centerTitle: true,
         title: Text(
           'Create an AREA',
-          style: TextStyle(color: Theme.of(context).colorScheme.onSurface, fontWeight: FontWeight.bold),
+          style: TextStyle(
+            color: cs.onSurface,
+            fontWeight: FontWeight.bold,
+          ),
         ),
       ),
-      backgroundColor: Theme.of(context).colorScheme.surface,
+      backgroundColor: cs.surface,
       body: Padding(
         padding: const EdgeInsets.symmetric(horizontal: 24),
         child: ListView(
@@ -355,14 +470,17 @@ class _CreateAreaScreenState extends State<CreateAreaScreen> {
                 hintText: 'My cool AREA',
               ),
             ),
+
             const SizedBox(height: 24),
-            AppText(
+            Text(
               'IF',
-              style: theme.textTheme.titleMedium!.copyWith(
+              textAlign: TextAlign.center,
+              style: theme.textTheme.titleMedium?.copyWith(
                 fontWeight: FontWeight.bold,
-                color: theme.colorScheme.onSurface,
+                color: Theme.of(context).colorScheme.onSurface,
               ),
             ),
+
             const SizedBox(height: 8),
             Row(
               mainAxisAlignment: MainAxisAlignment.center,
@@ -373,20 +491,26 @@ class _CreateAreaScreenState extends State<CreateAreaScreen> {
                 ),
               ],
             ),
-            const SizedBox(height: 8),
-            TextField(
-              controller: _fromController,
-              decoration: const InputDecoration(
-                labelText: 'Only when email is from (optional)',
-                hintText: 'someone@example.com',
+
+            // Action params only after selecting action
+            if (_actionKey == 'new_email') ...[
+              const SizedBox(height: 8),
+              TextField(
+                controller: _fromController,
+                decoration: const InputDecoration(
+                  labelText: 'Only when email is from (optional)',
+                  hintText: 'someone@example.com',
+                ),
               ),
-            ),
+            ],
+
             const SizedBox(height: 24),
-            AppText(
+            Text(
               'THEN',
-              style: theme.textTheme.titleMedium!.copyWith(
+              textAlign: TextAlign.center,
+              style: theme.textTheme.titleMedium?.copyWith(
                 fontWeight: FontWeight.bold,
-                color: theme.colorScheme.onSurface,
+                color: Theme.of(context).colorScheme.onSurface,
               ),
             ),
             const SizedBox(height: 8),
@@ -399,66 +523,62 @@ class _CreateAreaScreenState extends State<CreateAreaScreen> {
                 ),
               ],
             ),
-            const SizedBox(height: 8),
-            TextField(
-              controller: _toController,
-              decoration: const InputDecoration(
-                labelText: 'Send email to',
-                hintText: 'you@example.com',
+
+            // Reaction params only after selecting reaction
+            if (_reactionKey == 'send_email') ...[
+              const SizedBox(height: 8),
+              TextField(
+                controller: _toController,
+                decoration: const InputDecoration(
+                  labelText: 'Send email to',
+                  hintText: 'you@example.com',
+                ),
               ),
-            ),
-            const SizedBox(height: 8),
-            TextField(
-              controller: _subjectController,
-              decoration: const InputDecoration(
-                labelText: 'Subject',
+              const SizedBox(height: 8),
+              TextField(
+                controller: _subjectController,
+                decoration: const InputDecoration(
+                  labelText: 'Subject',
+                ),
               ),
-            ),
-            const SizedBox(height: 8),
-            TextField(
-              controller: _textController,
-              decoration: const InputDecoration(
-                labelText: 'Message body',
+              const SizedBox(height: 8),
+              TextField(
+                controller: _textController,
+                decoration: const InputDecoration(
+                  labelText: 'Message body',
+                ),
+                maxLines: 3,
               ),
-              maxLines: 3,
-            ),
+            ],
+
             const SizedBox(height: 32),
             SizedBox(
               height: 50,
               child: ElevatedButton(
                 style: ElevatedButton.styleFrom(
-                  backgroundColor: Theme.of(context).colorScheme.primary,
+                  backgroundColor: cs.primary,
                   shape: RoundedRectangleBorder(
                     borderRadius: BorderRadius.circular(12),
                   ),
                 ),
-                onPressed: _submit,
-                child: Text(
+                onPressed: _submitting ? null : _submit,
+                child: _submitting
+                    ? SizedBox(
+                  width: 22,
+                  height: 22,
+                  child: CircularProgressIndicator(
+                    strokeWidth: 2,
+                    valueColor: AlwaysStoppedAnimation<Color>(cs.onPrimary),
+                  ),
+                )
+                    : Text(
                   'Create area',
-                  style: TextStyle (
+                  style: TextStyle(
                     fontSize: 16,
-                    color : Theme.of(context).colorScheme.onPrimary,
-                  )
+                    color: cs.onPrimary,
+                  ),
                 ),
               ),
-            ),
-
-            const SizedBox(height: 32),
-            const Divider(),
-            const SizedBox(height: 12),
-
-            const Text(
-              'Existing areas',
-              style: TextStyle(fontSize: 20, fontWeight: FontWeight.bold),
-            ),
-
-            const SizedBox(height: 16),
-
-            _ExistingAreaRow(
-              from: 'Github',
-              to: 'Spotify',
-              title: 'music push',
-              time: 'created 2d ago',
             ),
           ],
         ),
@@ -478,6 +598,7 @@ class _ServiceBox extends StatelessWidget {
 
   @override
   Widget build(BuildContext context) {
+    final cs = Theme.of(context).colorScheme;
 
     return InkWell(
       borderRadius: BorderRadius.circular(12),
@@ -485,68 +606,17 @@ class _ServiceBox extends StatelessWidget {
       child: Container(
         padding: const EdgeInsets.symmetric(horizontal: 20, vertical: 14),
         decoration: BoxDecoration(
-          color: const Color(0xFFEAE4FF),
+          color: cs.surfaceContainerHigh,
           borderRadius: BorderRadius.circular(12),
         ),
         child: Text(
           label,
           style: TextStyle(
             fontSize: 16,
-            color: Theme.of(context).colorScheme.primary,
-            ),
+            color: cs.onSurface,
+          ),
         ),
       ),
-    );
-  }
-}
-
-class _ExistingAreaRow extends StatelessWidget {
-  final String from;
-  final String to;
-  final String title;
-  final String time;
-
-  const _ExistingAreaRow({
-    required this.from,
-    required this.to,
-    required this.title,
-    required this.time,
-  });
-
-  @override
-  Widget build(BuildContext context) {
-    return Row(
-      children: [
-        Container(
-          padding: const EdgeInsets.symmetric(horizontal: 20, vertical: 12),
-          decoration: BoxDecoration(
-            color: Theme.of(context).colorScheme.primary,
-            borderRadius: BorderRadius.circular(12),
-          ),
-          child: Text(from, style: const TextStyle(color: Colors.white)),
-        ),
-        const SizedBox(width: 16),
-        Column(
-          children: [
-            Text(title, style: const TextStyle(fontSize: 14)),
-            const Icon(Icons.arrow_forward),
-          ],
-        ),
-        const SizedBox(width: 16),
-        Container(
-          padding: const EdgeInsets.symmetric(horizontal: 20, vertical: 12),
-          decoration: BoxDecoration(
-            color: Colors.green,
-            borderRadius: BorderRadius.circular(12),
-          ),
-          child: Text(to, style: const TextStyle(color: Colors.white)),
-        ),
-        const Spacer(),
-        Text(
-          time,
-          style: TextStyle(fontSize: 12, color: Theme.of(context).colorScheme.onSurface),
-        ),
-      ],
     );
   }
 }
@@ -557,6 +627,8 @@ String prettyServiceName(String key) {
       return 'Gmail';
     case 'gmail':
       return 'Gmail';
+    case 'instagram':
+      return 'Instagram';
     case 'timer':
       return 'Timer';
     case 'github':
