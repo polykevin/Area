@@ -1,4 +1,3 @@
-// src/services/clock/reactions/send-time.reaction.ts
 export const sendTimeReaction = {
   id: 'clock.send_time',
   name: 'clock.send_time',
