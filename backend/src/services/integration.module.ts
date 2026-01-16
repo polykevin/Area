@@ -91,9 +91,6 @@ export class IntegrationModule {
     private slackNewMessageHook: SlackNewMessageHook,
 
     private discordService: DiscordService,
-    private authRepo: ServiceAuthRepository,
-    private engine: AutomationEngine,
-    private newEmailHook: NewEmailHook,
     private calendarEventHook: CalendarEventHook,
 
     private authRepo: ServiceAuthRepository,
