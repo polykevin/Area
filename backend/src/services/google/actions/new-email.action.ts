@@ -6,7 +6,7 @@ export const newEmailAction = {
   input: [
     {
       key: 'from',
-      label: 'From (optional)',
+      label: 'From',
       type: 'string',
       required: false,
       placeholder: 'boss@company.com',

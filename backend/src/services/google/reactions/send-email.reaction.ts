@@ -23,7 +23,7 @@ export const sendEmailReaction = {
       helpText: 'Email subject.',
     },
     {
-      key: 'body',
+      key: 'text',
       label: 'Body',
       type: 'string',
       required: true,

@@ -1,36 +1,28 @@
-class Service {
-  final String id;
-  final String displayName;
-  final String? color;   // hex like "#EA4335"
-  final String iconKey;
+class InputFieldDefinition {
+  final String key;
+  final String label;
+  final String type;
+  final bool required;
+  final String? placeholder;
+  final String? helpText;
 
-  final List<ServiceAction> actions;
-  final List<ServiceReaction> reactions;
-
-  Service({
-    required this.id,
-    required this.displayName,
-    required this.color,
-    required this.iconKey,
-    required this.actions,
-    required this.reactions,
+  InputFieldDefinition({
+    required this.key,
+    required this.label,
+    required this.type,
+    required this.required,
+    this.placeholder,
+    this.helpText,
   });
 
-  factory Service.fromJson(Map<String, dynamic> json) {
-    final actionsJson = (json['actions'] as List?) ?? const [];
-    final reactionsJson = (json['reactions'] as List?) ?? const [];
-
-    return Service(
-      id: (json['id'] ?? '').toString(),
-      displayName: (json['displayName'] ?? json['id'] ?? '').toString(),
-      color: json['color']?.toString(),
-      iconKey: (json['iconKey'] ?? json['id'] ?? '').toString(),
-      actions: actionsJson
-          .map((e) => ServiceAction.fromJson(e as Map<String, dynamic>))
-          .toList(),
-      reactions: reactionsJson
-          .map((e) => ServiceReaction.fromJson(e as Map<String, dynamic>))
-          .toList(),
+  factory InputFieldDefinition.fromJson(Map<String, dynamic> json) {
+    return InputFieldDefinition(
+      key: json['key'] as String,
+      label: json['label'] as String? ?? json['key'] as String,
+      type: json['type'] as String? ?? 'string',
+      required: json['required'] as bool? ?? false,
+      placeholder: json['placeholder'] as String?,
+      helpText: json['helpText'] as String?,
     );
   }
 }
@@ -48,14 +40,15 @@ class ServiceAction {
     required this.paramsSchema,
   });
 
-  factory ServiceAction.fromJson(Map<String, dynamic> json) {
-    final schemaJson = (json['paramsSchema'] as List?) ?? const [];
+  List<InputFieldDefinition> get input => paramsSchema;
 
+  factory ServiceAction.fromJson(Map<String, dynamic> json) {
+    final raw = (json['paramsSchema'] as List?) ?? const [];
     return ServiceAction(
-      id: (json['id'] ?? '').toString(),
-      displayName: (json['displayName'] ?? json['id'] ?? '').toString(),
-      description: (json['description'] ?? '').toString(),
-      paramsSchema: schemaJson
+      id: json['id'] as String,
+      displayName: json['displayName'] as String? ?? (json['id'] as String),
+      description: json['description'] as String? ?? '',
+      paramsSchema: raw
           .map((e) => InputFieldDefinition.fromJson(e as Map<String, dynamic>))
           .toList(),
     );
@@ -75,63 +68,50 @@ class ServiceReaction {
     required this.paramsSchema,
   });
 
-  factory ServiceReaction.fromJson(Map<String, dynamic> json) {
-    final schemaJson = (json['paramsSchema'] as List?) ?? const [];
+  List<InputFieldDefinition> get input => paramsSchema;
 
+  factory ServiceReaction.fromJson(Map<String, dynamic> json) {
+    final raw = (json['paramsSchema'] as List?) ?? const [];
     return ServiceReaction(
-      id: (json['id'] ?? '').toString(),
-      displayName: (json['displayName'] ?? json['id'] ?? '').toString(),
-      description: (json['description'] ?? '').toString(),
-      paramsSchema: schemaJson
+      id: json['id'] as String,
+      displayName: json['displayName'] as String? ?? (json['id'] as String),
+      description: json['description'] as String? ?? '',
+      paramsSchema: raw
           .map((e) => InputFieldDefinition.fromJson(e as Map<String, dynamic>))
           .toList(),
     );
   }
 }
 
-/// Keep this aligned with your backend type union:
-/// "string" | "number" | "boolean"
-enum ParamType { string, number, boolean }
+class Service {
+  final String id;
+  final String displayName;
+  final String? color;
+  final String iconKey;
+  final List<ServiceAction> actions;
+  final List<ServiceReaction> reactions;
 
-class InputFieldDefinition {
-  final String key;
-  final String label;
-  final ParamType type;
-  final bool requiredField;
-  final String? placeholder;
-  final String? helpText;
-
-  InputFieldDefinition({
-    required this.key,
-    required this.label,
-    required this.type,
-    required this.requiredField,
-    this.placeholder,
-    this.helpText,
+  Service({
+    required this.id,
+    required this.displayName,
+    required this.iconKey,
+    required this.actions,
+    required this.reactions,
+    this.color,
   });
 
-  factory InputFieldDefinition.fromJson(Map<String, dynamic> json) {
-    final rawType = (json['type'] ?? 'string').toString();
-
-    return InputFieldDefinition(
-      key: (json['key'] ?? '').toString(),
-      label: (json['label'] ?? json['key'] ?? '').toString(),
-      type: _parseParamType(rawType),
-      requiredField: json['required'] == true,
-      placeholder: json['placeholder']?.toString(),
-      helpText: json['helpText']?.toString(),
+  factory Service.fromJson(Map<String, dynamic> json) {
+    return Service(
+      id: json['id'] as String,
+      displayName: json['displayName'] as String? ?? (json['id'] as String),
+      color: json['color'] as String?,
+      iconKey: json['iconKey'] as String? ?? (json['id'] as String),
+      actions: ((json['actions'] as List?) ?? const [])
+          .map((e) => ServiceAction.fromJson(e as Map<String, dynamic>))
+          .toList(),
+      reactions: ((json['reactions'] as List?) ?? const [])
+          .map((e) => ServiceReaction.fromJson(e as Map<String, dynamic>))
+          .toList(),
     );
-  }
-
-  static ParamType _parseParamType(String raw) {
-    switch (raw) {
-      case 'number':
-        return ParamType.number;
-      case 'boolean':
-        return ParamType.boolean;
-      case 'string':
-      default:
-        return ParamType.string;
-    }
   }
 }

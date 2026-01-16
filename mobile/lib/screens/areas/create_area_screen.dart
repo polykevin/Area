@@ -99,8 +99,8 @@ class _CreateAreaScreenState extends State<CreateAreaScreen> {
 
     final action = _findAction(_actionServiceId!, _actionId!);
     for (final f in _inputSchema(action)) {
-      final key = (f['key'] ?? f.key).toString();
-      final placeholder = (f['placeholder'] ?? '').toString();
+      final key = f.key.toString();
+      final placeholder = (f.placeholder ?? '').toString();
       _actionParamCtrls[key] = TextEditingController(text: placeholder.isNotEmpty ? '' : '');
     }
   }
@@ -115,8 +115,8 @@ class _CreateAreaScreenState extends State<CreateAreaScreen> {
 
     final reaction = _findReaction(_reactionServiceId!, _reactionId!);
     for (final f in _inputSchema(reaction)) {
-      final key = (f['key'] ?? f.key).toString();
-      final placeholder = (f['placeholder'] ?? '').toString();
+      final key = f.key.toString();
+      final placeholder = (f.placeholder ?? '').toString();
       _reactionParamCtrls[key] = TextEditingController(text: placeholder.isNotEmpty ? '' : '');
     }
   }
@@ -129,8 +129,8 @@ class _CreateAreaScreenState extends State<CreateAreaScreen> {
     final out = <String, dynamic>{};
 
     for (final f in schema) {
-      final key = (f['key'] ?? f.key).toString();
-      final requiredField = (f['required'] ?? f.required) == true;
+      final key = f.key.toString();
+      final requiredField = f.required == true;
 
       final raw = (ctrls[key]?.text ?? '').trim();
       if (raw.isEmpty) {
@@ -140,7 +140,7 @@ class _CreateAreaScreenState extends State<CreateAreaScreen> {
         continue;
       }
 
-      final type = (f['type'] ?? f.type ?? 'string').toString();
+      final type = (f.type ?? 'string').toString();
 
       if (type == 'number') {
         final n = num.tryParse(raw);
@@ -429,12 +429,12 @@ class _CreateAreaScreenState extends State<CreateAreaScreen> {
       ...schema.map((f) {
         final cs = Theme.of(context).colorScheme;
 
-        final key = (f['key'] ?? f.key).toString();
-        final label = (f['label'] ?? f.label ?? key).toString();
-        final placeholder = (f['placeholder'] ?? f.placeholder ?? '').toString();
-        final helpText = (f['helpText'] ?? f.helpText ?? '').toString();
-        final requiredField = (f['required'] ?? f.required) == true;
-        final type = (f['type'] ?? f.type ?? 'string').toString();
+        final key = f.key.toString();
+        final label = (f.label ?? key).toString();
+        final placeholder = (f.placeholder ?? '').toString();
+        final helpText = (f.helpText ?? '').toString();
+        final requiredField = f.required == true;
+        final type = (f.type ?? 'string').toString();
 
         final ctrl = ctrls.putIfAbsent(key, () => TextEditingController());
 
