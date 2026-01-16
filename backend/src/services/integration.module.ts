@@ -102,7 +102,6 @@ export class IntegrationModule {
     private engine: AutomationEngine,
      
     private notionService: NotionService,
-    private calendarEventHook: CalendarEventHook,
      
   ) {
     newEmailHook.setEngine(engine);
