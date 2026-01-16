@@ -1,5 +1,5 @@
 import { Injectable } from '@nestjs/common';
-import { sendMessageReaction } from './reactions/discord-messages.action';
+import { sendMessageReaction } from './reaction/discord-send-message.reaction'
 
 @Injectable()
 export class DiscordService {

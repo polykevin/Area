@@ -1,18 +1,12 @@
-import { sendMessageReaction } from './reactions/discord-messages.action';
+import { sendMessageReaction } from './reaction/discord-send-message.reaction'
 
 export function discordIntegration(discordService) {
   return {
     id: 'discord',
     displayName: 'Discord',
-
-    instance: discordService,
-
+    instance: {},
     actions: [],
-
-    reactions: [
-      sendMessageReaction,
-    ],
-
+    reactions: [sendMessageReaction],
     hooks: [],
   };
 }

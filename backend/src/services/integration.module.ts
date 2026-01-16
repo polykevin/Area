@@ -10,7 +10,6 @@ import { ServiceAuthRepository } from '../auth/service-auth.repository';
 import { NewEmailHook } from './google/hooks/new-email.hook';
 import { googleIntegration } from './google/google.integration';
 import { discordIntegration } from '../services/discord/discord.integration';
-import { Cron } from '@nestjs/schedule';
 import { CalendarEventHook } from './google/hooks/calendar-event.hook';
 
 @Module({
@@ -44,10 +43,12 @@ export class IntegrationModule {
     private calendarEventHook: CalendarEventHook,
   ) {
     newEmailHook.setEngine(engine);
-    this.registry.register(
-      googleIntegration(googleService, authRepo, engine, newEmailHook),
+    calendarEventHook.setEngine(engine);
+  
+    registry.register(
+      googleIntegration(googleService, authRepo, engine, newEmailHook)
     );
-    this.registry.register(
+    registry.register(
       discordIntegration(discordService)
     );
   }

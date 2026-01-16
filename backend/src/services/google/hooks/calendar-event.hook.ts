@@ -10,11 +10,13 @@ export class CalendarEventHook {
   constructor(
     private readonly authRepo: ServiceAuthRepository,
     private readonly config: ConfigService,
-    private readonly engine: AutomationEngine,
+    private engine: AutomationEngine,
   ) {
     console.log('CalendarEventHook instantiated');
   }
-
+  setEngine(engine: AutomationEngine) {
+    this.engine = engine;
+  }
   @Cron('*/20 * * * * *')
   async check() {
     // console.log('Calendar CRON running');
