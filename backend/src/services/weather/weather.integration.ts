@@ -1,6 +1,6 @@
 import { newWeatherDataAction } from './actions/new-weather-data.action';
 import { NewWeatherDataHook } from './hooks/new-weather-data.hook';
-//import { logWeatherReaction } from './reactions/log-weather.reaction';
+import { logWeatherReaction } from './reactions/log-weather.reaction';
 
 export function weatherIntegration(weatherService, authRepo, engine, newWeatherDataHook) {
   return {
@@ -18,7 +18,7 @@ export function weatherIntegration(weatherService, authRepo, engine, newWeatherD
     ],
 
     reactions: [
-      //logWeatherReaction,
+      logWeatherReaction,
     ],
 
     hooks: [

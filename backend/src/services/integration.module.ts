@@ -37,6 +37,19 @@ import { NewIssueHook } from './gitlab/hooks/new-issue.hook';
 import { NewMergeRequestHook } from './gitlab/hooks/new-merge-request.hook';
 import { gitlabIntegration } from './gitlab/gitlab.integration';
 
+import { ClockModule } from './clock/clock.module';
+import { ClockService } from './clock/clock.service';
+import { EveryDayAtHook } from './clock/hooks/every-day-at.hook';
+import { EveryMinuteHook } from './clock/hooks/every-minute.hook';
+import { clockIntegration } from './clock/clock.integration';
+
+import { SlackModule } from './slack/slack.module';
+import { SlackService } from './slack/slack.module';
+import { SlackNewMessageHook } from './slack/hooks/slack-new-message.hook';
+import { slackIntegration } from './slack/slack.integration';
+
+import { every } from 'rxjs';
+
 @Module({
   imports: [
     GoogleModule,
@@ -45,6 +58,8 @@ import { gitlabIntegration } from './gitlab/gitlab.integration';
     TwitterModule,
     DropboxModule,
     GitLabModule,
+    ClockModule,
+    SlackModule,
     AuthModule,
     AreasModule,
   ],
@@ -95,6 +110,13 @@ export class IntegrationModule {
     private newIssueHook: NewIssueHook,
     private newMergeRequestHook: NewMergeRequestHook,
 
+    private clockService: ClockService,
+    private everyMinuteHook: EveryMinuteHook,
+    private everyDayAtHook: EveryDayAtHook,
+
+    private slackService: SlackService,
+    private slackNewMessageHook: SlackNewMessageHook,
+
     private authRepo: ServiceAuthRepository,
     private engine: AutomationEngine,
   ) {
@@ -107,6 +129,9 @@ export class IntegrationModule {
     fileChangedHook.setEngine(engine);
     newIssueHook.setEngine(engine);
     newMergeRequestHook.setEngine(engine);
+    everyMinuteHook.setEngine(engine);
+    everyDayAtHook.setEngine(engine);
+    slackNewMessageHook.setEngine(engine);
 
     registry.register(
       googleIntegration(googleService, authRepo, engine, newEmailHook),
@@ -130,6 +155,14 @@ export class IntegrationModule {
 
     registry.register(
       gitlabIntegration(gitlabService, authRepo, engine, newIssueHook, newMergeRequestHook),
+    );
+
+    registry.register(
+      clockIntegration(clockService, authRepo, engine, everyMinuteHook, everyDayAtHook),
+    );
+
+    registry.register(
+      slackIntegration(slackService, authRepo, engine, slackNewMessageHook)
     );
   }
 }

@@ -156,6 +156,7 @@ class AuthProvider extends ChangeNotifier {
       debugPrint('GOOGLE ID TOKEN (first 40 chars): ${idToken.substring(0, 40)}...');
 
       final json = await _authApi.loginWithGoogleIdToken(idToken);
+      
 
       final tokens = AuthTokens.fromJson(json);
       _tokens = tokens;

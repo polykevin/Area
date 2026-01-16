@@ -32,15 +32,16 @@ class _RegisterScreenState extends State<RegisterScreen> {
     setState(() {
       _loading = true;
       _error = null;
-    });bool _showPassword = false;
-
+    });
+    
+    bool _showPassword = false;
     final auth = context.read<AuthProvider>();
     final err = await auth.register(_emailCtrl.text.trim(), _passwordCtrl.text);
 
     if (err != null) {
       setState(() {
         _loading = false;
-        _error = err;bool _showPassword = false;
+        _error = err;
       });
     } else {
       if (!mounted) return;
