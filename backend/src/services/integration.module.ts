@@ -31,6 +31,12 @@ import { NewFileHook } from './dropbox/hooks/new-file.hook';
 import { FileChangedHook } from './dropbox/hooks/file-changed.hook';
 import { dropboxIntegration } from './dropbox/dropbox.integration';
 
+import { GitLabModule } from './gitlab/gitlab.module';
+import { GitLabService } from './gitlab/gitlab.service';
+import { NewIssueHook } from './gitlab/hooks/new-issue.hook';
+import { NewMergeRequestHook } from './gitlab/hooks/new-merge-request.hook';
+import { gitlabIntegration } from './gitlab/gitlab.integration';
+
 @Module({
   imports: [
     GoogleModule,
@@ -38,6 +44,7 @@ import { dropboxIntegration } from './dropbox/dropbox.integration';
     WeatherModule,
     TwitterModule,
     DropboxModule,
+    GitLabModule,
     AuthModule,
     AreasModule,
   ],
@@ -84,6 +91,10 @@ export class IntegrationModule {
     private newFileHook: NewFileHook,
     private fileChangedHook: FileChangedHook,
 
+    private gitlabService: GitLabService,
+    private newIssueHook: NewIssueHook,
+    private newMergeRequestHook: NewMergeRequestHook,
+
     private authRepo: ServiceAuthRepository,
     private engine: AutomationEngine,
   ) {
@@ -94,6 +105,8 @@ export class IntegrationModule {
     newMentionHook.setEngine(engine);
     newFileHook.setEngine(engine);
     fileChangedHook.setEngine(engine);
+    newIssueHook.setEngine(engine);
+    newMergeRequestHook.setEngine(engine);
 
     registry.register(
       googleIntegration(googleService, authRepo, engine, newEmailHook),
@@ -113,6 +126,10 @@ export class IntegrationModule {
 
     registry.register(
       dropboxIntegration(dropboxService, authRepo, engine, newFileHook, fileChangedHook),
+    );
+
+    registry.register(
+      gitlabIntegration(gitlabService, authRepo, engine, newIssueHook, newMergeRequestHook),
     );
   }
 }

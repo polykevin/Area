@@ -3,6 +3,7 @@ import { GoogleOAuthProvider } from './providers/google.oauth';
 import { InstagramOAuthProvider } from './providers/instagram.oauth';
 import { TwitterOAuthProvider } from './providers/twitter.oauth';
 import { DropboxOAuthProvider } from './providers/dropbox.oauth';
+import { GitLabOAuthProvider } from './providers/gitlab.oauth';
 
 export interface OAuthProvider {
   getAuthUrl(state: string, codeChallenge?: string): string;
@@ -22,6 +23,8 @@ export class OauthFactoryService {
         return new TwitterOAuthProvider();
       case 'dropbox':
         return new DropboxOAuthProvider();
+      case 'gitlab':
+        return new GitLabOAuthProvider();
       default:
         throw new Error(`Unknown OAuth provider: ${provider}`);
     }

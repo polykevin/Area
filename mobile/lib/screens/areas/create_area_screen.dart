@@ -19,21 +19,39 @@ class _CreateAreaScreenState extends State<CreateAreaScreen> {
   String? _reactionKey;
 
   final _areaNameController = TextEditingController();
+
+  // Gmail action/reaction params
   final _fromController = TextEditingController();
   final _toController = TextEditingController();
   final _subjectController = TextEditingController(text: 'AREA test');
   final _textController = TextEditingController(
     text: 'You received a new email matching your AREA rule.',
   );
+
+  // Dropbox reaction params
   final _dropboxPathController = TextEditingController();
   final _dropboxContentController = TextEditingController();
+
+  // ✅ GitLab params
+  // Action filters
+  final _gitlabProjectIdController = TextEditingController();
+  final _gitlabContainsController = TextEditingController();
+  final _gitlabTargetBranchController = TextEditingController();
+
+  // Reaction params
+  final _gitlabIssueProjectIdController = TextEditingController();
+  final _gitlabIssueTitleController = TextEditingController();
+  final _gitlabIssueDescriptionController = TextEditingController();
+
+  final _gitlabMrProjectIdController = TextEditingController();
+  final _gitlabMrIidController = TextEditingController();
+  final _gitlabMrCommentController = TextEditingController();
 
   bool _submitting = false;
 
   @override
   void initState() {
     super.initState();
-    // Load services if not already loaded
     Future.microtask(() {
       context.read<ServicesProvider>().loadServices();
     });
@@ -50,14 +68,29 @@ class _CreateAreaScreenState extends State<CreateAreaScreen> {
     _textController.dispose();
     _dropboxPathController.dispose();
     _dropboxContentController.dispose();
+
+    _gitlabProjectIdController.dispose();
+    _gitlabContainsController.dispose();
+    _gitlabTargetBranchController.dispose();
+
+    _gitlabIssueProjectIdController.dispose();
+    _gitlabIssueTitleController.dispose();
+    _gitlabIssueDescriptionController.dispose();
+
+    _gitlabMrProjectIdController.dispose();
+    _gitlabMrIidController.dispose();
+    _gitlabMrCommentController.dispose();
+
     super.dispose();
   }
 
   /// Get list of actions for a given service name
-  List<(String name, String description)> _getActionsForService(String serviceName) {
+  List<(String name, String description)> _getActionsForService(
+      String serviceName,
+      ) {
     final servicesProvider = context.read<ServicesProvider>();
     final service = servicesProvider.services.firstWhere(
-      (s) => s.name == serviceName,
+          (s) => s.name == serviceName,
       orElse: () => throw Exception('Service not found: $serviceName'),
     );
     return service.actions.map((a) => (a.name, a.description)).toList();
@@ -65,13 +98,71 @@ class _CreateAreaScreenState extends State<CreateAreaScreen> {
 
   /// Get list of reactions for a given service name
   List<(String name, String description)> _getReactionsForService(
-      String serviceName) {
+      String serviceName,
+      ) {
     final servicesProvider = context.read<ServicesProvider>();
     final service = servicesProvider.services.firstWhere(
-      (s) => s.name == serviceName,
+          (s) => s.name == serviceName,
       orElse: () => throw Exception('Service not found: $serviceName'),
     );
     return service.reactions.map((r) => (r.name, r.description)).toList();
+  }
+
+  void _clearActionParamsNotApplicable() {
+    // Gmail action params
+    if (_actionKey != 'new_email') {
+      _fromController.clear();
+    }
+
+    // GitLab action params
+    if (_actionKey != 'new_issue' && _actionKey != 'new_merge_request') {
+      _gitlabProjectIdController.clear();
+      _gitlabContainsController.clear();
+      _gitlabTargetBranchController.clear();
+    } else {
+      // targetBranch only applies to new_merge_request
+      if (_actionKey != 'new_merge_request') {
+        _gitlabTargetBranchController.clear();
+      }
+    }
+  }
+
+  void _clearReactionParamsNotApplicable() {
+    // Gmail reaction params
+    if (_reactionKey != 'send_email') {
+      _toController.clear();
+      _subjectController.clear();
+      _textController.clear();
+    } else {
+      if (_subjectController.text.trim().isEmpty) {
+        _subjectController.text = 'AREA test';
+      }
+      if (_textController.text.trim().isEmpty) {
+        _textController.text =
+        'You received a new email matching your AREA rule.';
+      }
+    }
+
+    // Dropbox reaction params
+    if (_reactionKey != 'upload_text_file' && _reactionKey != 'create_shared_link') {
+      _dropboxPathController.clear();
+      _dropboxContentController.clear();
+    } else if (_reactionKey == 'create_shared_link') {
+      _dropboxContentController.clear();
+    }
+
+    // GitLab reaction params
+    if (_reactionKey != 'create_issue') {
+      _gitlabIssueProjectIdController.clear();
+      _gitlabIssueTitleController.clear();
+      _gitlabIssueDescriptionController.clear();
+    }
+
+    if (_reactionKey != 'comment_merge_request') {
+      _gitlabMrProjectIdController.clear();
+      _gitlabMrIidController.clear();
+      _gitlabMrCommentController.clear();
+    }
   }
 
   Future<void> _submit() async {
@@ -108,6 +199,37 @@ class _CreateAreaScreenState extends State<CreateAreaScreen> {
       }
     }
 
+    // ✅ GitLab reactions validation
+    if (_reactionKey == 'create_issue') {
+      if (_gitlabIssueProjectIdController.text.trim().isEmpty) {
+        _showError('Please enter a GitLab projectId for "create_issue".');
+        return;
+      }
+      if (_gitlabIssueTitleController.text.trim().isEmpty) {
+        _showError('Please enter an issue title for "create_issue".');
+        return;
+      }
+    }
+
+    if (_reactionKey == 'comment_merge_request') {
+      if (_gitlabMrProjectIdController.text.trim().isEmpty) {
+        _showError('Please enter a GitLab projectId for "comment_merge_request".');
+        return;
+      }
+      if (_gitlabMrIidController.text.trim().isEmpty) {
+        _showError('Please enter a mergeRequestIid for "comment_merge_request".');
+        return;
+      }
+      if (_gitlabMrCommentController.text.trim().isEmpty) {
+        _showError('Please enter a comment body for "comment_merge_request".');
+        return;
+      }
+      // basic numeric sanity (optional)
+      if (int.tryParse(_gitlabMrIidController.text.trim()) == null) {
+        _showError('mergeRequestIid must be a number.');
+        return;
+      }
+    }
 
     final areasProvider = context.read<AreasProvider>();
 
@@ -120,9 +242,25 @@ class _CreateAreaScreenState extends State<CreateAreaScreen> {
         ? '${prettyServiceName(actionService)} → ${prettyServiceName(reactionService)}'
         : _areaNameController.text.trim();
 
+    // Build action params based on selected action
     final actionParams = <String, dynamic>{};
+
     if (actionType == 'new_email' && _fromController.text.trim().isNotEmpty) {
       actionParams['from'] = _fromController.text.trim();
+    }
+
+    // ✅ GitLab action params (filters)
+    if ((actionType == 'new_issue' || actionType == 'new_merge_request')) {
+      if (_gitlabProjectIdController.text.trim().isNotEmpty) {
+        actionParams['projectId'] = _gitlabProjectIdController.text.trim();
+      }
+      if (_gitlabContainsController.text.trim().isNotEmpty) {
+        actionParams['contains'] = _gitlabContainsController.text.trim();
+      }
+      if (actionType == 'new_merge_request' &&
+          _gitlabTargetBranchController.text.trim().isNotEmpty) {
+        actionParams['targetBranch'] = _gitlabTargetBranchController.text.trim();
+      }
     }
 
     // Build reaction params based on selected reaction
@@ -143,6 +281,20 @@ class _CreateAreaScreenState extends State<CreateAreaScreen> {
       reactionParams['path'] = _dropboxPathController.text.trim();
     }
 
+    // ✅ GitLab reactions params
+    if (reactionType == 'create_issue') {
+      reactionParams['projectId'] = _gitlabIssueProjectIdController.text.trim();
+      reactionParams['title'] = _gitlabIssueTitleController.text.trim();
+      if (_gitlabIssueDescriptionController.text.trim().isNotEmpty) {
+        reactionParams['description'] = _gitlabIssueDescriptionController.text.trim();
+      }
+    }
+
+    if (reactionType == 'comment_merge_request') {
+      reactionParams['projectId'] = _gitlabMrProjectIdController.text.trim();
+      reactionParams['mergeRequestIid'] = int.parse(_gitlabMrIidController.text.trim());
+      reactionParams['body'] = _gitlabMrCommentController.text.trim();
+    }
 
     setState(() {
       _submitting = true;
@@ -285,11 +437,7 @@ class _CreateAreaScreenState extends State<CreateAreaScreen> {
                     setState(() {
                       _actionService = tempService;
                       _actionKey = tempKey;
-
-                      // Clear action params that no longer apply
-                      if (_actionKey != 'new_email') {
-                        _fromController.clear();
-                      }
+                      _clearActionParamsNotApplicable();
                     });
                     Navigator.of(ctx).pop();
                   }
@@ -393,8 +541,7 @@ class _CreateAreaScreenState extends State<CreateAreaScreen> {
                         });
                       },
                     ),
-                  ] else if (tempService != null &&
-                      reactionsForService.isEmpty)
+                  ] else if (tempService != null && reactionsForService.isEmpty)
                     Padding(
                       padding: const EdgeInsets.only(top: 12),
                       child: Text(
@@ -415,28 +562,7 @@ class _CreateAreaScreenState extends State<CreateAreaScreen> {
                     setState(() {
                       _reactionService = tempService;
                       _reactionKey = tempKey;
-
-                      if (_reactionKey != 'send_email') {
-                        _toController.clear();
-                        _subjectController.clear();
-                        _textController.clear();
-                      } else {
-                        if (_subjectController.text.trim().isEmpty) {
-                          _subjectController.text = 'AREA test';
-                        }
-                        if (_textController.text.trim().isEmpty) {
-                          _textController.text =
-                          'You received a new email matching your AREA rule.';
-                        }
-                      }
-
-                      if (_reactionKey != 'upload_text_file' &&
-                          _reactionKey != 'create_shared_link') {
-                        _dropboxPathController.clear();
-                        _dropboxContentController.clear();
-                      } else if (_reactionKey == 'create_shared_link') {
-                        _dropboxContentController.clear();
-                      }
+                      _clearReactionParamsNotApplicable();
                     });
                     Navigator.of(ctx).pop();
                   }
@@ -455,7 +581,6 @@ class _CreateAreaScreenState extends State<CreateAreaScreen> {
     if (_actionService == null || _actionKey == null) {
       return 'Tap to choose action...';
     }
-    // Since action name is now directly stored in _actionKey, just return it with service
     return '${prettyServiceName(_actionService!)} • $_actionKey';
   }
 
@@ -463,7 +588,6 @@ class _CreateAreaScreenState extends State<CreateAreaScreen> {
     if (_reactionService == null || _reactionKey == null) {
       return 'Tap to choose reaction...';
     }
-    // Since reaction name is now directly stored in _reactionKey, just return it with service
     return '${prettyServiceName(_reactionService!)} • $_reactionKey';
   }
 
@@ -544,6 +668,37 @@ class _CreateAreaScreenState extends State<CreateAreaScreen> {
               ),
             ],
 
+            // ✅ GitLab action params
+            if (_actionKey == 'new_issue' || _actionKey == 'new_merge_request') ...[
+              const SizedBox(height: 8),
+              TextField(
+                controller: _gitlabProjectIdController,
+                decoration: const InputDecoration(
+                  labelText: 'GitLab projectId (optional filter)',
+                  hintText: 'e.g. 12345678',
+                ),
+                keyboardType: TextInputType.number,
+              ),
+              const SizedBox(height: 8),
+              TextField(
+                controller: _gitlabContainsController,
+                decoration: const InputDecoration(
+                  labelText: 'Title contains (optional)',
+                  hintText: 'e.g. WIP',
+                ),
+              ),
+              if (_actionKey == 'new_merge_request') ...[
+                const SizedBox(height: 8),
+                TextField(
+                  controller: _gitlabTargetBranchController,
+                  decoration: const InputDecoration(
+                    labelText: 'Target branch (optional)',
+                    hintText: 'main',
+                  ),
+                ),
+              ],
+            ],
+
             const SizedBox(height: 24),
             Text(
               'THEN',
@@ -619,6 +774,66 @@ class _CreateAreaScreenState extends State<CreateAreaScreen> {
                   labelText: 'Dropbox path',
                   hintText: '/foo/bar.txt',
                 ),
+              ),
+            ],
+
+            // ✅ GitLab reaction params
+            if (_reactionKey == 'create_issue') ...[
+              const SizedBox(height: 8),
+              TextField(
+                controller: _gitlabIssueProjectIdController,
+                decoration: const InputDecoration(
+                  labelText: 'GitLab projectId',
+                  hintText: 'e.g. 12345678',
+                ),
+                keyboardType: TextInputType.number,
+              ),
+              const SizedBox(height: 8),
+              TextField(
+                controller: _gitlabIssueTitleController,
+                decoration: const InputDecoration(
+                  labelText: 'Issue title',
+                  hintText: 'e.g. Review MR !42',
+                ),
+              ),
+              const SizedBox(height: 8),
+              TextField(
+                controller: _gitlabIssueDescriptionController,
+                decoration: const InputDecoration(
+                  labelText: 'Issue description (optional)',
+                  hintText: 'Details...',
+                ),
+                maxLines: 3,
+              ),
+            ],
+
+            if (_reactionKey == 'comment_merge_request') ...[
+              const SizedBox(height: 8),
+              TextField(
+                controller: _gitlabMrProjectIdController,
+                decoration: const InputDecoration(
+                  labelText: 'GitLab projectId',
+                  hintText: 'e.g. 12345678',
+                ),
+                keyboardType: TextInputType.number,
+              ),
+              const SizedBox(height: 8),
+              TextField(
+                controller: _gitlabMrIidController,
+                decoration: const InputDecoration(
+                  labelText: 'Merge Request IID',
+                  hintText: 'e.g. 42',
+                ),
+                keyboardType: TextInputType.number,
+              ),
+              const SizedBox(height: 8),
+              TextField(
+                controller: _gitlabMrCommentController,
+                decoration: const InputDecoration(
+                  labelText: 'Comment body',
+                  hintText: 'e.g. Please address review comments.',
+                ),
+                maxLines: 3,
               ),
             ],
 
@@ -704,6 +919,8 @@ String prettyServiceName(String key) {
       return 'Timer';
     case 'github':
       return 'GitHub';
+    case 'gitlab':
+      return 'GitLab';
     case 'weather':
       return 'Weather';
     case 'slack':
