@@ -342,7 +342,7 @@ class AreaDetailsScreen extends StatelessWidget {
     return Container(
       width: double.infinity,
       margin: const EdgeInsets.only(top: 12),
-      padding: const EdgeInsets.all(12),
+      padding: const EdgeInsets.fromLTRB(12, 4, 12, 12),
       decoration: BoxDecoration(
         color: cs.surfaceContainerHigh,
         borderRadius: BorderRadius.circular(14),
@@ -352,6 +352,7 @@ class AreaDetailsScreen extends StatelessWidget {
         crossAxisAlignment: CrossAxisAlignment.start,
         children: [
           Row(
+            crossAxisAlignment: CrossAxisAlignment.center,
             children: [
               Expanded(
                 child: Text(
@@ -363,6 +364,9 @@ class AreaDetailsScreen extends StatelessWidget {
                 ),
               ),
               IconButton(
+                visualDensity: VisualDensity.compact,
+                padding: EdgeInsets.zero,
+                constraints: const BoxConstraints(),
                 tooltip: 'Copy',
                 onPressed: () async {
                   await Clipboard.setData(ClipboardData(text: text));
@@ -374,7 +378,7 @@ class AreaDetailsScreen extends StatelessWidget {
               ),
             ],
           ),
-          const SizedBox(height: 8),
+          const SizedBox(height: 4),
           SelectableText(
             text,
             style: TextStyle(
