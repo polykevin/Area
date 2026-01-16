@@ -41,6 +41,7 @@ model ServiceAuth {
   refreshToken    String?
   expiresAt       DateTime?
   metadata        Json?
+  lastEventId     String?
 
   user User @relation(fields: [userId], references: [id])
 
