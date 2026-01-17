@@ -1,11 +1,5 @@
-import NotionCallbackClient from "./NotionCallbackClient";
+import NotionCallbackClient from './NotionCallbackClient';
 
-type SearchParams = { [key: string]: string | string[] | undefined };
-
-export default function NotionCallbackPage({
-  searchParams,
-}: {
-  searchParams: SearchParams;
-}) {
-  return <NotionCallbackClient searchParams={searchParams} />;
+export default function NotionCallbackPage() {
+  return <NotionCallbackClient />;
 }

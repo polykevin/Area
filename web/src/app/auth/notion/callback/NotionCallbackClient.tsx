@@ -11,25 +11,31 @@ export default function NotionCallbackClient() {
 
   useEffect(() => {
     const code = searchParams.get('code');
+    const state = searchParams.get('state');
 
     if (!code) {
       router.replace('/services?error=notion');
       return;
     }
 
-    fetch(`${API_URL}/oauth/notion/callback`, {
-      method: 'POST',
-      headers: { 'Content-Type': 'application/json' },
-      credentials: 'include',
-      body: JSON.stringify({ code }),
-    })
-      .then((res) => {
-        if (!res.ok) throw new Error();
+    const exchange = async () => {
+      try {
+        const res = await fetch(
+          `${API_URL}/oauth/notion/service-callback?code=${encodeURIComponent(code)}&state=${encodeURIComponent(state ?? '')}`
+        );
+
+        if (!res.ok) {
+          throw new Error('Notion OAuth failed');
+        }
+
         router.replace('/services?connected=notion');
-      })
-      .catch(() => {
+      } catch (err) {
+        console.error(err);
         router.replace('/services?error=notion');
-      });
+      }
+    };
+
+    exchange();
   }, [router, searchParams]);
 
   return <p>Connecting to Notion…</p>;
