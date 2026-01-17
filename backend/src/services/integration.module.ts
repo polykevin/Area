@@ -101,7 +101,6 @@ export class IntegrationModule {
   constructor(
     private registry: ServiceRegistry,
 
-
     private googleService: GoogleService,
     private newEmailHook: NewEmailHook,
 
@@ -161,7 +160,7 @@ export class IntegrationModule {
     trelloCardCreatedHook.setEngine(this.engine);
 
     registry.register(
-      googleIntegration(googleService, authRepo, engine, newEmailHook),
+      googleIntegration(googleService, authRepo, engine, newEmailHook, calendarEventHook),
     );
 
     registry.register(

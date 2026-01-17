@@ -4,6 +4,7 @@ import { google } from 'googleapis';
 import { ConfigService } from '@nestjs/config';
 import { ServiceAuthRepository } from '../../../auth/service-auth.repository';
 import { AutomationEngine } from '../../../automation/engine.service';
+import { calendarEventCreatedAction } from '../actions/calendar-event.action';
 
 @Injectable()
 export class CalendarEventHook {
@@ -14,15 +15,15 @@ export class CalendarEventHook {
   ) {
     console.log('CalendarEventHook instantiated');
   }
+
   setEngine(engine: AutomationEngine) {
     this.engine = engine;
   }
+
   @Cron('*/20 * * * * *')
   async check() {
-    // console.log('Calendar CRON running');
 
     const subscribed = await this.authRepo.findUsersWithService('google');
-    // console.log('Google users:', subscribed.length);
 
     for (const record of subscribed) {
       const oauth = new google.auth.OAuth2(
@@ -54,7 +55,7 @@ export class CalendarEventHook {
       await this.engine.emitHookEvent({
         userId: record.userId,
         actionService: 'google',
-        actionType: 'calendar_event_created',
+        actionType: calendarEventCreatedAction.id,
         payload: latest,
       });
 

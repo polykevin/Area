@@ -9,9 +9,28 @@ class ServicesApi {
   Future<List<Service>> getServices() async {
     try {
       final response = await _dio.get('/services');
-      final data = response.data as List<dynamic>;
-      final result = data.map((e) => Service.fromJson(e as Map<String, dynamic>)).toList();
-      return result;
+      final raw = response.data;
+      print('[DEBUG] /services raw = $raw');
+      print('[DEBUG] /services rawType = ${raw.runtimeType}');
+
+      final List<dynamic> data;
+      if (raw is List) {
+        data = raw;
+      } else if (raw is Map<String, dynamic>) {
+        if (raw['services'] is List) {
+          data = raw['services'] as List<dynamic>;
+        } else if (raw['data'] is List) {
+          data = raw['data'] as List<dynamic>;
+        } else {
+          throw Exception('Unexpected /services response shape: $raw');
+        }
+      } else {
+        throw Exception('Unexpected /services response type: ${raw.runtimeType}');
+      }
+
+      return data
+          .map((e) => Service.fromJson(e as Map<String, dynamic>))
+          .toList();
     } catch (e) {
       print('[ERROR] ServicesApi.getServices - error: $e');
       rethrow;

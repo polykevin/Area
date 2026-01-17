@@ -39,24 +39,21 @@ export const createIssueReaction = {
     },
   ],
 
-  execute: async ({ token, params, githubService }) => {
+  async execute({ token, params, githubService }) {
     if (!token) {
       throw new Error('GitHub account not connected.');
     }
 
-    const { owner, repo, title, body } = params;
+    const owner = String(params?.owner ?? '').trim();
+    const repo = String(params?.repo ?? '').trim();
+    const title = String(params?.title ?? '').trim();
+    const body = params?.body != null ? String(params.body) : undefined;
 
     if (!owner || !repo || !title) {
       throw new Error('Missing required parameters');
     }
 
-    await githubService.createIssue(
-      token.userId,
-      owner,
-      repo,
-      title,
-      body,
-    );
+    await githubService.createIssue(token.userId, owner, repo, title, body);
 
     return { success: true };
   },

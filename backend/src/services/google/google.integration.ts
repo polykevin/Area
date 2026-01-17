@@ -1,9 +1,9 @@
 import { newEmailAction } from './actions/new-email.action';
-import { NewEmailHook } from './hooks/new-email.hook';
-import { sendEmailReaction } from './reactions/send-email.reaction';
 import { calendarEventCreatedAction } from './actions/calendar-event.action';
+import { sendEmailReaction } from './reactions/send-email.reaction';
+import { createDriveFileReaction } from './reactions/create-drive-file.reaction';
 
-export function googleIntegration(googleService, authRepo, engine, newEmailHook) {
+export function googleIntegration(googleService, authRepo, engine, newEmailHook, calendarEventHook) {
   return {
     id: 'google',
     displayName: 'Gmail',
@@ -22,11 +22,13 @@ export function googleIntegration(googleService, authRepo, engine, newEmailHook)
     ],
 
     reactions: [
-        sendEmailReaction
+      sendEmailReaction,
+      createDriveFileReaction,
     ],
 
     hooks: [
-      newEmailHook
-    ]
+      newEmailHook,
+      calendarEventHook,
+    ],
   };
 }

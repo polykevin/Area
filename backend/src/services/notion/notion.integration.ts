@@ -1,3 +1,4 @@
+import { NotionCreatePageAction } from './action/create-page.action';
 import { NotionCreatePageReaction } from './reaction/create-page.reaction';
 
 export function notionIntegration(notionService) {
@@ -8,13 +9,11 @@ export function notionIntegration(notionService) {
     iconKey: 'notion',
 
     instance: {
-      notionService
+      notionService,
     },
 
-    actions: [],
-    reactions: [
-      NotionCreatePageReaction,
-    ],
-    hooks: []
+    actions: [NotionCreatePageAction],
+    reactions: [NotionCreatePageReaction],
+    hooks: [],
   };
 }

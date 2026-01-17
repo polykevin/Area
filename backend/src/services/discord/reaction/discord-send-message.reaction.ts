@@ -1,5 +1,5 @@
 export const sendMessageReaction = {
-  id: 'discord_send_message', 
+  id: 'discord_send_message',
   name: 'discord.send.message',
   displayName: 'Send Discord message',
   description: 'Sends a discord message',

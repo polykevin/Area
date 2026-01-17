@@ -3,6 +3,7 @@ import { Cron } from '@nestjs/schedule';
 import { ServiceAuthRepository } from '../../../auth/service-auth.repository';
 import { AutomationEngine } from '../../../automation/engine.service';
 import { TrelloService } from '../trello.service';
+import { trelloCardCreatedAction } from '../actions/card-created.action';
 
 @Injectable()
 export class TrelloCardCreatedHook {
@@ -41,7 +42,7 @@ export class TrelloCardCreatedHook {
       await this.engine.emitHookEvent({
         userId,
         actionService: 'trello',
-        actionType: 'card_created',
+        actionType: trelloCardCreatedAction.id,
         payload: latest,
       });
 
