@@ -7,39 +7,31 @@ export const NotionCreatePageReaction = {
   input: [
     {
       key: 'databaseId',
-      label: 'Database ID (optional)',
+      label: 'Database ID',
       type: 'string',
-      required: false,
+      required: true,
       placeholder: '2e99859422a18036963dc0cdfd378f5b',
-      helpText: 'Target Notion database. If empty, a default database is used.',
+      helpText: 'ID of the Notion database where the page will be created.',
     },
     {
-      key: 'to',
-      label: 'To',
+      key: 'title',
+      label: 'Page title',
       type: 'string',
-      required: false,
-      placeholder: 'user@example.com',
-      helpText: 'Used only to build the page content (email recap).',
+      required: true,
+      placeholder: 'New page from AREA',
+      helpText: 'Title of the Notion page.',
     },
     {
-      key: 'subject',
-      label: 'Subject',
+      key: 'content',
+      label: 'Content (optional)',
       type: 'string',
       required: false,
-      placeholder: 'Email Sent',
-      helpText: 'Used as the Notion page title.',
-    },
-    {
-      key: 'text',
-      label: 'Body',
-      type: 'string',
-      required: false,
-      placeholder: 'Message content...',
-      helpText: 'Used to build the Notion page content.',
+      placeholder: 'Page content...',
+      helpText: 'Optional page content.',
     },
   ],
 
-  async execute({ token, notionService, params }) {
+  async execute({ notionService, params, context }) {
     const databaseId =
       params?.databaseId ?? '2e99859422a18036963dc0cdfd378f5b';
 
@@ -48,6 +40,11 @@ export const NotionCreatePageReaction = {
     const title = subject ?? 'Email Sent';
     const content = `Email sent to : ${to}\n\n${text ?? ''}`;
 
-    return notionService.createPage(databaseId, title, content);
+    return notionService.createPage(
+      context.userId,
+      databaseId,
+      title,
+      content
+    );
   },
 };

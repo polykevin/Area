@@ -1,26 +1,25 @@
 import { NestFactory } from '@nestjs/core';
 import { AppModule } from './app.module';
-import { TrelloService } from './services/trello/trello.service';
+import { NotionService } from './services/notion/notion.service';
 
 async function bootstrap() {
   const app = await NestFactory.createApplicationContext(AppModule);
 
-  const trello = app.get(TrelloService);
+  const notion = app.get(NotionService);
 
-  const listId = await trello.findListIdByName(
-    1,     
-    'AREA',   
-    'test'   
-  );
+  const databaseId = '2e99859422a18036963dc0cdfd378f5b';
 
-  await trello.createCard(
-    1,
-    listId,
-    'Carte test BACKEND',
-    'Créée sans clock'
-  );
+  console.log('[TEST] Creating Notion page...');
+
+ await notion.createPage(
+  1,
+  databaseId,
+  'Test NOTION backend',
+  'Page créée avec OAuth 🎉'
+);
 
 
+  console.log('[TEST] Notion page created');
 
   await app.close();
 }
