@@ -4,7 +4,12 @@ export function discordIntegration(discordService) {
   return {
     id: 'discord',
     displayName: 'Discord',
-    instance: {},
+    color: '#5865F2',
+    iconKey: 'discord',
+
+    instance: {
+      discordService,
+    },
     actions: [],
     reactions: [sendMessageReaction],
     hooks: [],

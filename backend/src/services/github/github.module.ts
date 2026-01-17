@@ -2,7 +2,7 @@ import { Module } from '@nestjs/common';
 import { PrismaModule } from '../../prisma/prisma.module';
 import { AreasModule } from '../../areas/area.module';
 import { GithubService } from './github.service';
-import { NewIssueHook } from './hooks/new-issue.hook';
+import { GithubNewIssueHook } from './hooks/new-issue.hook';
 import { ServiceAuthRepository } from 'src/auth/service-auth.repository';
 import { ServiceRegistry } from '../service.registry';
 
@@ -14,13 +14,13 @@ import { ServiceRegistry } from '../service.registry';
   providers: [
     GithubService,
     ServiceAuthRepository,
-    NewIssueHook,
+    GithubNewIssueHook,
     ServiceRegistry,
   ],
   exports: [
     GithubService,
     ServiceAuthRepository,
-    NewIssueHook,
+    GithubNewIssueHook,
     ServiceRegistry,
   ],
 })

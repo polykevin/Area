@@ -5,7 +5,7 @@ import { ServiceAuthRepository } from '../../../auth/service-auth.repository';
 import { AutomationEngine } from '../../../automation/engine.service';
 
 @Injectable()
-export class NewIssueHook {
+export class GithubNewIssueHook {
   private engine: AutomationEngine;
 
   constructor(

@@ -4,6 +4,8 @@ export function githubIntegration(githubService, authRepo, engine, newIssueHook)
     return {
         id: 'github',
         displayName: 'Github',
+        color: '#212830',
+        iconKey: 'Github',
 
         instance: {
             githubService,

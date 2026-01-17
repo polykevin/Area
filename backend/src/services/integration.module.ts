@@ -58,7 +58,7 @@ import { slackIntegration } from './slack/slack.integration';
 import { every } from 'rxjs';
 import { GithubModule } from './github/github.module';
 import { GithubService } from './github/github.service';
-import { NewIssueHook } from './github/hooks/new-issue.hook';
+import { GithubNewIssueHook } from './github/hooks/new-issue.hook';
 import { githubIntegration } from './github/github.integration';
 
 @Module({
@@ -100,7 +100,7 @@ export class IntegrationModule {
     private newEmailHook: NewEmailHook,
 
     private githubService: GithubService,
-    private newIssueHook: NewIssueHook,
+    private githubNewIssueHook: GithubNewIssueHook,
 
     private instagramService: InstagramService,
     private newMediaHook: NewMediaHook,
@@ -188,7 +188,7 @@ export class IntegrationModule {
       notionIntegration(notionService)
     );
     registry.register(
-      githubIntegration(githubService, authRepo, engine, newIssueHook)
+      githubIntegration(githubService, authRepo, engine, githubNewIssueHook)
     );
   }
 }
