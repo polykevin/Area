@@ -16,19 +16,15 @@ export default function AreasPage() {
 
   useEffect(() => {
     if (!isReady) return;
-    if (!user) {
-      router.replace("/login");
-    }
+    if (!user) router.replace("/login");
   }, [isReady, user, router]);
 
-    useEffect(() => {
+  useEffect(() => {
     if (!user) return;
 
     async function loadAreas() {
       try {
-        const res = await apiFetch("/areas", {
-          method: "GET",
-        });
+        const res = await apiFetch("/areas", { method: "GET" });
 
         if (!res.ok) {
           console.error("Failed to fetch areas:", await res.text());
@@ -37,7 +33,7 @@ export default function AreasPage() {
         }
 
         const data = await res.json();
-        setAreas(data);
+        setAreas(Array.isArray(data) ? data : []);
       } catch (err) {
         console.error("Network error:", err);
         setAreas([]);
@@ -49,11 +45,9 @@ export default function AreasPage() {
     loadAreas();
   }, [user]);
 
-  if (!isReady || !user) {
-    return null;
-  }
+  if (!isReady || !user) return null;
 
-   if (loading) {
+  if (loading) {
     return (
       <div style={{ paddingTop: "6rem", textAlign: "center", color: "#e5e7eb" }}>
         Loading your AREAs...
@@ -79,16 +73,11 @@ export default function AreasPage() {
           justifyContent: "space-between",
           alignItems: "center",
           marginBottom: "1.5rem",
+          gap: "1rem",
         }}
       >
         <div>
-          <h1
-            style={{
-              fontSize: "1.8rem",
-              fontWeight: 600,
-              marginBottom: "0.3rem",
-            }}
-          >
+          <h1 style={{ fontSize: "1.8rem", fontWeight: 600, marginBottom: "0.3rem" }}>
             My AREAs
           </h1>
           <p style={{ fontSize: "0.9rem", color: "#9ca3af" }}>
@@ -106,11 +95,12 @@ export default function AreasPage() {
               background: "#2563eb",
               color: "#f9fafb",
               fontSize: "0.9rem",
-              fontWeight: 500,
+              fontWeight: 600,
               cursor: "pointer",
+              whiteSpace: "nowrap",
             }}
           >
-            + New AREA
+            New AREA
           </button>
         </Link>
       </header>
@@ -125,9 +115,7 @@ export default function AreasPage() {
             background: "rgba(15,23,42,0.8)",
           }}
         >
-          <p style={{ marginBottom: "0.7rem" }}>
-            You do not have any AREA yet.
-          </p>
+          <p style={{ marginBottom: "0.7rem" }}>You do not have any AREA yet.</p>
           <Link href="/areas/new">
             <button
               type="button"
@@ -139,6 +127,7 @@ export default function AreasPage() {
                 color: "#fff",
                 fontSize: "0.85rem",
                 cursor: "pointer",
+                fontWeight: 600,
               }}
             >
               Create your first AREA
@@ -154,7 +143,7 @@ export default function AreasPage() {
           }}
         >
           {areas.map((area, idx) => (
-            <AreaCard key={`${area.name}-${idx}`} area={area} />
+            <AreaCard key={`${area.name}-${area.actionType}-${area.reactionType}-${idx}`} area={area} />
           ))}
         </div>
       )}

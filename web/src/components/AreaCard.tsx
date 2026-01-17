@@ -2,15 +2,16 @@
 
 import type { Area } from "@/types/area";
 
-type Props = {
-  area: Area;
-};
+type Props = { area: Area };
 
 export function AreaCard({ area }: Props) {
   const isActive = area.active === true;
 
+  const whenLabel = `${area.actionService} · ${area.actionType}`;
+  const thenLabel = `${area.reactionService} · ${area.reactionType}`;
+
   return (
-    <div
+    <article
       style={{
         borderRadius: 16,
         border: "1px solid rgba(148,163,184,0.35)",
@@ -18,24 +19,12 @@ export function AreaCard({ area }: Props) {
         background: "rgba(15,23,42,0.95)",
         display: "flex",
         flexDirection: "column",
-        gap: "0.3rem",
+        gap: "0.45rem",
       }}
+      aria-label={`AREA ${area.name}`}
     >
-      <div
-        style={{
-          display: "flex",
-          justifyContent: "space-between",
-          alignItems: "center",
-          gap: "0.75rem",
-        }}
-      >
-        <h3
-          style={{
-            fontSize: "1rem",
-            fontWeight: 500,
-            color: "#e5e7eb",
-          }}
-        >
+      <header style={{ display: "flex", justifyContent: "space-between", alignItems: "center", gap: "0.75rem" }}>
+        <h3 style={{ margin: 0, fontSize: "1rem", fontWeight: 600, color: "#e5e7eb" }}>
           {area.name}
         </h3>
 
@@ -48,38 +37,28 @@ export function AreaCard({ area }: Props) {
               ? "1px solid rgba(52,211,153,0.5)"
               : "1px solid rgba(148,163,184,0.4)",
             color: isActive ? "#6ee7b7" : "#9ca3af",
-            background: isActive
-              ? "rgba(22,163,74,0.15)"
-              : "rgba(30,64,175,0.15)",
+            background: isActive ? "rgba(22,163,74,0.15)" : "rgba(30,64,175,0.15)",
+            whiteSpace: "nowrap",
           }}
         >
           {isActive ? "Active" : "Paused"}
         </span>
-      </div>
+      </header>
 
-      {area.description && (
-        <p
-          style={{
-            fontSize: "0.85rem",
-            color: "#9ca3af",
-            marginTop: "0.15rem",
-          }}
-        >
+      {area.description ? (
+        <p style={{ margin: 0, fontSize: "0.85rem", color: "#9ca3af" }}>
           {area.description}
         </p>
-      )}
+      ) : null}
 
-      <p
-        style={{
-          fontSize: "0.8rem",
-          color: "#cbd5f5",
-          marginTop: "0.25rem",
-        }}
-      >
-        <strong>When</strong> {area.actionService} / {area.actionType}
-        <br />
-        <strong>Then</strong> {area.reactionService} / {area.reactionType}
-      </p>
-    </div>
+      <div style={{ marginTop: "0.35rem", fontSize: "0.85rem", color: "#cbd5f5", lineHeight: 1.35 }}>
+        <div>
+          <strong>When</strong> {whenLabel}
+        </div>
+        <div>
+          <strong>Then</strong> {thenLabel}
+        </div>
+      </div>
+    </article>
   );
 }
