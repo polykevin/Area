@@ -530,7 +530,6 @@ class _CreateAreaScreenState extends State<CreateAreaScreen> {
     final theme = Theme.of(context);
     final cs = theme.colorScheme;
 
-    // build schemas (or empty) for current selection
     final actionSchema = (_actionServiceId != null && _actionId != null)
         ? _inputSchema(_findAction(_actionServiceId!, _actionId!))
         : const <dynamic>[];
