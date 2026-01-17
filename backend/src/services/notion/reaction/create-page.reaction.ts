@@ -1,6 +1,8 @@
 export const NotionCreatePageReaction = {
   id: 'create_page',
-  name: 'Create Notion page',
+  name: 'create.notion.page',
+  displayName: 'Create Notion page',
+  description: 'Create a new Notion page',
 
   async execute({ notionService, params }) {
     const databaseId =

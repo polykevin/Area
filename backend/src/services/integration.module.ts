@@ -56,10 +56,15 @@ import { SlackNewMessageHook } from './slack/hooks/slack-new-message.hook';
 import { slackIntegration } from './slack/slack.integration';
 
 import { every } from 'rxjs';
+import { GithubModule } from './github/github.module';
+import { GithubService } from './github/github.service';
+import { GithubNewIssueHook } from './github/hooks/new-issue.hook';
+import { githubIntegration } from './github/github.integration';
 
 @Module({
   imports: [
     GoogleModule,
+    GithubModule,
     InstagramModule,
     WeatherModule,
     TwitterModule,
@@ -75,6 +80,7 @@ import { every } from 'rxjs';
     ServiceRegistry,
     AutomationEngine,
     GoogleService,
+    GithubService,
     DiscordService,
     ServiceAuthRepository,
     NewEmailHook,
@@ -89,8 +95,12 @@ export class IntegrationModule {
   constructor(
     private registry: ServiceRegistry,
 
+
     private googleService: GoogleService,
     private newEmailHook: NewEmailHook,
+
+    private githubService: GithubService,
+    private githubNewIssueHook: GithubNewIssueHook,
 
     private instagramService: InstagramService,
     private newMediaHook: NewMediaHook,
@@ -122,11 +132,10 @@ export class IntegrationModule {
 
     private authRepo: ServiceAuthRepository,
     private engine: AutomationEngine,
-     
     private notionService: NotionService,
-     
   ) {
     newEmailHook.setEngine(engine);
+    newIssueHook.setEngine(engine);
     newMediaHook.setEngine(engine);
     newWeatherDataHook.setEngine(engine);
     newTweetHook.setEngine(engine);
@@ -168,7 +177,7 @@ export class IntegrationModule {
     registry.register(
       clockIntegration(clockService, authRepo, engine, everyMinuteHook, everyDayAtHook),
     );
-    
+
     registry.register(
       slackIntegration(slackService, authRepo, engine, slackNewMessageHook)
     );
@@ -177,6 +186,9 @@ export class IntegrationModule {
     );
      registry.register(
       notionIntegration(notionService)
+    );
+    registry.register(
+      githubIntegration(githubService, authRepo, engine, githubNewIssueHook)
     );
   }
 }

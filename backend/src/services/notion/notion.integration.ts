@@ -4,9 +4,11 @@ export function notionIntegration(notionService) {
   return {
     id: 'notion',
     displayName: 'Notion',
+    color: '#000000',
+    iconKey: 'notion',
 
-    instance: { 
-      notionService 
+    instance: {
+      notionService
     },
 
     actions: [],

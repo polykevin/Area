@@ -7,6 +7,7 @@ import { DropboxOAuthProvider } from './providers/dropbox.oauth';
 import { GitLabOAuthProvider } from './providers/gitlab.oauth';
 import { ClockOAuthProvider } from './providers/clock.oauth';
 import { SlackOAuthProvider } from './providers/slack.oauth';
+import { GithubOAuthProvider } from './providers/github.oauth';
 
 export interface OAuthProvider {
   getAuthUrl(state: string, codeChallenge?: string): string;
@@ -34,6 +35,8 @@ export class OauthFactoryService {
         return new ClockOAuthProvider();
       case 'slack':
         return new SlackOAuthProvider();
+      case 'github':
+        return new GithubOAuthProvider();
       default:
         throw new Error(`Unknown OAuth provider: ${provider}`);
     }
