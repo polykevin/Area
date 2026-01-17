@@ -9,8 +9,7 @@ export default function TrelloCallbackClient() {
   const searchParams = useSearchParams();
 
   useEffect(() => {
-    // 🔥 Trello token est dans le HASH (#token=...)
-    const hash = window.location.hash; // "#token=ATTA..."
+    const hash = window.location.hash;
     const token = hash.startsWith("#token=")
       ? hash.replace("#token=", "")
       : null;
@@ -30,7 +29,6 @@ export default function TrelloCallbackClient() {
           body: JSON.stringify({ token, state }),
         });
 
-        // Nettoie l'URL + redirection propre
         router.replace("/services?connected=true");
       } catch (err) {
         console.error("Trello OAuth failed", err);
