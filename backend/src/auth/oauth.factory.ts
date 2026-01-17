@@ -1,8 +1,5 @@
 import { Injectable } from '@nestjs/common';
 import { GoogleOAuthProvider } from './providers/google.oauth';
-<<<<<<< HEAD
-import { TrelloOAuthProvider } from './providers/trello.oauth';
-=======
 import { InstagramOAuthProvider } from './providers/instagram.oauth';
 import { WeatherOAuthProvider } from './providers/weather.oauth';
 import { TwitterOAuthProvider } from './providers/twitter.oauth';
@@ -11,6 +8,7 @@ import { GitLabOAuthProvider } from './providers/gitlab.oauth';
 import { ClockOAuthProvider } from './providers/clock.oauth';
 import { SlackOAuthProvider } from './providers/slack.oauth';
 import { GithubOAuthProvider } from './providers/github.oauth';
+import { TrelloOAuthProvider } from './providers/trello.oauth';
 
 export interface OAuthProvider {
   getAuthUrl(state: string, codeChallenge?: string): string;
@@ -24,12 +22,6 @@ export class OauthFactoryService {
     switch (provider) {
       case 'google':
         return new GoogleOAuthProvider();
-<<<<<<< HEAD
-
-      case 'trello':
-        return new TrelloOAuthProvider();
-
-=======
       case 'instagram':
         return new InstagramOAuthProvider();
       case 'weather':
@@ -46,6 +38,8 @@ export class OauthFactoryService {
         return new SlackOAuthProvider();
       case 'github':
         return new GithubOAuthProvider();
+      case 'trello':
+        return new TrelloOAuthProvider();
       default:
         throw new Error(`Unknown OAuth provider: ${provider}`);
     }

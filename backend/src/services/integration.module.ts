@@ -9,9 +9,6 @@ import { DiscordService } from '../services/discord/discord.service';
 import { ServiceAuthRepository } from '../auth/service-auth.repository';
 import { NewEmailHook } from './google/hooks/new-email.hook';
 import { googleIntegration } from './google/google.integration';
-import { TrelloService } from './trello/trello.service';
-import { TrelloCardCreatedHook } from './trello/hooks/card-created.hook';
-import { trelloIntegration } from './trello/trello.integration';
 import { NotionService } from './notion/notion.service';
 import { notionIntegration } from './notion/notion.integration';
 import { NotionModule } from './notion/notion.module';
@@ -64,6 +61,11 @@ import { GithubService } from './github/github.service';
 import { GithubNewIssueHook } from './github/hooks/new-issue.hook';
 import { githubIntegration } from './github/github.integration';
 
+import { TrelloModule } from './trello/trello.module';
+import { TrelloService } from './trello/trello.service';
+import { TrelloCardCreatedHook } from './trello/hooks/card-created.hook';
+import { trelloIntegration } from './trello/trello.integration';
+
 @Module({
   imports: [
     GoogleModule,
@@ -78,6 +80,7 @@ import { githubIntegration } from './github/github.integration';
     AuthModule,
     AreasModule,
     NotionModule,
+    TrelloModule,
   ],
   providers: [
     ServiceRegistry,
@@ -87,7 +90,6 @@ import { githubIntegration } from './github/github.integration';
     DiscordService,
     ServiceAuthRepository,
     NewEmailHook,
-    TrelloCardCreatedHook,
     CalendarEventHook,
   ],
   exports: [
@@ -137,6 +139,9 @@ export class IntegrationModule {
     private authRepo: ServiceAuthRepository,
     private engine: AutomationEngine,
     private notionService: NotionService,
+
+    private trelloService: TrelloService,
+    private trelloCardCreatedHook: TrelloCardCreatedHook,
   ) {
     newEmailHook.setEngine(engine);
     newIssueHook.setEngine(engine);
@@ -153,6 +158,7 @@ export class IntegrationModule {
     slackNewMessageHook.setEngine(engine);
     newEmailHook.setEngine(engine);
     calendarEventHook.setEngine(engine);
+    trelloCardCreatedHook.setEngine(this.engine);
 
     registry.register(
       googleIntegration(googleService, authRepo, engine, newEmailHook),
@@ -194,6 +200,8 @@ export class IntegrationModule {
     registry.register(
       githubIntegration(githubService, authRepo, engine, githubNewIssueHook)
     );
-   registry.register(trelloIntegration());
+    registry.register(
+      trelloIntegration(trelloService, authRepo, engine, trelloCardCreatedHook),
+    );
   }
 }

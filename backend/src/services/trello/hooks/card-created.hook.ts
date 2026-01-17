@@ -1,39 +1,52 @@
 import { Injectable } from '@nestjs/common';
 import { Cron } from '@nestjs/schedule';
-import axios from 'axios';
 import { ServiceAuthRepository } from '../../../auth/service-auth.repository';
 import { AutomationEngine } from '../../../automation/engine.service';
+import { TrelloService } from '../trello.service';
 
 @Injectable()
 export class TrelloCardCreatedHook {
+  private engine: AutomationEngine;
+
   constructor(
     private authRepo: ServiceAuthRepository,
-    private engine: AutomationEngine,
+    private trello: TrelloService,
   ) {}
 
+  setEngine(engine: AutomationEngine) {
+    this.engine = engine;
+  }
+
   @Cron('*/20 * * * * *')
-  async poll() {
-    const users = await this.authRepo.findUsersWithService('trello');
+  async check() {
+    if (!this.engine) return;
 
-    for (const user of users) {
-      const res = await axios.get(
-        'https://api.trello.com/1/members/me/cards',
-        {
-          params: {
-            key: user.accessToken,
-            token: user.refreshToken,
-          },
-        }
-      );
+    const subscribed = await this.authRepo.findUsersWithService('trello');
 
-      const latest = res.data?.[0];
-      if (!latest) continue;
+    for (const record of subscribed) {
+      const userId = record.userId;
+
+      const meta =
+        record.metadata &&
+        typeof record.metadata === 'object' &&
+        !Array.isArray(record.metadata)
+          ? (record.metadata as any)
+          : {};
+
+      const lastActionId = meta.lastCreateCardActionId ?? null;
+
+      const latest = await this.trello.getLatestCreateCardAction(userId);
+      if (!latest?.id || latest.id === lastActionId) continue;
 
       await this.engine.emitHookEvent({
-        userId: user.userId,
+        userId,
         actionService: 'trello',
-        actionType: 'trello_card_created',
+        actionType: 'card_created',
         payload: latest,
+      });
+
+      await this.authRepo.updateMetadata(userId, 'trello', {
+        lastCreateCardActionId: latest.id,
       });
     }
   }

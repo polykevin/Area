@@ -1,23 +1,27 @@
 import { NestFactory } from '@nestjs/core';
 import { AppModule } from './app.module';
-import { AutomationEngine } from './automation/engine.service';
+import { TrelloService } from './services/trello/trello.service';
 
 async function bootstrap() {
   const app = await NestFactory.createApplicationContext(AppModule);
 
-  const engine = app.get(AutomationEngine);
+  const trello = app.get(TrelloService);
 
-  await engine.emitHookEvent({
-    userId: 1, // ⚠️ doit exister en DB
-    actionService: 'google',
-    actionType: 'new_email',
-    payload: {
-      from: 'test@example.com',
-      subject: 'Test AREA',
-    },
-  });
+  const listId = await trello.findListIdByName(
+    1,     
+    'AREA',   
+    'test'   
+  );
 
-  console.log('AREA test event emitted.');
+  await trello.createCard(
+    1,
+    listId,
+    'Carte test BACKEND',
+    'Créée sans clock'
+  );
+
+
+
   await app.close();
 }
 
