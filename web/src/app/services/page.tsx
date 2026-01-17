@@ -1,109 +1,164 @@
 "use client";
 
 import { ServiceCard } from "@/components/ServiceCard";
-import { useEffect, useState } from "react";
+import { useEffect, useMemo, useState } from "react";
 import { useAuth } from "@/components/AuthProvider";
+import { apiGetCatalog, CatalogService, apiFetch } from "@/lib/api";
 
-const MOCK_SERVICES = [
-  {
-    name: "github",
-    category: "Developer tools",
-    description:
-      "Triggers based on commits, pull requests, issues and releases in your repositories.",
-    isConnected: false,
-    logoSrc: "/services/github.png",
-    actionsCount: 3,
-    reactionsCount: 2,
-  },
-  {
-    name: "google",
+type UiMeta = {
+  category: string;
+  description: string;
+  logoSrc: string;
+};
+
+const UI_META: Record<string, UiMeta> = {
+  google: {
     category: "Communication",
-    description:
-      "React to incoming emails, labels or threads to automate notifications and workflows.",
-    isConnected: false,
+    description: "Gmail & Google services automation.",
     logoSrc: "/services/gmail.png",
-    actionsCount: 2,
-    reactionsCount: 2,
   },
-  {
-  name: "trello",
-  category: "Project Management",
-  description:
-    "Create, track and manage cards and boards to automate project workflows.",
-  isConnected: false,
-  logoSrc: "/services/trello.png",
-  actionsCount: 1,
-  reactionsCount: 1,
-},
-
-  // {
-  //   name: "Discord",
-  //   category: "Chat & Community",
-  //   description:
-  //     "Send messages to channels or DMs when an Action is triggered on another service.",
-  //   isConnected: false,
-  //   logoSrc: "/services/discord.png",
-  //   actionsCount: 1,
-  //   reactionsCount: 2,
-  // },
-  // {
-  //   name: "Google Drive",
-  //   category: "Storage",
-  //   description:
-  //     "Create files, move documents or update folders when an Action occurs somewhere else.",
-  //   isConnected: false,
-  //   logoSrc: "/services/drive.png",
-  //   actionsCount: 2,
-  //   reactionsCount: 1,
-  // },
-];
+  github: {
+    category: "Developer tools",
+    description: "Automate issues, PRs, and repository events.",
+    logoSrc: "/services/github.png",
+  },
+  gitlab: {
+    category: "Developer tools",
+    description: "Automate issues and merge requests on GitLab.",
+    logoSrc: "/services/gitlab.png",
+  },
+  slack: {
+    category: "Chat & Community",
+    description: "Send messages to Slack when an action triggers.",
+    logoSrc: "/services/slack.png",
+  },
+  discord: {
+    category: "Chat & Community",
+    description: "Send messages to Discord channels.",
+    logoSrc: "/services/discord.png",
+  },
+  dropbox: {
+    category: "Storage",
+    description: "Automate file events and uploads in Dropbox.",
+    logoSrc: "/services/dropbox.png",
+  },
+  trello: {
+    category: "Project management",
+    description: "Automate card creation and workflow tasks.",
+    logoSrc: "/services/trello.png",
+  },
+  notion: {
+    category: "Productivity",
+    description: "Create pages and notes in Notion.",
+    logoSrc: "/services/notion.png",
+  },
+  twitter: {
+    category: "Social",
+    description: "Automate tweets and mentions.",
+    logoSrc: "/services/twitter.png",
+  },
+  instagram: {
+    category: "Social",
+    description: "Trigger automations on new Instagram media.",
+    logoSrc: "/services/instagram.png",
+  },
+  weather: {
+    category: "Utilities",
+    description: "Trigger workflows on weather updates.",
+    logoSrc: "/services/weather.png",
+  },
+  clock: {
+    category: "Utilities",
+    description: "Schedule workflows with time triggers.",
+    logoSrc: "/services/clock.png",
+  },
+};
 
 export default function ServicesPage() {
   const { user, token, isReady } = useAuth();
+
+  const [catalog, setCatalog] = useState<CatalogService[]>([]);
   const [connectedServices, setConnectedServices] = useState<string[]>([]);
+  const [loading, setLoading] = useState(true);
 
   useEffect(() => {
-    if (!isReady) return;
-    if (!token) return;
+    if (!isReady || !token) return;
 
-    const fetchServices = async () => {
+    async function loadAll() {
       try {
-        const res = await fetch(
-          `${process.env.NEXT_PUBLIC_API_URL}/auth/me`,
-          { headers: { Authorization: `Bearer ${token}` } }
-        );
+        setLoading(true);
 
-        const data = await res.json();
+        const catalogRes = await apiGetCatalog();
+        setCatalog(catalogRes.services ?? []);
 
-        if (data?.serviceAuth) {
-          const services = data.serviceAuth.map((s: { serviceName?: string; service?: string }) => s.serviceName ?? s.service);
+        const meRes = await apiFetch("/auth/me", { method: "GET" });
+        const meData: unknown = await meRes.json();
+
+        if (meData && typeof meData === "object" && "services" in meData) {
+          const services = (meData as { services?: string[] }).services ?? [];
           setConnectedServices(services);
+        } else {
+          if (meData && typeof meData === "object" && "serviceAuth" in meData) {
+            const arr = (meData as any).serviceAuth as Array<{
+              serviceName?: string;
+              service?: string;
+            }>;
+            const isString = (v: unknown): v is string => typeof v === "string" && v.length > 0;
+
+            const services = Array.isArray(arr)
+              ? arr.map((s) => s.serviceName ?? s.service).filter(isString)
+              : [];
+            
+            setConnectedServices(services);
+          }
+        }
+
+        const params = new URLSearchParams(window.location.search);
+        if (params.get("connected")) {
+          window.history.replaceState({}, "", "/services");
         }
       } catch (err) {
-        console.error("Failed to load services:", err);
+        console.error(err);
+      } finally {
+        setLoading(false);
       }
-    };
-
-    fetchServices();
-
-    const params = new URLSearchParams(window.location.search);
-    if (params.get("connected")) {
-      window.history.replaceState({}, "", "/services");
-      fetchServices();
     }
+
+    loadAll();
   }, [isReady, token]);
 
-  const handleServiceConnect = (serviceName: string) => {
+  const servicesUi = useMemo(() => {
+    return catalog.map((s) => {
+      const meta = UI_META[s.id] ?? {
+        category: "Other",
+        description: "Service available in AREA.",
+        logoSrc: "/services/default.png",
+      };
+
+      return {
+        id: s.id,
+        name: s.displayName || s.id,
+        category: meta.category,
+        description: meta.description,
+        logoSrc: meta.logoSrc,
+        actionsCount: Array.isArray(s.actions) ? s.actions.length : 0,
+        reactionsCount: Array.isArray(s.reactions) ? s.reactions.length : 0,
+      };
+    });
+  }, [catalog]);
+
+  const connectedCount = connectedServices.length;
+
+  const handleServiceConnect = (serviceId: string) => {
     if (!token || !user) {
       alert("You must be logged in first.");
       return;
     }
 
-    window.location.href =
-      `${process.env.NEXT_PUBLIC_API_URL}/oauth/${serviceName}/url?userId=${user.id}`;
+    window.location.href = `${process.env.NEXT_PUBLIC_API_BASE_URL}/oauth/${serviceId}/url?userId=${user.id}`;
   };
 
-  const connectedCount = connectedServices.length;
+  if (!isReady) return null;
 
   return (
     <div
@@ -117,7 +172,7 @@ export default function ServicesPage() {
       <header
         style={{
           textAlign: "center",
-          maxWidth: 640,
+          maxWidth: 680,
           marginInline: "auto",
           marginBottom: "2rem",
         }}
@@ -128,30 +183,42 @@ export default function ServicesPage() {
         <p style={{ fontSize: "0.9rem", color: "#cbd5e1", marginBottom: "0.75rem" }}>
           Connect external services to AREA.
         </p>
+
         <p style={{ fontSize: "0.8rem", color: "#94a3b8" }}>
           <strong>{connectedCount}</strong> connected ·{" "}
-          <strong>{MOCK_SERVICES.length}</strong> available
+          <strong>{servicesUi.length}</strong> available
         </p>
       </header>
 
-      <div
-        style={{
-          display: "grid",
-          gridTemplateColumns: "repeat(auto-fit, minmax(260px, 1fr))",
-          gap: "1rem",
-          maxWidth: 960,
-          marginInline: "auto",
-        }}
-      >
-        {MOCK_SERVICES.map((service) => (
-          <ServiceCard
-            key={service.name}
-            {...service}
-            isConnected={connectedServices.includes(service.name)}
-            onConnect={() => handleServiceConnect(service.name)}
-          />
-        ))}
-      </div>
+      {loading ? (
+        <div style={{ textAlign: "center", color: "#cbd5e1" }}>
+          Loading services...
+        </div>
+      ) : (
+        <div
+          style={{
+            display: "grid",
+            gridTemplateColumns: "repeat(auto-fit, minmax(260px, 1fr))",
+            gap: "1rem",
+            maxWidth: 960,
+            marginInline: "auto",
+          }}
+        >
+          {servicesUi.map((service) => (
+            <ServiceCard
+              key={service.id}
+              name={service.name}
+              category={service.category}
+              description={service.description}
+              logoSrc={service.logoSrc}
+              actionsCount={service.actionsCount}
+              reactionsCount={service.reactionsCount}
+              isConnected={connectedServices.includes(service.id)}
+              onConnect={() => handleServiceConnect(service.id)}
+            />
+          ))}
+        </div>
+      )}
     </div>
   );
 }
