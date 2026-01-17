@@ -14,9 +14,9 @@ import 'screens/home/home_screen.dart';
 void main() async {
   WidgetsFlutterBinding.ensureInitialized();
 
-  await ApiClient().setBackendUrl("http://192.168.1.172:8080"); // Paul's local dev server
+  //await ApiClient().setBackendUrl("http://192.168.1.172:8080"); // Paul's local dev server
   //await ApiClient().setBackendUrl("http://10.68.251.81:8080"); //local ip lan address, this is the epitech one
-  //await ApiClient().setBackendUrl("http://10.192.64.132:8080"); //this is my home in france
+  await ApiClient().setBackendUrl("http://10.192.64.132:8080"); //this is my home in france
   //await ApiClient().setBackendUrl("http://10.68.240.88:8080"); //this is another epitech one
   //await ApiClient().setBackendUrl("http://192.168.0.161:8080");
   //await ApiClient().setBackendUrl("http://10.68.246.170:8080"); //this is another epitech one

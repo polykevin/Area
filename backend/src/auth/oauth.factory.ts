@@ -6,9 +6,11 @@ import { TrelloOAuthProvider } from './providers/trello.oauth';
 import { InstagramOAuthProvider } from './providers/instagram.oauth';
 import { WeatherOAuthProvider } from './providers/weather.oauth';
 import { TwitterOAuthProvider } from './providers/twitter.oauth';
+import { DropboxOAuthProvider } from './providers/dropbox.oauth';
+import { GitLabOAuthProvider } from './providers/gitlab.oauth';
 import { ClockOAuthProvider } from './providers/clock.oauth';
 import { SlackOAuthProvider } from './providers/slack.oauth';
->>>>>>> 1a7f805
+import { GithubOAuthProvider } from './providers/github.oauth';
 
 export interface OAuthProvider {
   getAuthUrl(state: string, codeChallenge?: string): string;
@@ -34,11 +36,16 @@ export class OauthFactoryService {
         return new WeatherOAuthProvider();
       case 'twitter':
         return new TwitterOAuthProvider();
+      case 'dropbox':
+        return new DropboxOAuthProvider();
+      case 'gitlab':
+        return new GitLabOAuthProvider();
       case 'clock':
         return new ClockOAuthProvider();
       case 'slack':
         return new SlackOAuthProvider();
->>>>>>> 1a7f805
+      case 'github':
+        return new GithubOAuthProvider();
       default:
         throw new Error(`Unknown OAuth provider: ${provider}`);
     }

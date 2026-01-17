@@ -6,7 +6,7 @@ import { useAuth } from "@/components/AuthProvider";
 
 const MOCK_SERVICES = [
   {
-    name: "GitHub",
+    name: "github",
     category: "Developer tools",
     description:
       "Triggers based on commits, pull requests, issues and releases in your repositories.",

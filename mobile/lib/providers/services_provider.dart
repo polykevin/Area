@@ -23,7 +23,9 @@ class ServicesProvider extends ChangeNotifier {
       final result = await _api.getServices();
       _services = result;
     } catch (e) {
-      print('[ERROR] ServicesProvider.loadServices - error: $e');
+      if (kDebugMode) {
+        print('[ERROR] ServicesProvider.loadServices - error: $e');
+      }
       _services = [];
       _error = 'Failed to load services: $e';
     } finally {
@@ -32,28 +34,41 @@ class ServicesProvider extends ChangeNotifier {
     }
   }
 
-  Future<void> connect(String serviceName) async {
+  void _upsertService(Service updated) {
+    final idx = _services.indexWhere((s) => s.id == updated.id);
+    if (idx == -1) {
+      _services = [updated, ..._services];
+    } else {
+      final copy = [..._services];
+      copy[idx] = updated;
+      _services = copy;
+    }
+  }
+
+  Future<void> connect(String serviceId) async {
+    _error = null;
+    notifyListeners();
+
     try {
-      final updated = await _api.connectService(serviceName);
-      _services = _services
-          .map((s) => s.name == serviceName ? updated : s)
-          .toList();
+      final updated = await _api.connectService(serviceId);
+      _upsertService(updated);
       notifyListeners();
     } catch (e) {
-      _error = 'Failed to connect $serviceName: $e';
+      _error = 'Failed to connect $serviceId: $e';
       notifyListeners();
     }
   }
 
-  Future<void> disconnect(String serviceName) async {
+  Future<void> disconnect(String serviceId) async {
+    _error = null;
+    notifyListeners();
+
     try {
-      final updated = await _api.disconnectService(serviceName);
-      _services = _services
-          .map((s) => s.name == serviceName ? updated : s)
-          .toList();
+      final updated = await _api.disconnectService(serviceId);
+      _upsertService(updated);
       notifyListeners();
     } catch (e) {
-      _error = 'Failed to disconnect $serviceName: $e';
+      _error = 'Failed to disconnect $serviceId: $e';
       notifyListeners();
     }
   }

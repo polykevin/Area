@@ -8,7 +8,6 @@ class AreasApi {
   Future<List<Area>> fetchAreas() async {
     final res = await _dio.get('/areas');
 
-    // backend returns a list
     final data = res.data as List<dynamic>;
     return data
         .map((e) => Area.fromJson(e as Map<String, dynamic>))
@@ -22,10 +21,12 @@ class AreasApi {
     required String reactionService,
     required String reactionType,
     required Map<String, dynamic> reactionParams,
-    String? name, // optional if your DTO supports it
+    String? name,
+    required String description,
   }) async {
     final payload = <String, dynamic>{
       if (name != null) 'name': name,
+      'description': description,
       'actionService': actionService,
       'actionType': actionType,
       'actionParams': actionParams,

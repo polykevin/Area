@@ -8,6 +8,8 @@ export function twitterIntegration(twitterService, authRepo, engine, newTweetHoo
   return {
     id: 'twitter',
     displayName: 'Twitter',
+    color: '#1DA1F2',
+    iconKey: 'twitter',
 
     instance: {
       twitterService,
