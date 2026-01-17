@@ -246,7 +246,7 @@ body {
 }
 
 .btn-nav-primary {
-  background: #3b82f6;
+  background: #1d4ed8;
   color: #f9fafb;
   border-radius: 999px;
   border: none;
@@ -263,12 +263,12 @@ body {
 }
 
 .btn-nav-primary:hover {
-  background: #60a5fa;
+  background: #2563eb;
   box-shadow: 0 14px 32px rgba(37, 99, 235, 0.6);
 }
 
 .btn-nav-primary:active {
-  background: #1d4ed8;
+  background: #1e40af;
   transform: translateY(1px) scale(0.97);
   box-shadow: 0 6px 18px rgba(30, 64, 175, 0.75);
 }
@@ -407,4 +407,50 @@ body {
 
 .nav-link-main:active {
   transform: translateY(1px) scale(0.97);
+}
+
+/* Accessibility: visible focus for keyboard users */
+:focus-visible {
+  outline: 2px solid #60a5fa;
+  outline-offset: 3px;
+}
+
+/* Accessibility: reduce motion */
+@media (prefers-reduced-motion: reduce) {
+  * {
+    animation: none !important;
+    transition: none !important;
+    scroll-behavior: auto !important;
+  }
+}
+
+/* Accessibility: screen-reader only text */
+.sr-only {
+  position: absolute;
+  width: 1px;
+  height: 1px;
+  padding: 0;
+  margin: -1px;
+  overflow: hidden;
+  clip: rect(0, 0, 0, 0);
+  white-space: nowrap;
+  border: 0;
+}
+
+/* Accessibility: skip link */
+.skip-link {
+  position: absolute;
+  top: -48px;
+  left: 12px;
+  padding: 8px 12px;
+  background: #2563eb;
+  color: #fff;
+  border-radius: 10px;
+  z-index: 1000;
+  text-decoration: none;
+  font-weight: 600;
+}
+
+.skip-link:focus {
+  top: 12px;
 }

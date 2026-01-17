@@ -1,70 +1,210 @@
 "use client";
 
-import { useState, FormEvent } from "react";
+import { useEffect, useMemo, useState, FormEvent } from "react";
 import type { Area } from "@/types/area";
+import { apiFetch } from "@/lib/api";
 
 type WizardStep = 1 | 2 | 3;
+
+type Catalog = {
+  services: Array<{
+    id: string;
+    displayName: string;
+    actions: Array<{ id: string; name: string }>;
+    reactions: Array<{ id: string; name: string }>;
+  }>;
+};
 
 type Props = {
   onCreate(area: Area): void;
 };
 
-const ACTION_SERVICES = ["Gmail"];
-const REACTION_SERVICES = ["Gmail"];
+type Field = {
+  key: string;
+  label: string;
+  type: "text" | "textarea";
+  required?: boolean;
+  placeholder?: string;
+};
+
+function getActionFields(serviceId: string, actionId: string): Field[] {
+  if (serviceId === "google" && actionId === "new_email") {
+    return [
+      {
+        key: "folder",
+        label: "Folder",
+        type: "text",
+        required: true,
+        placeholder: "INBOX",
+      },
+    ];
+  }
+  return [];
+}
+
+function getReactionFields(serviceId: string, reactionId: string): Field[] {
+  if (serviceId === "google" && reactionId === "send_email") {
+    return [
+      { key: "to", label: "To", type: "text", required: true, placeholder: "you@example.com" },
+      { key: "subject", label: "Subject", type: "text", required: true, placeholder: "Hello" },
+      { key: "body", label: "Body", type: "textarea", required: true, placeholder: "Your message..." },
+    ];
+  }
+  return [];
+}
 
 export function AreaWizard({ onCreate }: Props) {
   const [step, setStep] = useState<WizardStep>(1);
 
+  // Step 1
   const [name, setName] = useState("");
   const [description, setDescription] = useState("");
 
-  const [triggerService, setTriggerService] = useState("google");
-  const [triggerAction, setTriggerAction] = useState("new_email");
-  const [actionParams, setActionParams] = useState("{}");
+  // Catalog
+  const [catalog, setCatalog] = useState<Catalog | null>(null);
+  const [loadingCatalog, setLoadingCatalog] = useState(true);
+  const [catalogError, setCatalogError] = useState<string | null>(null);
 
-  const [reactionService, setReactionService] = useState("google");
-  const [reactionAction, setReactionAction] = useState("send_email");
-  const [reactionParams, setReactionParams] = useState("{}");
+  // Step 2 (Action)
+  const [actionService, setActionService] = useState("");
+  const [actionType, setActionType] = useState("");
+  const [actionParams, setActionParams] = useState<Record<string, string>>({});
+
+  // Step 3 (Reaction)
+  const [reactionService, setReactionService] = useState("");
+  const [reactionType, setReactionType] = useState("");
+  const [reactionParams, setReactionParams] = useState<Record<string, string>>({});
+
+  useEffect(() => {
+    async function loadCatalog() {
+      try {
+        setLoadingCatalog(true);
+        setCatalogError(null);
+
+        const res = await apiFetch("/services/catalog", { method: "GET" });
+        if (!res.ok) {
+          const txt = await res.text();
+          throw new Error(txt || "Failed to load services catalog");
+        }
+
+        const data = (await res.json()) as Catalog;
+        setCatalog(data);
+
+        // Preselect first service/action/reaction
+        const first = data.services?.[0];
+        if (first) {
+          setActionService(first.id);
+          setActionType(first.actions?.[0]?.id || "");
+          setReactionService(first.id);
+          setReactionType(first.reactions?.[0]?.id || "");
+        }
+      } catch (e) {
+        const msg = e instanceof Error ? e.message : "Failed to load catalog";
+        setCatalogError(msg);
+      } finally {
+        setLoadingCatalog(false);
+      }
+    }
+
+    loadCatalog();
+  }, []);
+
+  const services = catalog?.services ?? [];
+
+  const actionServiceDef = useMemo(
+    () => services.find((s) => s.id === actionService) ?? null,
+    [services, actionService]
+  );
+
+  const reactionServiceDef = useMemo(
+    () => services.find((s) => s.id === reactionService) ?? null,
+    [services, reactionService]
+  );
+
+  const actionFields = useMemo(
+    () => getActionFields(actionService, actionType),
+    [actionService, actionType]
+  );
+
+  const reactionFields = useMemo(
+    () => getReactionFields(reactionService, reactionType),
+    [reactionService, reactionType]
+  );
 
   function handleNext(e: FormEvent) {
     e.preventDefault();
-    if (step === 3) {
-      let parsedActionParams: any = {};
-      let parsedReactionParams: any = {};
 
-      try {
-        parsedActionParams = JSON.parse(actionParams);
-      } catch {
-        alert("Invalid JSON in action params");
+    if (step === 1) {
+      if (!name.trim()) {
+        alert("Please give a name to your AREA.");
         return;
       }
+    }
 
-      try {
-        parsedReactionParams = JSON.parse(reactionParams);
-      } catch {
-        alert("Invalid JSON in reaction params");
-        return;
+    if (step === 2) {
+      // validate action fields
+      for (const f of actionFields) {
+        if (f.required && !actionParams[f.key]?.trim()) {
+          alert(`Please fill: ${f.label}`);
+          return;
+        }
+      }
+    }
+
+    if (step === 3) {
+      // validate reaction fields
+      for (const f of reactionFields) {
+        if (f.required && !reactionParams[f.key]?.trim()) {
+          alert(`Please fill: ${f.label}`);
+          return;
+        }
       }
 
       const newArea: Area = {
-        name: name,
-        description: description,
-        actionService: triggerService,
-        actionType: triggerAction,
-        actionParams: parsedActionParams,
+        name: name.trim(),
+        description: description.trim(),
+        actionService,
+        actionType,
+        actionParams,
         reactionService,
-        reactionType: reactionAction,
-        reactionParams: parsedReactionParams,
+        reactionType,
+        reactionParams,
         active: true,
       };
+
       onCreate(newArea);
       return;
     }
+
     setStep((prev) => (prev + 1) as WizardStep);
   }
 
   function handleBack() {
     setStep((prev) => (prev === 1 ? 1 : ((prev - 1) as WizardStep)));
+  }
+
+  function setField(
+    setter: React.Dispatch<React.SetStateAction<Record<string, string>>>,
+    key: string,
+    value: string
+  ) {
+    setter((prev) => ({ ...prev, [key]: value }));
+  }
+
+  if (loadingCatalog) {
+    return (
+      <div style={{ textAlign: "center", color: "#e5e7eb" }}>
+        Loading services...
+      </div>
+    );
+  }
+
+  if (catalogError) {
+    return (
+      <div style={{ color: "#fca5a5", background: "rgba(127,29,29,0.25)", padding: "1rem", borderRadius: 12 }}>
+        Failed to load services catalog: {catalogError}
+      </div>
+    );
   }
 
   return (
@@ -80,44 +220,25 @@ export function AreaWizard({ onCreate }: Props) {
         color: "#e5e7eb",
       }}
     >
-      <p
-        style={{
-          fontSize: "0.85rem",
-          color: "#9ca3af",
-          marginBottom: "0.8rem",
-        }}
-      >
+      <p style={{ fontSize: "0.85rem", color: "#9ca3af", marginBottom: "0.8rem" }}>
         Step {step} of 3
       </p>
 
       {step === 1 && (
         <>
-          <h2
-            style={{
-              fontSize: "1.2rem",
-              fontWeight: 500,
-              marginBottom: "0.8rem",
-            }}
-          >
+          <h2 style={{ fontSize: "1.2rem", fontWeight: 500, marginBottom: "0.8rem" }}>
             Define your AREA
           </h2>
 
           <div style={{ marginBottom: "0.9rem" }}>
-            <label
-              htmlFor="name"
-              style={{
-                display: "block",
-                fontSize: "0.85rem",
-                marginBottom: "0.25rem",
-              }}
-            >
+            <label htmlFor="name" style={{ display: "block", fontSize: "0.85rem", marginBottom: "0.25rem" }}>
               Name
             </label>
             <input
               id="name"
               value={name}
               onChange={(e) => setName(e.target.value)}
-              placeholder="My GitHub → Discord automation"
+              placeholder="My Gmail automation"
               style={{
                 width: "100%",
                 padding: "0.45rem 0.6rem",
@@ -131,14 +252,7 @@ export function AreaWizard({ onCreate }: Props) {
           </div>
 
           <div style={{ marginBottom: "0.9rem" }}>
-            <label
-              htmlFor="description"
-              style={{
-                display: "block",
-                fontSize: "0.85rem",
-                marginBottom: "0.25rem",
-              }}
-            >
+            <label htmlFor="description" style={{ display: "block", fontSize: "0.85rem", marginBottom: "0.25rem" }}>
               Description (optional)
             </label>
             <textarea
@@ -164,31 +278,24 @@ export function AreaWizard({ onCreate }: Props) {
 
       {step === 2 && (
         <>
-          <h2
-            style={{
-              fontSize: "1.2rem",
-              fontWeight: 500,
-              marginBottom: "0.8rem",
-            }}
-          >
+          <h2 style={{ fontSize: "1.2rem", fontWeight: 500, marginBottom: "0.8rem" }}>
             Choose Action
           </h2>
 
           <div style={{ marginBottom: "0.9rem" }}>
-            <label
-              htmlFor="trigger-service"
-              style={{
-                display: "block",
-                fontSize: "0.85rem",
-                marginBottom: "0.25rem",
-              }}
-            >
-              Action service
+            <label htmlFor="action-service" style={{ display: "block", fontSize: "0.85rem", marginBottom: "0.25rem" }}>
+              Service
             </label>
             <select
-              id="trigger-service"
-              value={triggerService}
-              onChange={(e) => setTriggerService(e.target.value)}
+              id="action-service"
+              value={actionService}
+              onChange={(e) => {
+                const nextService = e.target.value;
+                setActionService(nextService);
+                const def = services.find((s) => s.id === nextService);
+                setActionType(def?.actions?.[0]?.id || "");
+                setActionParams({});
+              }}
               style={{
                 width: "100%",
                 padding: "0.45rem 0.6rem",
@@ -199,30 +306,25 @@ export function AreaWizard({ onCreate }: Props) {
                 fontSize: "0.9rem",
               }}
             >
-              {ACTION_SERVICES.map((service) => (
-                <option key={service} value={service}>
-                  {service}
+              {services.map((s) => (
+                <option key={s.id} value={s.id}>
+                  {s.displayName}
                 </option>
               ))}
             </select>
           </div>
 
           <div style={{ marginBottom: "0.9rem" }}>
-            <label
-              htmlFor="trigger-action"
-              style={{
-                display: "block",
-                fontSize: "0.85rem",
-                marginBottom: "0.25rem",
-              }}
-            >
+            <label htmlFor="action-type" style={{ display: "block", fontSize: "0.85rem", marginBottom: "0.25rem" }}>
               Action
             </label>
-            <input
-              id="trigger-action"
-              value={triggerAction}
-              onChange={(e) => setTriggerAction(e.target.value)}
-              placeholder="New issue in repository"
+            <select
+              id="action-type"
+              value={actionType}
+              onChange={(e) => {
+                setActionType(e.target.value);
+                setActionParams({});
+              }}
               style={{
                 width: "100%",
                 padding: "0.45rem 0.6rem",
@@ -232,58 +334,63 @@ export function AreaWizard({ onCreate }: Props) {
                 color: "#e5e7eb",
                 fontSize: "0.9rem",
               }}
-            />
+            >
+              {(actionServiceDef?.actions ?? []).map((a) => (
+                <option key={a.id} value={a.id}>
+                  {a.name}
+                </option>
+              ))}
+            </select>
           </div>
-          <div style={{ marginBottom: "0.9rem" }}>
-            <label htmlFor="action-params">Action Params (JSON)</label>
-            <textarea
-              id="action-params"
-              value={actionParams}
-              onChange={(e) => setActionParams(e.target.value)}
-              placeholder='{"folder": "Inbox"}'
-              rows={3}
-              style={{
-                width: "100%",
-                padding: "0.45rem 0.6rem",
-                borderRadius: 8,
-                border: "1px solid rgba(148,163,184,0.6)",
-                background: "rgba(15,23,42,0.9)",
-                color: "#e5e7eb",
-                fontSize: "0.9rem",
-                resize: "vertical",
-              }}
-            />
-          </div>
+
+          {actionFields.length > 0 && (
+            <div style={{ marginTop: "0.6rem" }}>
+              {actionFields.map((f) => (
+                <div key={f.key} style={{ marginBottom: "0.9rem" }}>
+                  <label style={{ display: "block", fontSize: "0.85rem", marginBottom: "0.25rem" }}>
+                    {f.label}
+                  </label>
+                  <input
+                    value={actionParams[f.key] ?? ""}
+                    onChange={(e) => setField(setActionParams, f.key, e.target.value)}
+                    placeholder={f.placeholder ?? ""}
+                    style={{
+                      width: "100%",
+                      padding: "0.45rem 0.6rem",
+                      borderRadius: 8,
+                      border: "1px solid rgba(148,163,184,0.6)",
+                      background: "rgba(15,23,42,0.9)",
+                      color: "#e5e7eb",
+                      fontSize: "0.9rem",
+                    }}
+                  />
+                </div>
+              ))}
+            </div>
+          )}
         </>
       )}
 
       {step === 3 && (
         <>
-          <h2
-            style={{
-              fontSize: "1.2rem",
-              fontWeight: 500,
-              marginBottom: "0.8rem",
-            }}
-          >
+          <h2 style={{ fontSize: "1.2rem", fontWeight: 500, marginBottom: "0.8rem" }}>
             Choose Reaction
           </h2>
 
           <div style={{ marginBottom: "0.9rem" }}>
-            <label
-              htmlFor="reaction-service"
-              style={{
-                display: "block",
-                fontSize: "0.85rem",
-                marginBottom: "0.25rem",
-              }}
-            >
-              Reaction service
+            <label htmlFor="reaction-service" style={{ display: "block", fontSize: "0.85rem", marginBottom: "0.25rem" }}>
+              Service
             </label>
             <select
               id="reaction-service"
               value={reactionService}
-              onChange={(e) => setReactionService(e.target.value)}
+              onChange={(e) => {
+                const nextService = e.target.value;
+                setReactionService(nextService);
+                const def = services.find((s) => s.id === nextService);
+                setReactionType(def?.reactions?.[0]?.id || "");
+                setReactionParams({});
+              }}
               style={{
                 width: "100%",
                 padding: "0.45rem 0.6rem",
@@ -294,30 +401,25 @@ export function AreaWizard({ onCreate }: Props) {
                 fontSize: "0.9rem",
               }}
             >
-              {REACTION_SERVICES.map((service) => (
-                <option key={service} value={service}>
-                  {service}
+              {services.map((s) => (
+                <option key={s.id} value={s.id}>
+                  {s.displayName}
                 </option>
               ))}
             </select>
           </div>
 
           <div style={{ marginBottom: "0.9rem" }}>
-            <label
-              htmlFor="reaction-action"
-              style={{
-                display: "block",
-                fontSize: "0.85rem",
-                marginBottom: "0.25rem",
-              }}
-            >
+            <label htmlFor="reaction-type" style={{ display: "block", fontSize: "0.85rem", marginBottom: "0.25rem" }}>
               Reaction
             </label>
-            <input
-              id="reaction-action"
-              value={reactionAction}
-              onChange={(e) => setReactionAction(e.target.value)}
-              placeholder="Send message to channel"
+            <select
+              id="reaction-type"
+              value={reactionType}
+              onChange={(e) => {
+                setReactionType(e.target.value);
+                setReactionParams({});
+              }}
               style={{
                 width: "100%",
                 padding: "0.45rem 0.6rem",
@@ -327,39 +429,64 @@ export function AreaWizard({ onCreate }: Props) {
                 color: "#e5e7eb",
                 fontSize: "0.9rem",
               }}
-            />
+            >
+              {(reactionServiceDef?.reactions ?? []).map((r) => (
+                <option key={r.id} value={r.id}>
+                  {r.name}
+                </option>
+              ))}
+            </select>
           </div>
-          <div style={{ marginBottom: "0.9rem" }}>
-            <label htmlFor="reaction-params">Reaction Params (JSON)</label>
-            <textarea
-              id="reaction-params"
-              value={reactionParams}
-              onChange={(e) => setReactionParams(e.target.value)}
-              placeholder='{"channel": "#general"}'
-              rows={3}
-              style={{
-                width: "100%",
-                padding: "0.45rem 0.6rem",
-                borderRadius: 8,
-                border: "1px solid rgba(148,163,184,0.6)",
-                background: "rgba(15,23,42,0.9)",
-                color: "#e5e7eb",
-                fontSize: "0.9rem",
-                resize: "vertical",
-              }}
-            />
-          </div>
+
+          {reactionFields.length > 0 && (
+            <div style={{ marginTop: "0.6rem" }}>
+              {reactionFields.map((f) => (
+                <div key={f.key} style={{ marginBottom: "0.9rem" }}>
+                  <label style={{ display: "block", fontSize: "0.85rem", marginBottom: "0.25rem" }}>
+                    {f.label}
+                  </label>
+
+                  {f.type === "textarea" ? (
+                    <textarea
+                      value={reactionParams[f.key] ?? ""}
+                      onChange={(e) => setField(setReactionParams, f.key, e.target.value)}
+                      placeholder={f.placeholder ?? ""}
+                      rows={4}
+                      style={{
+                        width: "100%",
+                        padding: "0.45rem 0.6rem",
+                        borderRadius: 8,
+                        border: "1px solid rgba(148,163,184,0.6)",
+                        background: "rgba(15,23,42,0.9)",
+                        color: "#e5e7eb",
+                        fontSize: "0.9rem",
+                        resize: "vertical",
+                      }}
+                    />
+                  ) : (
+                    <input
+                      value={reactionParams[f.key] ?? ""}
+                      onChange={(e) => setField(setReactionParams, f.key, e.target.value)}
+                      placeholder={f.placeholder ?? ""}
+                      style={{
+                        width: "100%",
+                        padding: "0.45rem 0.6rem",
+                        borderRadius: 8,
+                        border: "1px solid rgba(148,163,184,0.6)",
+                        background: "rgba(15,23,42,0.9)",
+                        color: "#e5e7eb",
+                        fontSize: "0.9rem",
+                      }}
+                    />
+                  )}
+                </div>
+              ))}
+            </div>
+          )}
         </>
       )}
 
-      <div
-        style={{
-          marginTop: "1.1rem",
-          display: "flex",
-          justifyContent: "space-between",
-          gap: "0.75rem",
-        }}
-      >
+      <div style={{ marginTop: "1.1rem", display: "flex", justifyContent: "space-between", gap: "0.75rem" }}>
         <button
           type="button"
           onClick={handleBack}

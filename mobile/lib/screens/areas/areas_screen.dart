@@ -118,12 +118,10 @@ class _AreaRow extends StatelessWidget {
     final actionServiceName = prettyServiceName(area.actionService);
     final reactionServiceName = prettyServiceName(area.reactionService);
 
-    final actionLabel = prettyType(area.actionType);
-    final reactionLabel = prettyType(area.reactionType);
-
     final isActive = area.active;
 
-    final displayName = '$actionServiceName → $reactionServiceName';
+    final actionBg = serviceColor(context, area.actionService);
+    final reactionBg = serviceColor(context, area.reactionService);
 
     return Container(
       padding: const EdgeInsets.symmetric(horizontal: 12, vertical: 14),
@@ -135,71 +133,58 @@ class _AreaRow extends StatelessWidget {
       child: Row(
         crossAxisAlignment: CrossAxisAlignment.center,
         children: [
-          Row(
-            mainAxisSize: MainAxisSize.min,
-            children: [
-              _ServiceTag(
-                text: actionServiceName,
-                color: theme.colorScheme.primary,
-                textColor: theme.colorScheme.onPrimary,
-              ),
-              const SizedBox(width: 8),
-              Icon(Icons.arrow_forward, size: 18, color: theme.iconTheme.color),
-              const SizedBox(width: 8),
-              _ServiceTag(
-                text: reactionServiceName,
-                color: Colors.green,
-                textColor: Colors.white,
-              ),
-            ],
-          ),
-          const SizedBox(width: 16),
+          // LEFT SIDE — flexible
           Expanded(
-            child: Column(
-              crossAxisAlignment: CrossAxisAlignment.start,
+            child: Row(
               children: [
-                Text(
-                  displayName,
-                  overflow: TextOverflow.ellipsis,
-                  style: TextStyle(
-                    fontSize: 14,
-                    fontWeight: FontWeight.w600,
-                    color: theme.colorScheme.onSurface,
+                Flexible(
+                  child: _ServiceTag(
+                    text: actionServiceName,
+                    color: actionBg,
+                    textColor: onServiceColor(actionBg),
                   ),
                 ),
-                const SizedBox(height: 4),
-                Text(
-                  '$actionLabel → $reactionLabel',
-                  maxLines: 2,
-                  overflow: TextOverflow.ellipsis,
-                  style: TextStyle(
-                    fontSize: 11,
-                    color: theme.colorScheme.onSurface.withOpacity(0.6),
+                const SizedBox(width: 12),
+                Icon(
+                  Icons.arrow_forward,
+                  size: 18,
+                  color: theme.colorScheme.onSurface.withOpacity(0.7),
+                ),
+                const SizedBox(width: 12),
+                Flexible(
+                  child: _ServiceTag(
+                    text: reactionServiceName,
+                    color: reactionBg,
+                    textColor: onServiceColor(reactionBg),
                   ),
                 ),
               ],
             ),
           ),
-          const SizedBox(width: 8),
-          Row(
-            mainAxisSize: MainAxisSize.min,
-            children: [
-              Switch(
-                value: isActive,
-                activeColor: Colors.green,
-                onChanged: (_) {
-                  context.read<AreasProvider>().toggleArea(area.id);
-                },
-              ),
-              IconButton(
-                icon: Icon(
-                  Icons.delete_outline,
-                  color: theme.colorScheme.error,
-                  size: 20,
+
+          const SizedBox(width: 12),
+
+          // RIGHT SIDE — Switch + Delete (never overflows)
+          IntrinsicWidth(
+            child: Row(
+              children: [
+                Switch(
+                  value: isActive,
+                  activeThumbColor: Colors.green,
+                  onChanged: (_) {
+                    context.read<AreasProvider>().toggleArea(area.id);
+                  },
                 ),
-                onPressed: () => _confirmDelete(context, area),
-              ),
-            ],
+                IconButton(
+                  icon: Icon(
+                    Icons.delete_outline,
+                    color: theme.colorScheme.error,
+                    size: 20,
+                  ),
+                  onPressed: () => _confirmDelete(context, area),
+                ),
+              ],
+            ),
           ),
         ],
       ),
@@ -261,16 +246,21 @@ class _ServiceTag extends StatelessWidget {
   @override
   Widget build(BuildContext context) {
     return Container(
-      padding: const EdgeInsets.symmetric(horizontal: 18, vertical: 8),
+      padding: const EdgeInsets.symmetric(horizontal: 12, vertical: 10),
       decoration: BoxDecoration(
         color: color,
-        borderRadius: BorderRadius.circular(12),
+        borderRadius: BorderRadius.circular(16),
       ),
-      child: Text(
-        text,
-        style: TextStyle(
-          color: textColor,
-          fontSize: 13,
+      child: Center(
+        child: Text(
+          text,
+          maxLines: 1,
+          overflow: TextOverflow.ellipsis,
+          style: TextStyle(
+            color: textColor,
+            fontSize: 13,
+            fontWeight: FontWeight.w600,
+          ),
         ),
       ),
     );
@@ -280,7 +270,7 @@ class _ServiceTag extends StatelessWidget {
 String prettyServiceName(String key) {
   switch (key) {
     case 'google':
-      return 'Gmail';
+      return 'Google';
     case 'gmail':
       return 'Gmail';
     case 'timer':
@@ -299,5 +289,41 @@ String prettyServiceName(String key) {
 }
 
 String prettyType(String key) {
-  return key.replaceAll('_', ' ');
+  final s = key.replaceAll('_', ' ').trim();
+  if (s.isEmpty) return s;
+
+  return s
+      .split(RegExp(r'\s+'))
+      .map((w) => w.isEmpty ? w : '${w[0].toUpperCase()}${w.substring(1).toLowerCase()}')
+      .join(' ');
+}
+
+Color serviceColor(BuildContext context, String key) {
+  final cs = Theme.of(context).colorScheme;
+
+  switch (key) {
+    case 'google':
+    case 'gmail':
+      return const Color(0xFFEA4335);
+    case 'instagram':
+      return const Color(0xFFE1306C);
+    case 'github':
+      return const Color(0xFF24292E);
+    case 'slack':
+      return const Color(0xFF4A154B);
+    case 'weather':
+      return const Color(0xFF1E88E5);
+    case 'rss':
+      return const Color(0xFFFF9800);
+    case 'timer':
+      return const Color(0xFF00BFA5);
+    default:
+      return cs.primary;
+  }
+}
+
+Color onServiceColor(Color bg) {
+  return ThemeData.estimateBrightnessForColor(bg) == Brightness.dark
+      ? Colors.white
+      : Colors.black;
 }

@@ -14,7 +14,7 @@ class ServicesProvider extends ChangeNotifier {
   bool get loading => _loading;
   String? get error => _error;
 
-  Future<void> loadServices({bool mockIfFail = true}) async { //placeholder since backend is not ready
+  Future<void> loadServices() async {
     _loading = true;
     _error = null;
     notifyListeners();
@@ -23,12 +23,9 @@ class ServicesProvider extends ChangeNotifier {
       final result = await _api.getServices();
       _services = result;
     } catch (e) {
-      if (mockIfFail) {
-        _services = _mockServices();
-        _error = 'Using mocked services (backend not ready yet).';
-      } else {
-        _error = 'Failed to load services: $e';
-      }
+      print('[ERROR] ServicesProvider.loadServices - error: $e');
+      _services = [];
+      _error = 'Failed to load services: $e';
     } finally {
       _loading = false;
       notifyListeners();
@@ -59,52 +56,5 @@ class ServicesProvider extends ChangeNotifier {
       _error = 'Failed to disconnect $serviceName: $e';
       notifyListeners();
     }
-  }
-
-  List<Service> _mockServices() {
-    return [
-      Service(
-        id: '1',
-        name: 'timer',
-        displayName: 'Timer',
-        description: 'Internal timer-based triggers.',
-        connected: true,
-      ),
-      Service(
-        id: '2',
-        name: 'github',
-        displayName: 'GitHub',
-        description: 'Track issues, PRs, and commits.',
-        connected: false,
-      ),
-      Service(
-        id: '3',
-        name: 'gmail',
-        displayName: 'Gmail',
-        description: 'Send and receive emails.',
-        connected: false,
-      ),
-      Service(
-        id: '4',
-        name: 'weather',
-        displayName: 'Weather',
-        description: 'Weather-based conditions.',
-        connected: false,
-      ),
-      Service(
-        id: '5',
-        name: 'slack',
-        displayName: 'Slack',
-        description: 'Post messages to channels.',
-        connected: false,
-      ),
-      Service(
-        id: '6',
-        name: 'rss',
-        displayName: 'RSS',
-        description: 'Trigger on new RSS items.',
-        connected: false,
-      ),
-    ];
   }
 }
