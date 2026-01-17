@@ -101,38 +101,32 @@ export class OauthController {
     @Query('state') state: string,
     @Res() res: Response
   ) {
-
     let uid: number;
     let locationData: { latitude?: string; longitude?: string } = {};
 
-    // For weather service, state may be base64 encoded with coordinates
-    if (provider === 'weather' && state) {
-      try {
-        const decoded = JSON.parse(Buffer.from(state, 'base64').toString('utf-8'));
-        uid = Number(decoded.userId);
-        if (decoded.latitude) locationData.latitude = decoded.latitude;
-        if (decoded.longitude) locationData.longitude = decoded.longitude;
-      } catch {
-        uid = Number(state);
-      }
-    } else {
+    try {
+      const decoded = JSON.parse(Buffer.from(state, 'base64').toString('utf-8'));
+      uid = Number(decoded.userId);
+      
+      if (decoded.latitude) locationData.latitude = decoded.latitude;
+      if (decoded.longitude) locationData.longitude = decoded.longitude;
+    } catch (e) {
       uid = Number(state);
     }
 
     if (!Number.isFinite(uid)) {
-      throw new BadRequestException('Missing/invalid state (userId).');
+      throw new BadRequestException(`Missing/invalid state (userId). Reçu: ${state}`);
     }
 
     const oauth = this.oauthFactory.create(provider);
 
     try {
       const tokens = await oauth.exchangeCode(code);
-
       const profile = await oauth.getUserProfile(tokens);
 
-      const metadata = { ...profile, ...locationData };
-      if (locationData.latitude) metadata.latitude = parseFloat(locationData.latitude as string);
-      if (locationData.longitude) metadata.longitude = parseFloat(locationData.longitude as string);
+      const metadata: any = { ...profile, ...locationData };
+      if (locationData.latitude) metadata.latitude = parseFloat(locationData.latitude);
+      if (locationData.longitude) metadata.longitude = parseFloat(locationData.longitude);
 
       await this.authRepo.saveOrUpdate({
         userId: uid,
@@ -145,6 +139,7 @@ export class OauthController {
 
       return res.redirect(`${process.env.FRONTEND_URL}/services?connected=${provider}`);
     } catch (err) {
+      console.error(`OAuth Error for ${provider}:`, err);
       throw err;
     }
   }
