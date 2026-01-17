@@ -6,6 +6,8 @@ export function weatherIntegration(weatherService, authRepo, engine, newWeatherD
   return {
     id: 'weather',
     displayName: 'Weather',
+    color: '#1E88E5',
+    iconKey: 'weather',
 
     instance: {
       weatherService,

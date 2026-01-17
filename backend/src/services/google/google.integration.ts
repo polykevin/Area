@@ -6,7 +6,9 @@ import { calendarEventCreatedAction } from './actions/calendar-event.action';
 export function googleIntegration(googleService, authRepo, engine, newEmailHook) {
   return {
     id: 'google',
-    displayName: 'Google',
+    displayName: 'Gmail',
+    color: '#EA4335',
+    iconKey: 'gmail',
 
     instance: {
       googleService,
