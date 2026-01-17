@@ -15,12 +15,12 @@ const UI_META: Record<string, UiMeta> = {
   google: {
     category: "Communication",
     description: "Gmail & Google services automation.",
-    logoSrc: "/services/gmail.png",
+    logoSrc: "/services/gmail-v2.png",
   },
   github: {
     category: "Developer tools",
     description: "Automate issues, PRs, and repository events.",
-    logoSrc: "/services/github.png",
+    logoSrc: "/services/github-v2.png",
   },
   gitlab: {
     category: "Developer tools",
@@ -35,7 +35,7 @@ const UI_META: Record<string, UiMeta> = {
   discord: {
     category: "Chat & Community",
     description: "Send messages to Discord channels.",
-    logoSrc: "/services/discord.png",
+    logoSrc: "/services/discord-v.png",
   },
   dropbox: {
     category: "Storage",

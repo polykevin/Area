@@ -129,22 +129,6 @@ export default function HomePage() {
         >
           Built by a passionate AREA team
         </p>
-
-        <div
-          style={{
-            display: "flex",
-            justifyContent: "center",
-            gap: "1rem",
-            marginBottom: "2.2rem",
-          }}
-        >
-          <div style={avatarStyle}></div>
-          <div style={avatarStyle}></div>
-          <div style={avatarStyle}></div>
-          <div style={avatarStyle}></div>
-          <div style={avatarStyle}></div>
-        </div>
-
         <div
           style={{
             display: "flex",
