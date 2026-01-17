@@ -17,10 +17,14 @@ dependencies:
   provider: ^6.1.2
   flutter_secure_storage: ^9.0.0
   shared_preferences: ^2.2.2
+  url_launcher: ^6.3.0
+  network_info_plus: ^4.0.0
 
 flutter:
   uses-material-design: true
   assets:
     - assets/icons/google.png
     - assets/icons/login.png
+    - assets/icons/gmail.png
+    - assets/icons/instagram.png
 

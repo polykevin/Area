@@ -6,6 +6,7 @@ import 'providers/theme_provider.dart';
 import 'providers/auth_provider.dart';
 
 import 'api/areas_api.dart';
+import 'api/api_client.dart';
 
 import 'screens/auth/login_screen.dart';
 import 'screens/home/home_screen.dart';
@@ -13,6 +14,13 @@ import 'screens/home/home_screen.dart';
 void main() async {
   WidgetsFlutterBinding.ensureInitialized();
 
+  await ApiClient().setBackendUrl("http://192.168.1.172:8080"); // Paul's local dev server
+  //await ApiClient().setBackendUrl("http://10.68.251.81:8080"); //local ip lan address, this is the epitech one
+  //await ApiClient().setBackendUrl("http://10.192.64.132:8080"); //this is my home in france
+  //await ApiClient().setBackendUrl("http://10.68.240.88:8080"); //this is another epitech one
+  //await ApiClient().setBackendUrl("http://192.168.0.161:8080");
+  //await ApiClient().setBackendUrl("http://10.68.246.170:8080"); //this is another epitech one
+  await ApiClient().init();
   final authProvider = AuthProvider();
   await authProvider.init();
 
@@ -20,30 +28,15 @@ void main() async {
     MultiProvider(
       providers: [
         ChangeNotifierProvider<AuthProvider>.value(value: authProvider),
-        ChangeNotifierProvider<ServicesProvider>(
-          create: (_) => ServicesProvider(),
-        ),
-        ChangeNotifierProvider<AreasProvider>(
-          create: (_) {
-            // TODO: adjust to your real backend URL
-            const baseUrl = 'http://10.0.2.2:8080';
-
-            // We use the token already loaded in authProvider.init()
-            final token = authProvider.accessToken ?? '';
-
-            return AreasProvider(
-              api: AreasApi(),
-            );
-          },
-        ),
-        ChangeNotifierProvider<ThemeProvider>(
-          create: (_) => ThemeProvider(),
-        ),
+        ChangeNotifierProvider(create: (_) => ServicesProvider()),
+        ChangeNotifierProvider(create: (_) => AreasProvider(api: AreasApi())),
+        ChangeNotifierProvider(create: (_) => ThemeProvider()),
       ],
       child: const AreaApp(),
     ),
   );
 }
+
 
 class AreaApp extends StatelessWidget {
   const AreaApp({super.key});

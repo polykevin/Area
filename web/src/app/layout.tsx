@@ -12,9 +12,16 @@ export default function RootLayout({ children }: { children: ReactNode }) {
   return (
     <html lang="en">
       <body style={{ minHeight: "100vh", backgroundColor: "#020617" }}>
+        <a href="#main-content" className="skip-link">
+          Skip to content
+        </a>
+
         <AuthProvider>
-          <Navbar />
-          <main>
+          <header>
+            <Navbar />
+          </header>
+
+          <main id="main-content" role="main">
             <div className="app-root">{children}</div>
           </main>
         </AuthProvider>

@@ -7,7 +7,6 @@ import { useAuth } from "@/components/AuthProvider";
 import type { Area } from "@/types/area";
 import { AreaCard } from "@/components/AreaCard";
 import { apiFetch } from "@/lib/api";
-import { v4 as uuidv4 } from "uuid";
 
 export default function AreasPage() {
   const { user, isReady } = useAuth();
@@ -154,8 +153,8 @@ export default function AreasPage() {
             gap: "1rem",
           }}
         >
-          {areas.map((area) => (
-            <AreaCard key={uuidv4()} area={area} />
+          {areas.map((area, idx) => (
+            <AreaCard key={`${area.name}-${idx}`} area={area} />
           ))}
         </div>
       )}
