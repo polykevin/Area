@@ -82,6 +82,19 @@ function getReactionFields(serviceId: string, reactionId: string): Field[] {
   ];
 }
 
+  if (serviceId === "discord" && reactionId === "discord_send_message") {
+    return [
+      { key: "webhookUrl", label: "Discord Webhook URL", type: "text", required: true, placeholder: "https://discord.com/api/webhooks/..."},
+      { key: "message", label: "Message", type: "textarea", required: true, placeholder: "New Google Calendar event!" },
+    ];
+  }
+
+  if (serviceId === "notion" && reactionId === "create_page") {
+    return [
+      { key: "apiKey", label: "Notion API Key", type: "text", required: true, placeholder: "secret_xxx"},
+      { key: "databaseId", label: "Notion Database ID", type: "text", required: true, placeholder: "xxxxxxxxxxxxxxxxxxxx"},
+    ];
+  }
   return [];
 }
 
