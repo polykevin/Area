@@ -61,6 +61,11 @@ import { GithubService } from './github/github.service';
 import { GithubNewIssueHook } from './github/hooks/new-issue.hook';
 import { githubIntegration } from './github/github.integration';
 
+import { TrelloModule } from './trello/trello.module';
+import { TrelloService } from './trello/trello.service';
+import { TrelloCardCreatedHook } from './trello/hooks/card-created.hook';
+import { trelloIntegration } from './trello/trello.integration';
+
 @Module({
   imports: [
     GoogleModule,
@@ -75,6 +80,7 @@ import { githubIntegration } from './github/github.integration';
     AuthModule,
     AreasModule,
     NotionModule,
+    TrelloModule,
   ],
   providers: [
     ServiceRegistry,
@@ -133,6 +139,9 @@ export class IntegrationModule {
     private authRepo: ServiceAuthRepository,
     private engine: AutomationEngine,
     private notionService: NotionService,
+
+    private trelloService: TrelloService,
+    private trelloCardCreatedHook: TrelloCardCreatedHook,
   ) {
     newEmailHook.setEngine(engine);
     newIssueHook.setEngine(engine);
@@ -149,6 +158,7 @@ export class IntegrationModule {
     slackNewMessageHook.setEngine(engine);
     newEmailHook.setEngine(engine);
     calendarEventHook.setEngine(engine);
+    trelloCardCreatedHook.setEngine(this.engine);
 
     registry.register(
       googleIntegration(googleService, authRepo, engine, newEmailHook),
@@ -189,6 +199,9 @@ export class IntegrationModule {
     );
     registry.register(
       githubIntegration(githubService, authRepo, engine, githubNewIssueHook)
+    );
+    registry.register(
+      trelloIntegration(trelloService, authRepo, engine, trelloCardCreatedHook),
     );
   }
 }

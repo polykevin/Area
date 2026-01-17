@@ -51,6 +51,37 @@ function getReactionFields(serviceId: string, reactionId: string): Field[] {
     ];
   }
 
+  if (serviceId === "trello" && reactionId === "create_card") {
+  return [
+    {
+      key: 'boardName',
+      label: 'Board name',
+      type: 'text',
+      required: true,
+      placeholder: 'AREA',
+    },
+    {
+      key: "listName",
+      label: "List name",
+      type: "text",
+      required: true,
+      placeholder: "test",
+    },
+    {
+      key: "name",
+      label: "Card title",
+      type: "text",
+      required: true,
+    },
+    {
+      key: "desc",
+      label: "Description",
+      type: "textarea",
+      required: false,
+    },
+  ];
+}
+
   if (serviceId === "discord" && reactionId === "discord_send_message") {
     return [
       { key: "webhookUrl", label: "Discord Webhook URL", type: "text", required: true, placeholder: "https://discord.com/api/webhooks/..."},

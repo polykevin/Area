@@ -8,6 +8,7 @@ import { GitLabOAuthProvider } from './providers/gitlab.oauth';
 import { ClockOAuthProvider } from './providers/clock.oauth';
 import { SlackOAuthProvider } from './providers/slack.oauth';
 import { GithubOAuthProvider } from './providers/github.oauth';
+import { TrelloOAuthProvider } from './providers/trello.oauth';
 
 export interface OAuthProvider {
   getAuthUrl(state: string, codeChallenge?: string): string;
@@ -37,6 +38,8 @@ export class OauthFactoryService {
         return new SlackOAuthProvider();
       case 'github':
         return new GithubOAuthProvider();
+      case 'trello':
+        return new TrelloOAuthProvider();
       default:
         throw new Error(`Unknown OAuth provider: ${provider}`);
     }
