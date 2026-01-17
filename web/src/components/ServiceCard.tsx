@@ -1,5 +1,4 @@
 import Image from "next/image";
-import Link from "next/link";
 
 type ServiceCardProps = {
   name: string;
@@ -10,9 +9,6 @@ type ServiceCardProps = {
   actionsCount?: number;
   reactionsCount?: number;
   onConnect?: () => void;
-
-  // Optionnel: si plus tard tu fais une page "manage"
-  manageHref?: string;
 };
 
 export function ServiceCard({
@@ -24,10 +20,7 @@ export function ServiceCard({
   actionsCount,
   reactionsCount,
   onConnect,
-  manageHref,
 }: ServiceCardProps) {
-  const buttonLabel = isConnected ? "Connected" : "Connect";
-
   return (
     <article
       style={{
@@ -39,7 +32,6 @@ export function ServiceCard({
         flexDirection: "column",
         gap: "0.75rem",
       }}
-      aria-label={`${name} service card`}
     >
       <header
         style={{
@@ -50,46 +42,37 @@ export function ServiceCard({
         }}
       >
         <div style={{ display: "flex", alignItems: "center", gap: "0.75rem" }}>
+          {/* Badge logo */}
           <div
             style={{
               width: 44,
               height: 44,
               borderRadius: 12,
-              overflow: "hidden",
-              background: "#020617",
+              background: "rgba(255,255,255,0.08)",
+              border: "1px solid rgba(148,163,184,0.25)",
               display: "flex",
               alignItems: "center",
               justifyContent: "center",
+              padding: 6,
             }}
-            aria-hidden="true"
           >
             <Image
               src={logoSrc}
               alt={`${name} logo`}
-              width={44}
-              height={44}
-              style={{ objectFit: "contain" }}
+              width={32}
+              height={32}
+              style={{
+                objectFit: "contain",
+                borderRadius: 8,
+              }}
             />
           </div>
 
           <div>
-            <h3
-              style={{
-                margin: 0,
-                fontSize: "1rem",
-                fontWeight: 600,
-                color: "#f9fafb",
-              }}
-            >
+            <h3 style={{ margin: 0, fontSize: "1rem", fontWeight: 600, color: "#f9fafb" }}>
               {name}
             </h3>
-            <p
-              style={{
-                margin: 0,
-                fontSize: "0.75rem",
-                color: "#9ca3af",
-              }}
-            >
+            <p style={{ margin: 0, fontSize: "0.75rem", color: "#9ca3af" }}>
               {category}
             </p>
           </div>
@@ -102,20 +85,15 @@ export function ServiceCard({
             borderRadius: 999,
             border: "1px solid rgba(148,163,184,0.5)",
             color: isConnected ? "#4ade80" : "#e5e7eb",
-            background: isConnected
-              ? "rgba(22,163,74,0.15)"
-              : "rgba(15,23,42,1)",
+            background: isConnected ? "rgba(22,163,74,0.15)" : "rgba(15,23,42,1)",
             whiteSpace: "nowrap",
           }}
-          aria-label={isConnected ? "Service connected" : "Service not connected"}
         >
           {isConnected ? "Connected" : "Not connected"}
         </span>
       </header>
 
-      <p style={{ margin: 0, fontSize: "0.85rem", color: "#cbd5e1" }}>
-        {description}
-      </p>
+      <p style={{ margin: 0, fontSize: "0.85rem", color: "#cbd5e1" }}>{description}</p>
 
       {(actionsCount !== undefined || reactionsCount !== undefined) && (
         <p style={{ margin: 0, fontSize: "0.78rem", color: "#94a3b8" }}>
@@ -124,52 +102,21 @@ export function ServiceCard({
       )}
 
       <div style={{ marginTop: "0.6rem" }}>
-        {isConnected && manageHref ? (
-          <Link href={manageHref} style={{ textDecoration: "none" }}>
-            <button
-              type="button"
-              style={{
-                padding: "0.45rem 0.9rem",
-                borderRadius: 999,
-                border: "1px solid rgba(148,163,184,0.6)",
-                background: "transparent",
-                color: "#f9fafb",
-                fontSize: "0.85rem",
-                cursor: "pointer",
-              }}
-              aria-label={`Manage ${name}`}
-            >
-              Manage
-            </button>
-          </Link>
-        ) : (
-          <button
-            type="button"
-            style={{
-              padding: "0.45rem 0.9rem",
-              borderRadius: 999,
-              border: isConnected ? "1px solid rgba(148,163,184,0.35)" : "none",
-              background: isConnected ? "rgba(148,163,184,0.12)" : "#2563eb",
-              color: "#f9fafb",
-              fontSize: "0.85rem",
-              cursor: isConnected ? "not-allowed" : "pointer",
-              opacity: isConnected ? 0.7 : 1,
-            }}
-            onClick={() => {
-              if (isConnected) return;
-              onConnect?.();
-            }}
-            disabled={isConnected}
-            aria-disabled={isConnected}
-            aria-label={
-              isConnected
-                ? `${name} is already connected`
-                : `Connect ${name}`
-            }
-          >
-            {buttonLabel}
-          </button>
-        )}
+        <button
+          type="button"
+          onClick={onConnect}
+          style={{
+            padding: "0.45rem 0.9rem",
+            borderRadius: 999,
+            border: isConnected ? "1px solid rgba(148,163,184,0.6)" : "none",
+            background: isConnected ? "transparent" : "#2563eb",
+            color: "#f9fafb",
+            fontSize: "0.85rem",
+            cursor: "pointer",
+          }}
+        >
+          {isConnected ? "Manage" : "Connect"}
+        </button>
       </div>
     </article>
   );
