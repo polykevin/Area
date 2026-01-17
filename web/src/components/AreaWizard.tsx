@@ -50,6 +50,38 @@ function getReactionFields(serviceId: string, reactionId: string): Field[] {
       { key: "body", label: "Body", type: "textarea", required: true, placeholder: "Your message..." },
     ];
   }
+
+  if (serviceId === "trello" && reactionId === "create_card") {
+  return [
+    {
+      key: 'boardName',
+      label: 'Board name',
+      type: 'text',
+      required: true,
+      placeholder: 'AREA',
+    },
+    {
+      key: "listName",
+      label: "List name",
+      type: "text",
+      required: true,
+      placeholder: "test",
+    },
+    {
+      key: "name",
+      label: "Card title",
+      type: "text",
+      required: true,
+    },
+    {
+      key: "desc",
+      label: "Description",
+      type: "textarea",
+      required: false,
+    },
+  ];
+}
+
   return [];
 }
 

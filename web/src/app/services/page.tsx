@@ -26,25 +26,36 @@ const MOCK_SERVICES = [
     reactionsCount: 2,
   },
   {
-    name: "Discord",
-    category: "Chat & Community",
-    description:
-      "Send messages to channels or DMs when an Action is triggered on another service.",
-    isConnected: false,
-    logoSrc: "/services/discord.png",
-    actionsCount: 1,
-    reactionsCount: 2,
-  },
-  {
-    name: "Google Drive",
-    category: "Storage",
-    description:
-      "Create files, move documents or update folders when an Action occurs somewhere else.",
-    isConnected: false,
-    logoSrc: "/services/drive.png",
-    actionsCount: 2,
-    reactionsCount: 1,
-  },
+  name: "trello",
+  category: "Project Management",
+  description:
+    "Create, track and manage cards and boards to automate project workflows.",
+  isConnected: false,
+  logoSrc: "/services/trello.png",
+  actionsCount: 1,
+  reactionsCount: 1,
+},
+
+  // {
+  //   name: "Discord",
+  //   category: "Chat & Community",
+  //   description:
+  //     "Send messages to channels or DMs when an Action is triggered on another service.",
+  //   isConnected: false,
+  //   logoSrc: "/services/discord.png",
+  //   actionsCount: 1,
+  //   reactionsCount: 2,
+  // },
+  // {
+  //   name: "Google Drive",
+  //   category: "Storage",
+  //   description:
+  //     "Create files, move documents or update folders when an Action occurs somewhere else.",
+  //   isConnected: false,
+  //   logoSrc: "/services/drive.png",
+  //   actionsCount: 2,
+  //   reactionsCount: 1,
+  // },
 ];
 
 export default function ServicesPage() {
