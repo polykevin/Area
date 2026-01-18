@@ -62,6 +62,7 @@ area/
 
 ## More
 - [Comparative study](comparative.md)
+- [How to contribute](howtocontribute.md)
 ---
 
 ## Authors & Contacts
