@@ -1,19 +1,13 @@
 "use client";
 
 import { useEffect } from "react";
-import { useRouter } from "next/navigation";
+import { useRouter, useSearchParams } from "next/navigation";
 import { useAuth } from "@/components/AuthProvider";
 
 type AuthUser = {
-    id: number;
-    email: string;
-    name?: string;
-  };
-
-type SearchParams = { [key: string]: string | string[] | undefined };
-
-type Props = {
-  searchParams: SearchParams;
+  id: number;
+  email: string;
+  name?: string;
 };
 
 type JwtPayload = {
@@ -43,27 +37,18 @@ function parseJwt(token: string): JwtPayload | null {
   }
 }
 
-export default function GoogleCallbackClient({ searchParams }: Props) {
+export default function GoogleCallbackClient() {
   const router = useRouter();
+  const sp = useSearchParams();
   const { loginFromApi } = useAuth();
 
   useEffect(() => {
-    const qs = typeof window !== "undefined" ? window.location.search : "";
-    const params = new URLSearchParams(qs);
-
     const accessToken =
-      params.get("access_token") ||
-      params.get("token") ||
-      params.get("accessToken") ||
-      (typeof searchParams.access_token === "string"
-        ? searchParams.access_token
-        : undefined);
+      sp.get("access_token") || sp.get("token") || sp.get("accessToken");
+
+    console.log("[GoogleCallback] query token =", accessToken);
 
     if (!accessToken) {
-      console.error("No access token found in Google callback URL", {
-        qs,
-        searchParams,
-      });
       router.replace("/login?error=missing_token");
       return;
     }
@@ -71,20 +56,21 @@ export default function GoogleCallbackClient({ searchParams }: Props) {
     const payload = parseJwt(accessToken);
 
     if (!payload || !payload.email || !payload.sub) {
-      console.error("Invalid JWT payload in Google callback", payload);
+      console.error("[GoogleCallback] invalid JWT payload", payload);
       router.replace("/login?error=invalid_token");
       return;
     }
 
-    const user = {
+    const user: AuthUser = {
       id: typeof payload.sub === "string" ? Number(payload.sub) : payload.sub,
       email: payload.email,
     };
 
-    loginFromApi(user as AuthUser, accessToken);
+    loginFromApi(user, accessToken);
+    console.log("[GoogleCallback] stored auth =", localStorage.getItem("area-auth"));
 
-    router.replace("/areas");
-  }, [router, loginFromApi, searchParams]);
+    router.replace("/services");
+  }, [router, loginFromApi, sp]);
 
   return (
     <div
