@@ -2,18 +2,19 @@
 
 import { useEffect, useMemo, useState, FormEvent } from "react";
 import type { Area } from "@/types/area";
-import { apiFetch } from "@/lib/api";
+import type { Catalog } from "@/lib/api";
+import { apiGetCatalog } from "@/lib/api";
 
 type WizardStep = 1 | 2 | 3;
 
-type Catalog = {
-  services: Array<{
-    id: string;
-    displayName: string;
-    actions: Array<{ id: string; name: string }>;
-    reactions: Array<{ id: string; name: string }>;
-  }>;
-};
+// type Catalog = {
+//   services: Array<{
+//     id: string;
+//     displayName: string;
+//     actions: Array<{ id: string; name: string }>;
+//     reactions: Array<{ id: string; name: string }>;
+//   }>;
+// };
 
 type Props = {
   onCreate(area: Area): void;
@@ -126,16 +127,10 @@ export function AreaWizard({ onCreate }: Props) {
         setLoadingCatalog(true);
         setCatalogError(null);
 
-        const res = await apiFetch("/services/catalog", { method: "GET" });
-        if (!res.ok) {
-          const txt = await res.text();
-          throw new Error(txt || "Failed to load services catalog");
-        }
-
-        const data = (await res.json()) as Catalog;
+        const data = await apiGetCatalog();
+        console.log("[catalog]", data);
         setCatalog(data);
 
-        // Preselect first service/action/reaction
         const first = data.services?.[0];
         if (first) {
           setActionService(first.id);
